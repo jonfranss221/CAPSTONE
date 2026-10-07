@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bc36bbac8b9aa641a93c26cb084fcdb, type: 3}
+  m_Name: Baguio_Wave3
+  m_EditorClassIdentifier: 
+  waveNumber: 3
+  opAllowance: 10
+  enemies:
+  - {fileID: 11400000, guid: 372d5d658989902469eeb2df19db1d0e, type: 2}
+  - {fileID: 11400000, guid: be008af037d4a5c41b23dfddd1666e3e, type: 2}
+  - {fileID: 11400000, guid: 2d22fb25643c24347944282f9e39e8bf, type: 2}
+  - {fileID: 11400000, guid: 7e35330c8581c2a48ba97f817444804b, type: 2}

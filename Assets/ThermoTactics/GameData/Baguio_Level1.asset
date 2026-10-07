@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db51ff0f90298bc408ae1fa7eee8ed4e, type: 3}
+  m_Name: Baguio_Level1
+  m_EditorClassIdentifier: 
+  levelName: "Stage 1 \xB7 Baguio \u2014 Kennon Road"
+  startingTemperature: 1
+  lossThreshold: 1.5
+  heatPerUndefendedHit: 0.1
+  coolingPerEmptyLaneAttack: 0.05
+  opPenaltyByTurn: 000000000000000001000000020000000400000008000000
+  allyRoster:
+  - {fileID: 11400000, guid: d07420e94e36cf945a3070da84b6a99f, type: 2}
+  - {fileID: 11400000, guid: 01bf9aa96ff063e4f8abe59701e37041, type: 2}
+  - {fileID: 11400000, guid: b893954e3ef0aec4a87f762a80e4b363, type: 2}
+  - {fileID: 11400000, guid: 108d88f5195330140aa2174262348b44, type: 2}
+  - {fileID: 11400000, guid: dd27d304e2f554d45817b81a4f00b7d8, type: 2}
+  waves:
+  - {fileID: 11400000, guid: 5e65b6c932b4de44c96302c362252b05, type: 2}
+  - {fileID: 11400000, guid: 733fc9ae28c65524c9abd267232f3409, type: 2}
+  - {fileID: 11400000, guid: 0cd8902d6128d18458a0a4b35a500c05, type: 2}
+  enemyHpScale: 0.75
