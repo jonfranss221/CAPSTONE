@@ -1,0 +1,42 @@
+{
+ "MangroveGuardian": {
+  "pivotX": 0.382,
+  "pivotY": 0.042
+ },
+ "CoralDefender": {
+  "pivotX": 0.361,
+  "pivotY": 0.042
+ },
+ "WindCaller": {
+  "pivotX": 0.375,
+  "pivotY": 0.042
+ },
+ "GeothermalSentinel": {
+  "pivotX": 0.344,
+  "pivotY": 0.042
+ },
+ "ReefSentinel": {
+  "pivotX": 0.368,
+  "pivotY": 0.042
+ },
+ "IllegalLogger": {
+  "pivotX": 0.323,
+  "pivotY": 0.042
+ },
+ "MethaneCloud": {
+  "pivotX": 0.382,
+  "pivotY": 0.042
+ },
+ "QuarryColossus": {
+  "pivotX": 0.378,
+  "pivotY": 0.042
+ },
+ "OilSlick": {
+  "pivotX": 0.399,
+  "pivotY": 0.042
+ },
+ "PlasticGolem": {
+  "pivotX": 0.347,
+  "pivotY": 0.042
+ }
+}
