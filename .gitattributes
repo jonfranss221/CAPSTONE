@@ -1,0 +1,22 @@
+# Normalise line endings for text files
+* text=auto
+
+# Unity YAML assets: keep as text so scenes, prefabs and data merge readably
+*.unity    text eol=lf
+*.prefab   text eol=lf
+*.asset    text eol=lf
+*.anim     text eol=lf
+*.controller text eol=lf
+*.meta     text eol=lf
+*.cs       text diff=csharp
+
+# Pixel-art sprites are small, so they stay in normal Git
+*.png      binary
+
+# Large binary sources go to Git LFS (none in the repo yet; ready for audio and layered art)
+*.wav      filter=lfs diff=lfs merge=lfs -text
+*.mp3      filter=lfs diff=lfs merge=lfs -text
+*.ogg      filter=lfs diff=lfs merge=lfs -text
+*.psd      filter=lfs diff=lfs merge=lfs -text
+*.aseprite filter=lfs diff=lfs merge=lfs -text
+*.mp4      filter=lfs diff=lfs merge=lfs -text
