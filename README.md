@@ -15,7 +15,7 @@ temperature below the **1.5 °C** limit. Capstone project.
 | Unity | **6 (6000.0.84f1)** — Universal Render Pipeline 2D |
 | Target | Android 8.0+ (API 26), landscape |
 | Input | Unity Input System (touch and mouse) |
-| Packages | 2D feature set, uGUI, Input System (installed through `Packages/manifest.json`) |
+| Packages | 2D feature set, uGUI, Input System, SQLite-net (installed through `Packages/manifest.json`; Git must be installed) |
 
 ## Getting started
 
@@ -52,7 +52,7 @@ temperature below the **1.5 °C** limit. Capstone project.
 - Oxygen Point system with punishment for long waves
 - Wave logic (3 waves) and turn order
 - Win / loss at the 1.5 °C threshold
-- Local results database (name, WIN/LOSS, date created) shown in the **Results** panel
+- Local **SQLite** results database (name, WIN/LOSS, date created) shown in the **Results** panel
 
 ## Project structure
 
@@ -76,19 +76,32 @@ Assets/ThermoTactics/
 To rebuild the scene after changing art or stats, use **Thermo-Tactics ▸ Build Baguio Level**.
 Rebuilding replaces the scene, so make manual scene edits after rebuilding.
 
-## Results database
+## Results database (SQLite)
 
-Stored offline as JSON at `Application.persistentDataPath/results_db.json`
-(Windows editor: `%USERPROFILE%\AppData\LocalLow\<Company>\<Product>\results_db.json`).
+Results are stored offline in a **SQLite** database, `thermo_tactics.db`, in `Application.persistentDataPath`.
+On Windows, the editor puts it in `%USERPROFILE%\AppData\LocalLow\<Company>\<Product>\thermo_tactics.db`; on Android it lives in the app's private storage.
+The database is accessed with [SQLite-net for Unity](https://github.com/gilzoide/unity-sqlite-net) (`com.gilzoide.sqlite-net` 1.3.2, MIT). Unity installs it from `Packages/manifest.json`, which needs Git to be installed.
+Script: `Assets/ThermoTactics/Scripts/Persistence/ResultsDatabase.cs`.
 
-| Field | Type | Purpose |
-| --- | --- | --- |
-| `id` | Integer | Unique record id |
-| `player_name` | String (2–20) | Username entered at login |
-| `result` | String | `WIN` or `LOSS` |
-| `created_at` | String `yyyy-MM-dd HH:mm:ss` | Date and time the result was saved |
-| `final_temperature` | Float (°C) | Temperature when the level ended |
-| `waves_cleared` | Integer (0–3) | Waves fully cleared |
+```sql
+CREATE TABLE game_results (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_name       TEXT    NOT NULL CHECK (length(player_name) BETWEEN 1 AND 20),
+  result            TEXT    NOT NULL CHECK (result IN ('WIN','LOSS')),
+  created_at        TEXT    NOT NULL,          -- yyyy-MM-dd HH:mm:ss
+  final_temperature REAL    NOT NULL,          -- °C when the level ended
+  waves_cleared     INTEGER NOT NULL DEFAULT 0 CHECK (waves_cleared >= 0)
+);
+CREATE INDEX idx_game_results_created_at ON game_results(created_at);
+```
+
+| Operation | SQL |
+| --- | --- |
+| Save a result (end of level) | `INSERT INTO game_results (player_name, result, created_at, final_temperature, waves_cleared) VALUES (?, ?, ?, ?, ?)` |
+| Results panel | `SELECT ... FROM game_results ORDER BY id DESC` |
+
+Values are bound as parameters (`?`), never concatenated into the SQL. Results saved by the older JSON version (`results_db.json`) are imported automatically the first time the game runs.
+The `.db` file can be opened with [DB Browser for SQLite](https://sqlitebrowser.org/) for checking.
 
 ## Version control
 

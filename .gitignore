@@ -74,3 +74,8 @@ crashlytics-build.properties
 Thumbs.db
 desktop.ini
 
+
+# Unity Version Control (Plastic) and VS solution files
+.plastic/
+ignore.conf
+*.slnx

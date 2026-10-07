@@ -18,5 +18,7 @@ Rules in this level
   Unspent Oxygen does not carry over. Win by clearing all 3 waves below 1.50°C.
 
 Results database
-  Application.persistentDataPath/results_db.json  (id, player_name, result, created_at, final_temperature, waves_cleared)
-  Windows editor: %USERPROFILE%\AppData\LocalLow\<CompanyName>\<ProductName>\results_db.json
+  SQLite: Application.persistentDataPath/thermo_tactics.db, table game_results
+  (id, player_name, result, created_at, final_temperature, waves_cleared)
+  Windows editor: %USERPROFILE%\AppData\LocalLow\<CompanyName>\<ProductName>\thermo_tactics.db
+  Package: com.gilzoide.sqlite-net 1.3.2 (Packages/manifest.json)
