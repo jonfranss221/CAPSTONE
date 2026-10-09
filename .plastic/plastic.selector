@@ -1,4 +1,0 @@
-repository "TESTING CAPSTONE/TESTING CAPSTONE@18968516084226@cloud"
-  path "/"
-    br "/main"
-    co "/main"
