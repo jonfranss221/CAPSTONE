@@ -13,7 +13,7 @@ temperature below the **1.5 °C** limit. Capstone project.
 | Item | Version |
 | --- | --- |
 | Unity | **6 (6000.0.84f1)** — Universal Render Pipeline 2D |
-| Target | Android 8.0+ (API 26), landscape |
+| Target | Android, minimum API 23 (Android 6.0), IL2CPP, ARM64 |
 | Input | Unity Input System (touch and mouse) |
 | Packages | 2D feature set, uGUI, Input System, SQLite-net (installed through `Packages/manifest.json`; Git must be installed) |
 
@@ -110,15 +110,16 @@ The `.db` file can be opened with [DB Browser for SQLite](https://sqlitebrowser.
 | `.gitignore` | Present — Unity template; excludes `Library/`, `Temp/`, `Obj/`, `Build/`, `Logs/`, `UserSettings/`, IDE files and builds |
 | `.gitattributes` | Present — text/LF rules for Unity YAML; Git LFS rules for audio and layered art |
 | Git LFS | Configured for `*.wav *.mp3 *.ogg *.psd *.aseprite *.mp4` (no such files yet) |
-| Branches | `main` = stable · `develop` = integration · `feature/<name>` per system |
+| Branches | Current: `main` only. Planned: `main` = stable · `develop` = integration · `feature/<name>` per system |
 
-Commit `.meta` files together with their assets. Unity settings: Version Control mode
-**Visible Meta Files**, Asset Serialization **Force Text**.
+Commit `.meta` files together with their assets. Unity settings: Asset Serialization **Force Text** (set).
+Version Control mode is still Unity Version Control; switch it to **Visible Meta Files** (Edit ▸ Project Settings ▸ Version Control).
 
 ## Team
 
 | Member | Role |
 | --- | --- |
-| [ name ] | [ role ] |
-| [ name ] | [ role ] |
-| [ name ] | [ role ] |
+| [ Edz Steinar Bederico ] | [ role ] |
+| [ Jon Francis Gellido ] | [ role ] |
+| [ Rodge Emanuel Ramos ] | [ role ] |
+| [ Jherwin Reyes ] | [ role ] |
