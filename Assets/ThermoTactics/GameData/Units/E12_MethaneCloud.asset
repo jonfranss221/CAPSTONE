@@ -15,11 +15,13 @@ MonoBehaviour:
   unitId: E12
   displayName: Methane Cloud
   faction: 1
+  isElite: 0
   opCost: 0
   maxHp: 12
   damage: 3
   card: {fileID: 21300000, guid: d9c1c6d7094295c469f988626104e79f, type: 3}
   idlePose: {fileID: 21300000, guid: d9dfda9512a19c746961679516d9fbc5, type: 3}
   animator: {fileID: 9100000, guid: 8816f62c34de9ad41823214478663ca0, type: 2}
+  tint: {r: 1, g: 1, b: 1, a: 1}
   hitDelay: 0.42857143
   attackDuration: 0.85714287

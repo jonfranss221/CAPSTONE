@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace ThermoTactics
 {
-    /// <summary>One card in the deploy bar: portrait, name and OP cost.</summary>
+    /// <summary>One card in the deploy bar: portrait and OP cost badge (the name shows in the hint line).</summary>
     public class DeployCard : MonoBehaviour
     {
         [SerializeField] private Button _button;
@@ -13,8 +13,8 @@ namespace ThermoTactics
         [SerializeField] private Text _name;
         [SerializeField] private Text _cost;
 
-        private static readonly Color SelectedFrame = new Color(1f, 0.82f, 0.25f);
-        private static readonly Color NormalFrame = new Color(0.12f, 0.14f, 0.18f, 0.95f);
+        private static readonly Color SelectedFrame = new Color(0.886f, 0.682f, 0.173f);   // #E2AE2C
+        private static readonly Color NormalFrame = new Color(0.231f, 0.329f, 0.275f);     // #3B5446
 
         public UnitData Data { get; private set; }
 
@@ -25,8 +25,8 @@ namespace ThermoTactics
             if (data == null) return;
             _icon.sprite = data.card;
             _icon.preserveAspect = true;
-            _name.text = data.displayName;
-            _cost.text = $"{data.opCost} OP";
+            if (_name != null) _name.text = data.displayName;
+            _cost.text = data.opCost.ToString();
             _button.onClick.RemoveAllListeners();
             _button.onClick.AddListener(() => onClick(data));
         }
@@ -35,8 +35,8 @@ namespace ThermoTactics
         {
             if (Data == null) return;
             _frame.color = selected ? SelectedFrame : NormalFrame;
-            _icon.color = affordable ? Color.white : new Color(0.45f, 0.45f, 0.45f);
-            _cost.color = affordable ? new Color(0.55f, 1f, 0.65f) : new Color(1f, 0.45f, 0.4f);
+            _icon.color = affordable ? Color.white : new Color(0.4f, 0.4f, 0.4f);
+            _cost.color = affordable ? new Color(0.608f, 0.827f, 0.69f) : new Color(1f, 0.45f, 0.4f);
             _button.interactable = interactable;
         }
     }

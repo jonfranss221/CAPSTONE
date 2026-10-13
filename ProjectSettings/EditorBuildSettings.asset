@@ -6,8 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/ThermoTactics/Scenes/Baguio_Level1.unity
-    guid: d6b27aff9c5a1e147920617b564b388a
+    path: Assets/ThermoTactics/Scenes/MainMenu.unity
+    guid: 28403091f3339ce4b81f237779f41cb2
+  - enabled: 1
+    path: Assets/ThermoTactics/Scenes/Baguio_Battle.unity
+    guid: 9278f85fc74363e4baae9b92a7479e56
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02

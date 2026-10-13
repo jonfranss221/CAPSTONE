@@ -9,8 +9,17 @@ namespace ThermoTactics
         [Min(1)] public int waveNumber = 1;
         [Tooltip("Oxygen Points granted at the start of every turn of this wave (not carried over).")]
         [Min(1)] public int opAllowance = 5;
-        [Tooltip("Enemies that spawn when the wave starts (max 6, one per lane).")]
+
+        [Tooltip("Skip the long-wave Oxygen penalty for this wave (used for boss waves, which are meant to last).")]
+        public bool ignorePenalty = false;
+        [Tooltip("Enemies that spawn when the wave starts (max 6, one per lane). A BossData here fills all 6 lanes alone.")]
         public UnitData[] enemies = new UnitData[0];
+
+        /// <summary>True when this wave is a boss wave (the boss fights alone).</summary>
+        public bool HasBoss
+        {
+            get { if (enemies != null) foreach (var e in enemies) if (e is BossData) return true; return false; }
+        }
 
         private void OnValidate()
         {

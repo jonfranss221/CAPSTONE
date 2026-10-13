@@ -15,11 +15,13 @@ MonoBehaviour:
   unitId: A08
   displayName: Geothermal Sentinel
   faction: 0
+  isElite: 0
   opCost: 4
   maxHp: 22
   damage: 6
   card: {fileID: 21300000, guid: d60137f230937e14790cd1dca55d11a7, type: 3}
   idlePose: {fileID: 21300000, guid: abb5f05a00fe7fe4bb68acb4eeeda5d3, type: 3}
   animator: {fileID: 9100000, guid: c74dd10dbcd01a74eaaf31e1e456903e, type: 2}
+  tint: {r: 1, g: 1, b: 1, a: 1}
   hitDelay: 0.42857143
   attackDuration: 0.85714287

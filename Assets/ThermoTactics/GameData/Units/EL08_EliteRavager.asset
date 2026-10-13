@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2879c062ec7e5148b1c2c9a23b3fbe9, type: 3}
+  m_Name: EL08_EliteRavager
+  m_EditorClassIdentifier: 
+  unitId: EL08
+  displayName: Elite Ravager
+  faction: 1
+  isElite: 1
+  opCost: 0
+  maxHp: 27
+  damage: 7
+  card: {fileID: 21300000, guid: 174863fa3f01c27459cb1a238486d0a0, type: 3}
+  idlePose: {fileID: 21300000, guid: 6259abbbbfb8bd44493154ba2df1857c, type: 3}
+  animator: {fileID: 9100000, guid: a4be649a9f0b58341878049712a77f00, type: 2}
+  tint: {r: 1, g: 0.74, b: 0.7, a: 1}
+  hitDelay: 0.42857143
+  attackDuration: 0.85714287

@@ -1,15 +1,22 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ThermoTactics
 {
-    /// <summary>Orchestrates the level: login → play → win/loss → results.</summary>
+    /// <summary>
+    /// Orchestrates one level in the battle scene: start or resume → play → win/loss → results.
+    /// The level comes from GameSession (chosen in the Main Menu). Saves the game at the start of
+    /// every player turn, after every deploy, and when the app is paused or closed, so Continue
+    /// returns to the same wave and turn.
+    /// </summary>
     public class GameManager : MonoBehaviour
     {
-        public enum State { Menu, Playing, Ended }
+        public enum State { Loading, Playing, Paused, Ended }
 
         public static GameManager Instance { get; private set; }
 
-        [SerializeField] private LevelData _level;
+        [Tooltip("Used when the battle scene is played directly in the editor (no menu choice).")]
+        [SerializeField] private StageData _defaultStage;
         [SerializeField] private TurnManager _turns;
         [SerializeField] private WaveManager _waves;
         [SerializeField] private OxygenPointSystem _oxygen;
@@ -17,59 +24,237 @@ namespace ThermoTactics
         [SerializeField] private GridManager _grid;
         [SerializeField] private LaneController _lanes;
         [SerializeField] private DeploySystem _deploy;
+        [SerializeField] private UnitFactory _factory;
         [SerializeField] private ResultsDatabase _database;
         [SerializeField] private UIManager _ui;
         [SerializeField] private FogScroller _fog;
 
-        public State Current { get; private set; } = State.Menu;
-        public LevelData Level => _level;
+        public State Current { get; private set; } = State.Loading;
+        public StageData Stage { get; private set; }
+        public LevelData Level { get; private set; }
+        public int LevelNumber { get; private set; } = 1;
         public string PlayerName { get; private set; } = "";
         public bool CanPlayerAct => Current == State.Playing && !_turns.IsResolving;
+        public bool HasNextLevel => Stage != null && LevelNumber < Stage.LevelCount;
+
+        /// <summary>True when the last autosave reached the database.</summary>
+        public bool LastSaveOk { get; private set; } = true;
 
         private void Awake()
         {
             Instance = this;
             Application.targetFrameRate = 60;
+            SettingsStore.Apply();
         }
 
         private void Start()
         {
             _temperature.Changed += OnTemperatureChanged;
-            _ui.ShowLogin();
+            _deploy.Deployed += _ => Autosave();
+
+            Stage = GameSession.Stage != null ? GameSession.Stage : _defaultStage;
+            PlayerName = ResultsDatabase.Sanitize(string.IsNullOrEmpty(GameSession.PlayerName) ? "Tester" : GameSession.PlayerName);
+            LevelNumber = Mathf.Clamp(GameSession.LevelNumber, 1, Mathf.Max(1, Stage.LevelCount));
+
+            SessionSnapshot resume = GameSession.Resume;
+            GameSession.Resume = null;
+            if (resume != null && ResumeLevel(resume)) return;
+            StartLevel(LevelNumber);
+            if (resume != null)
+                _ui.Announce("The saved game could not be restored, so the level starts from Wave 1.", UIManager.Warning);
         }
 
-        public void StartLevel(string playerName)
+        private void OnDestroy()
         {
-            PlayerName = ResultsDatabase.Sanitize(playerName);
-            _grid.ClearAll();
-            _lanes.Init(_level);
-            _temperature.Init(_level.startingTemperature, _level.lossThreshold);
-            _waves.Begin(_level);
+            Time.timeScale = 1f;
+            if (Instance == this) Instance = null;
+        }
+
+        // ---------------------------------------------------------------- start / resume
+
+        public void StartLevel(int levelNumber)
+        {
+            LevelNumber = levelNumber;
+            Level = Stage.GetLevel(levelNumber);
+            PrepareBoard();
+            _temperature.Init(Level.startingTemperature, Level.lossThreshold);
+            _waves.Begin(Level);
             _waves.SpawnNextWave();
             Current = State.Playing;
-            if (_level.allyRoster.Length > 0) _deploy.Select(_level.allyRoster[0]);
+            ApplySpeed();
             _ui.ShowHud();
-            _turns.BeginPlayerTurn(_level);
-            _ui.Announce($"Wave 1 of {_waves.TotalWaves}: defend Kennon Road, {PlayerName}! Keep it below {_level.lossThreshold:0.0}°C.", UIManager.Info);
+            _turns.BeginPlayerTurn(Level);   // also autosaves
+            _ui.Announce($"Level {LevelNumber} · {Level.locationName}. Wave 1 of {_waves.TotalWaves}: keep it below {Level.lossThreshold:0.0}°C, {PlayerName}!", UIManager.Info);
         }
+
+        /// <summary>Rebuilds the board from a saved game. Returns false if the save does not fit this stage.</summary>
+        private bool ResumeLevel(SessionSnapshot s)
+        {
+            LevelData level = Stage.stageId == s.stageId ? Stage.GetLevel(s.levelNumber) : null;
+            if (level == null || s.waveNumber < 1 || s.waveNumber > level.waves.Length)
+            {
+                _database.DeleteSession(PlayerName);
+                return false;
+            }
+
+            LevelNumber = s.levelNumber;
+            Level = level;
+            PrepareBoard();
+            _temperature.Init(Level.startingTemperature, Level.lossThreshold);
+            _temperature.Restore(s.temperature);
+            _waves.Restore(Level, s.waveNumber, s.turnNumber);
+
+            foreach (SavedUnit u in s.allies)
+            {
+                UnitData data = Stage.FindUnit(u.unitId);
+                if (data == null || !_grid.IsAllySlotFree(u.lane)) continue;
+                UnitBase unit = _factory.Spawn(data, u.lane, data.maxHp);
+                unit.SetHp(u.hp);
+                _grid.Place(unit, u.lane);
+            }
+            foreach (SavedUnit u in s.enemies)
+            {
+                UnitData data = Stage.FindUnit(u.unitId);
+                if (data == null) continue;
+                if (data is BossData bossData)
+                {
+                    BossUnit boss = _factory.SpawnBoss(bossData, Level.ScaledHp(bossData));
+                    boss.RestoreTurn(s.bossTurn);
+                    boss.SetHp(u.hp);
+                    _grid.PlaceBoss(boss);
+                    break;
+                }
+                UnitBase unit = _factory.Spawn(data, u.lane, Level.ScaledHp(data));
+                unit.SetHp(u.hp);
+                _grid.Place(unit, u.lane);
+            }
+
+            _oxygen.Restore(s.oxygenLeft, s.oxygenAllowance, s.oxygenPenalty);
+            Current = State.Playing;
+            ApplySpeed();
+            _ui.ShowHud();
+            _turns.ResumePlayerTurn();
+            _ui.Announce($"Welcome back, {PlayerName}! Level {LevelNumber}, Wave {s.waveNumber} of {_waves.TotalWaves}, Turn {s.turnNumber}.", UIManager.Good);
+            return true;
+        }
+
+        private void PrepareBoard()
+        {
+            _grid.ClearAll();
+            _lanes.Init(Level);
+            if (Level.allyRoster.Length > 0) _deploy.Select(Level.allyRoster[0]);
+        }
+
+        // ---------------------------------------------------------------- saving
+
+        /// <summary>Saves the board to saved_session. Skipped while a turn is resolving (the last save stands).</summary>
+        public void Autosave()
+        {
+            if (Current != State.Playing && Current != State.Paused) return;
+            if (_turns.IsResolving || _waves.CurrentWave == null) return;
+
+            var s = new SessionSnapshot
+            {
+                playerName = PlayerName,
+                stageId = Stage.stageId,
+                levelNumber = LevelNumber,
+                waveNumber = _waves.WaveNumber,
+                turnNumber = _waves.TurnInWave,
+                oxygenLeft = _oxygen.Current,
+                oxygenAllowance = _oxygen.Allowance,
+                oxygenPenalty = _oxygen.Penalty,
+                temperature = _temperature.Current,
+                bossTurn = _grid.Boss != null ? _grid.Boss.BossTurn : 0,
+            };
+            foreach (UnitBase a in _grid.Allies)
+                if (!a.IsDead) s.allies.Add(new SavedUnit { lane = a.Lane, unitId = a.Data.unitId, hp = a.Hp, maxHp = a.MaxHp });
+            foreach (UnitBase e in _grid.Enemies)
+                if (!e.IsDead) s.enemies.Add(new SavedUnit { lane = e.Lane, unitId = e.Data.unitId, hp = e.Hp, maxHp = e.MaxHp });
+            LastSaveOk = _database.SaveSession(s);
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused) Autosave();
+        }
+
+        private void OnApplicationQuit() => Autosave();
+
+        // ---------------------------------------------------------------- end of level
 
         public void EndLevel(bool won)
         {
             if (Current != State.Playing) return;
             Current = State.Ended;
+            Time.timeScale = 1f;
             _grid.SetDeployHighlights(false);
             int waves = won ? _waves.TotalWaves : _waves.WavesCleared;
+            _database.DeleteSession(PlayerName);
+            _database.RecordAttempt(PlayerName, Stage.stageId, LevelNumber, won, _temperature.Current);
             GameResult record = _database.Insert(PlayerName, won, _temperature.Current, waves);
-            _ui.ShowEnd(won, record, _level.lossThreshold);
+            _ui.ShowEnd(won, record, Level.lossThreshold, HasNextLevel && won);
         }
 
-        public void Restart() => StartLevel(PlayerName);
-
-        public void BackToMenu()
+        public void Restart()
         {
-            _grid.ClearAll();
-            Current = State.Menu;
-            _ui.ShowLogin();
+            Time.timeScale = 1f;
+            _database.DeleteSession(PlayerName);
+            StartLevel(LevelNumber);
+        }
+
+        public void NextLevel()
+        {
+            if (!HasNextLevel) { ToLevelSelect(); return; }
+            StartLevel(LevelNumber + 1);
+        }
+
+        // ---------------------------------------------------------------- pause and leaving
+
+        public void Pause()
+        {
+            if (Current != State.Playing) return;
+            Current = State.Paused;
+            Time.timeScale = 0f;
+            Autosave();
+            _ui.ShowPause(true);
+        }
+
+        public void Resume()
+        {
+            if (Current != State.Paused) return;
+            Current = State.Playing;
+            ApplySpeed();
+            _ui.ShowPause(false);
+        }
+
+        /// <summary>Back to the Main Menu title. The game is saved first, so Continue can resume it.</summary>
+        public void ToMainMenu()
+        {
+            Autosave();
+            GameSession.OpenLevelSelect = false;
+            LoadMenu();
+        }
+
+        /// <summary>Back to the Baguio level path.</summary>
+        public void ToLevelSelect()
+        {
+            Autosave();
+            GameSession.OpenLevelSelect = true;
+            LoadMenu();
+        }
+
+        private void LoadMenu()
+        {
+            Time.timeScale = 1f;
+            GameSession.PlayerName = PlayerName;
+            GameSession.Stage = Stage;
+            GameSession.LevelNumber = LevelNumber;
+            SceneManager.LoadScene(GameSession.MenuScene);
+        }
+
+        public void ApplySpeed()
+        {
+            if (Current == State.Playing) Time.timeScale = SettingsStore.BattleSpeed;
         }
 
         private void OnTemperatureChanged(float value)

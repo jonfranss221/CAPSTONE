@@ -15,11 +15,13 @@ MonoBehaviour:
   unitId: E05
   displayName: Plastic Golem
   faction: 1
+  isElite: 0
   opCost: 0
   maxHp: 24
   damage: 4
   card: {fileID: 21300000, guid: 541b76c280893fc498714693f3496648, type: 3}
   idlePose: {fileID: 21300000, guid: 71e20d3886f2ce747a651417b8b322ab, type: 3}
   animator: {fileID: 9100000, guid: 751a0f20fa8a51249a6a9034e962d1b1, type: 2}
+  tint: {r: 1, g: 1, b: 1, a: 1}
   hitDelay: 0.42857143
   attackDuration: 0.85714287

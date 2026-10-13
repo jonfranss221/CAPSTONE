@@ -17,6 +17,7 @@ namespace ThermoTactics
         public WaveData CurrentWave => _level != null && WaveIndex >= 0 && WaveIndex < _level.waves.Length ? _level.waves[WaveIndex] : null;
         public bool HasNextWave => _level != null && WaveIndex + 1 < _level.waves.Length;
         public bool IsCurrentWaveCleared => _grid.EnemyCount == 0;
+        public bool IsBossWave => CurrentWave != null && CurrentWave.HasBoss;
 
         /// <summary>Number of waves fully cleared so far.</summary>
         public int WavesCleared => Mathf.Clamp(IsCurrentWaveCleared ? WaveIndex + 1 : WaveIndex, 0, TotalWaves);
@@ -28,7 +29,7 @@ namespace ThermoTactics
             TurnInWave = 0;
         }
 
-        /// <summary>Spawns the next wave into random free enemy slots.</summary>
+        /// <summary>Spawns the next wave into random free enemy slots (a boss takes all of them).</summary>
         public void SpawnNextWave()
         {
             if (!HasNextWave) return;
@@ -38,13 +39,26 @@ namespace ThermoTactics
             var free = _grid.FreeEnemyLanes();
             foreach (UnitData enemy in CurrentWave.enemies)
             {
-                if (enemy == null || free.Count == 0) continue;
+                if (enemy == null) continue;
+                if (enemy is BossData boss)
+                {
+                    _grid.PlaceBoss(_factory.SpawnBoss(boss, _level.ScaledHp(boss)));
+                    break;   // a boss wave is the boss alone
+                }
+                if (free.Count == 0) continue;
                 int pick = Random.Range(0, free.Count);
                 int lane = free[pick];
                 free.RemoveAt(pick);
-                int hp = Mathf.Max(1, Mathf.RoundToInt(enemy.maxHp * _level.enemyHpScale));
-                _grid.Place(_factory.Spawn(enemy, lane, hp), lane);
+                _grid.Place(_factory.Spawn(enemy, lane, _level.ScaledHp(enemy)), lane);
             }
+        }
+
+        /// <summary>Puts the wave counters back from a saved game (units are restored by GameManager).</summary>
+        public void Restore(LevelData level, int waveNumber, int turnInWave)
+        {
+            _level = level;
+            WaveIndex = Mathf.Clamp(waveNumber - 1, 0, Mathf.Max(0, level.waves.Length - 1));
+            TurnInWave = Mathf.Max(1, turnInWave);
         }
 
         public void AdvanceTurn() => TurnInWave++;

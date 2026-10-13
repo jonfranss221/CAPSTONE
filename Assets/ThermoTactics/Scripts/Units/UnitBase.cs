@@ -18,6 +18,12 @@ namespace ThermoTactics
         public Faction Faction => Data != null ? Data.faction : Faction.Ally;
         public int Damage => Data != null ? Data.damage : 0;
 
+        /// <summary>Raised after this unit takes damage (the boss panel listens to it).</summary>
+        public event Action<UnitBase> Damaged;
+
+        protected Animator Anim => _animator;
+        protected SpriteRenderer Body => _body;
+
         private SpriteRenderer _body;
         private Animator _animator;
         private Transform _hpFill;
@@ -36,6 +42,14 @@ namespace ThermoTactics
             UpdateHealthBar();
         }
 
+        /// <summary>Restores HP from a saved game (never above max, at least 1).</summary>
+        public void SetHp(int hp)
+        {
+            Hp = Mathf.Clamp(hp, 1, MaxHp);
+            UpdateHealthBar();
+            OnHpChanged();
+        }
+
         /// <summary>Plays the attack animation and calls onHit on the frame the blow lands.</summary>
         public IEnumerator AttackRoutine(Action onHit)
         {
@@ -52,8 +66,13 @@ namespace ThermoTactics
             Hp = Mathf.Max(0, Hp - Mathf.Max(0, amount));
             UpdateHealthBar();
             if (_animator != null) _animator.SetTrigger(HurtTrigger);
+            OnHpChanged();
+            Damaged?.Invoke(this);
             if (IsDead) StartCoroutine(DieRoutine());
         }
+
+        /// <summary>Called whenever HP changes (the boss uses it to enrage).</summary>
+        protected virtual void OnHpChanged() { }
 
         private IEnumerator DieRoutine()
         {

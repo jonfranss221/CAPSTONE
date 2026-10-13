@@ -26,6 +26,13 @@ namespace ThermoTactics
             Changed?.Invoke(Current);
         }
 
+        /// <summary>Puts back the temperature of a saved game.</summary>
+        public void Restore(float value)
+        {
+            Current = Mathf.Round(Mathf.Max(Baseline, value) * 100f) / 100f;
+            Changed?.Invoke(Current);
+        }
+
         /// <summary>Adds (or removes, if negative) degrees. Never drops below the starting temperature.</summary>
         public void Add(float delta)
         {

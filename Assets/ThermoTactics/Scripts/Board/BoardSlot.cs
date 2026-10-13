@@ -14,6 +14,8 @@ namespace ThermoTactics
         [SerializeField] private int _lane;
         [SerializeField] private bool _isEnemySide;
         [SerializeField] private SpriteRenderer _highlight;
+        [Tooltip("Red ring on lanes the boss will hit next.")]
+        [SerializeField] private SpriteRenderer _danger;
 
         private bool _deployable;
         private bool _hovered;
@@ -36,6 +38,12 @@ namespace ThermoTactics
             RefreshVisual();
         }
 
+        /// <summary>Shows the red warning ring (lanes the boss is about to hit).</summary>
+        public void SetDanger(bool danger)
+        {
+            if (_danger != null) _danger.enabled = danger;
+        }
+
         public void OnPointerClick(PointerEventData eventData)
         {
             if (_isEnemySide || DeploySystem.Instance == null) return;
@@ -49,8 +57,9 @@ namespace ThermoTactics
         {
             if (_highlight == null) return;
             _highlight.enabled = _deployable;
-            Color c = _highlight.color;
-            c.a = _hovered ? 1f : 0.65f;
+            // High-contrast setting: solid yellow rings instead of the soft green.
+            Color c = SettingsStore.HighContrast ? new Color(1f, 0.92f, 0.2f) : Color.white;
+            c.a = _hovered ? 1f : (SettingsStore.HighContrast ? 0.95f : 0.65f);
             _highlight.color = c;
         }
     }

@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d66d217c02e4d94080a7888cfbf46f7, type: 3}
+  m_Name: B01_ClearcutBehemoth
+  m_EditorClassIdentifier: 
+  unitId: B01
+  displayName: Clearcut Behemoth
+  faction: 1
+  isElite: 0
+  opCost: 0
+  maxHp: 300
+  damage: 8
+  card: {fileID: 21300000, guid: 1cfd64e23a42a2d4881d94277024e235, type: 3}
+  idlePose: {fileID: 21300000, guid: 11a82730796cf6e4c82009643ab5a73c, type: 3}
+  animator: {fileID: 9100000, guid: 3cde91d72fb076d4cab0824b20aacd68, type: 2}
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  hitDelay: 0.42857143
+  attackDuration: 0.85714287
+  enragedCleaveDamage: 10
+  slamDamage: 7
+  slamEvery: 3
+  enragedSlamEvery: 2
+  enrageAtFraction: 0.4
+  cleaveRadius: 1
+  boardAnchor: {x: 4.5, y: 3}
+  worldScale: 1.25
+  description: 'Stage 1 boss: felled pine logs, landslide mud and stone, with a chainsaw
+    arm (Cleave) and a boulder fist (Landslide Slam).'

@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db51ff0f90298bc408ae1fa7eee8ed4e, type: 3}
+  m_Name: Baguio_Level7
+  m_EditorClassIdentifier: 
+  levelName: "Stage 1 \xB7 Baguio \u2014 Strawberry Farm"
+  stageId: 1
+  levelNumber: 7
+  locationName: Strawberry Farm
+  pathCaption: La Trinidad
+  subtitle: Strawberry fields of La Trinidad
+  note: 'New enemy: Deforestation Beast, the boss in miniature.'
+  threat: 6
+  isEliteSpike: 0
+  isBossLevel: 0
+  startingTemperature: 1
+  lossThreshold: 1.5
+  heatPerUndefendedHit: 0.1
+  coolingPerEmptyLaneAttack: 0.05
+  opPenaltyByTurn: 000000000000000001000000020000000400000008000000
+  allyRoster:
+  - {fileID: 11400000, guid: d07420e94e36cf945a3070da84b6a99f, type: 2}
+  - {fileID: 11400000, guid: 01bf9aa96ff063e4f8abe59701e37041, type: 2}
+  - {fileID: 11400000, guid: b893954e3ef0aec4a87f762a80e4b363, type: 2}
+  - {fileID: 11400000, guid: 108d88f5195330140aa2174262348b44, type: 2}
+  - {fileID: 11400000, guid: dd27d304e2f554d45817b81a4f00b7d8, type: 2}
+  waves:
+  - {fileID: 11400000, guid: 281188e02c74f6a44b674a787b137b1d, type: 2}
+  - {fileID: 11400000, guid: 5924585569dba794d89ba466f60cd811, type: 2}
+  - {fileID: 11400000, guid: 22d1befa140935a4280defe32ff9b6d6, type: 2}
+  enemyHpScale: 0.85

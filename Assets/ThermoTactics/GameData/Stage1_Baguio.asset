@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa2f8801f8899a84bb583a75d2930907, type: 3}
+  m_Name: Stage1_Baguio
+  m_EditorClassIdentifier: 
+  stageId: 1
+  stageName: Baguio Forest
+  region: "Cordillera mountains \xB7 pine forest, fog, Kennon Road"
+  threats: illegal logging, mining, smog
+  difficulty: Easy
+  thumbnail: {fileID: 21300000, guid: b21c2898ca0e3374a8b25bb1bfda0723, type: 3}
+  levels:
+  - {fileID: 11400000, guid: 05e0f44d30d9b0f48b92d8d296cebbb2, type: 2}
+  - {fileID: 11400000, guid: 3131fbd7aabdffe4fb8de49a10901ede, type: 2}
+  - {fileID: 11400000, guid: f25a23d5db55baf4fb45d934a403fae4, type: 2}
+  - {fileID: 11400000, guid: 59fa7685cabaa7d43ab26a550c64432d, type: 2}
+  - {fileID: 11400000, guid: 3ec2ce9bc0dd94745a5fb34c5e4c2069, type: 2}
+  - {fileID: 11400000, guid: 0e3296a5792fdc44eb08200043e6a807, type: 2}
+  - {fileID: 11400000, guid: 13e5c364b8bf0054dbff39fcfd638061, type: 2}
+  - {fileID: 11400000, guid: 9f34d53d9e0111e4e84f12f031a903b3, type: 2}
+  - {fileID: 11400000, guid: e241487d79f8c3040a4d11fbc557e224, type: 2}
+  - {fileID: 11400000, guid: ba7c69ea203878a4d9ccca6517897d8d, type: 2}
+  unitCatalog:
+  - {fileID: 11400000, guid: d07420e94e36cf945a3070da84b6a99f, type: 2}
+  - {fileID: 11400000, guid: 01bf9aa96ff063e4f8abe59701e37041, type: 2}
+  - {fileID: 11400000, guid: b893954e3ef0aec4a87f762a80e4b363, type: 2}
+  - {fileID: 11400000, guid: 108d88f5195330140aa2174262348b44, type: 2}
+  - {fileID: 11400000, guid: dd27d304e2f554d45817b81a4f00b7d8, type: 2}
+  - {fileID: 11400000, guid: 85ac162b48f140f4d860110d22c1c98d, type: 2}
+  - {fileID: 11400000, guid: 2d22fb25643c24347944282f9e39e8bf, type: 2}
+  - {fileID: 11400000, guid: 372d5d658989902469eeb2df19db1d0e, type: 2}
+  - {fileID: 11400000, guid: 7e35330c8581c2a48ba97f817444804b, type: 2}
+  - {fileID: 11400000, guid: be008af037d4a5c41b23dfddd1666e3e, type: 2}
+  - {fileID: 11400000, guid: 6b91d168e5459f14090b180680f51759, type: 2}
+  - {fileID: 11400000, guid: baa611eaa317a3d46b19edc36b413171, type: 2}
+  - {fileID: 11400000, guid: a7e9b185c2e16e24e8afe8dd5cd44a8c, type: 2}
+  - {fileID: 11400000, guid: 4efe22e3496e17440bad1e19dea91515, type: 2}
+  - {fileID: 11400000, guid: 7bc1ee9faab23344e94eda8c38b80522, type: 2}
+  - {fileID: 11400000, guid: 970798797028bb345bbe82014634dd9f, type: 2}
+  - {fileID: 11400000, guid: 7e4574e2ed7fbda4590d3caa8f711d44, type: 2}
+  - {fileID: 11400000, guid: 8633af3ba1b8cfc458a6f078b1434d39, type: 2}
+  - {fileID: 11400000, guid: 13afeb6ec6d14674aa12df7623a0b0a4, type: 2}
+  - {fileID: 11400000, guid: 14ecf08c7be239540ae0e57f736a4760, type: 2}

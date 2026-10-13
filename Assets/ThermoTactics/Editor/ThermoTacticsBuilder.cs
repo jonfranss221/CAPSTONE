@@ -7,22 +7,26 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using static ThermoTactics.EditorTools.UiKit;
 
 namespace ThermoTactics.EditorTools
 {
     /// <summary>
-    /// Builds the playable Baguio level from the art in Assets/ThermoTactics/Art.
-    /// Menu: Thermo-Tactics ▸ Build Baguio Level. Safe to run again after changing art or stats.
+    /// Builds the game from the art in Assets/ThermoTactics/Art:
+    /// sprites → animations → unit, wave, level and stage data → Main Menu scene → Baguio battle scene.
+    /// Menu: Thermo-Tactics ▸ Build Everything. Safe to run again; existing assets keep their IDs.
     /// </summary>
     public static class ThermoTacticsBuilder
     {
-        private const string Root = "Assets/ThermoTactics";
         private const string ArtUnits = Root + "/Art/Units";
+        private const string ArtBosses = Root + "/Art/Bosses";
         private const string ArtEnv = Root + "/Art/Environment";
         private const string AnimDir = Root + "/Animations";
         private const string DataDir = Root + "/GameData";
-        private const string ScenePath = Root + "/Scenes/Baguio_Level1.unity";
+        public const string ScenePath = Root + "/Scenes/Baguio_Battle.unity";
+        private const string OldScenePath = Root + "/Scenes/Baguio_Level1.unity";
         private const string TemplateScene = "Assets/Settings/Scenes/URP2DSceneTemplate.unity";
+        public const string StagePath = DataDir + "/Stage1_Baguio.asset";
 
         private struct UnitDef
         {
@@ -31,7 +35,7 @@ namespace ThermoTactics.EditorTools
             { Folder = folder; Id = id; Display = display; Side = side; Cost = cost; Damage = damage; Hp = hp; PivotX = pivotX; }
         }
 
-        // Stats from the capstone overview (Section 10). Pivots keep the feet on the same pixel in every frame.
+        // Stats from the capstone overview (Section 10) and the Stage 1 level plan. Pivots keep the feet on the same pixel in every frame.
         private static readonly UnitDef[] Units =
         {
             new UnitDef("MangroveGuardian",   "A01", "Mangrove Guardian",   Faction.Ally, 3, 4, 20, 0.382f),
@@ -44,17 +48,41 @@ namespace ThermoTactics.EditorTools
             new UnitDef("QuarryColossus",     "E10", "Quarry Colossus",     Faction.Enemy, 0, 7, 22, 0.378f),
             new UnitDef("OilSlick",           "E07", "Oil Slick",           Faction.Enemy, 0, 3, 14, 0.399f),
             new UnitDef("PlasticGolem",       "E05", "Plastic Golem",       Faction.Enemy, 0, 4, 24, 0.347f),
+            new UnitDef("MiningRavager",      "E08", "Mining Ravager",      Faction.Enemy, 0, 6, 18, 0.389f),
+            new UnitDef("SmogWraith",         "E03", "Smog Wraith",         Faction.Enemy, 0, 5, 12, 0.368f),
+            new UnitDef("DeforestationBeast", "E04", "Deforestation Beast", Faction.Enemy, 0, 7, 20, 0.385f),
         };
         private const float PivotY = 0.042f;
 
-        [MenuItem("Thermo-Tactics/Build Baguio Level")]
+        // Elite variants (Level 5 on): base art with a red tint, ×1.5 HP and +1 damage.
+        private static readonly (string id, string display, string baseFolder, int hp, int dmg)[] Elites =
+        {
+            ("EL09", "Chainsaw Logger",       "IllegalLogger",      18, 6),
+            ("EL07", "Crude Oil Slick",       "OilSlick",           21, 4),
+            ("EL05", "Hardened Golem",        "PlasticGolem",       36, 5),
+            ("EL10", "Elite Quarry Colossus", "QuarryColossus",     33, 8),
+            ("EL08", "Elite Ravager",         "MiningRavager",      27, 7),
+            ("EL04", "Elite Beast",           "DeforestationBeast", 30, 8),
+        };
+        private static readonly Color EliteTint = new Color(1f, 0.74f, 0.7f);
+
+        // The Stage 1 boss (art: Art/Bosses/ClearcutBehemoth, 384 × 320 frames).
+        private const string BossFolder = "ClearcutBehemoth";
+        private static readonly Vector2 BossPivot = new Vector2(0.52f, 0.031f);
+
+        [MenuItem("Thermo-Tactics/Build Everything")]
         public static void BuildAll()
         {
             ImportArt();
             var controllers = BuildAnimations();
-            LevelData level = BuildData(controllers);
-            BuildScene(level);
-            Debug.Log("[Thermo-Tactics] Baguio level built: " + ScenePath);
+            StageData stage = BuildData(controllers);
+            MenuSceneBuilder.Build(stage);
+            BuildScene(stage);
+            SetBuildScenes();
+            if (string.IsNullOrEmpty(PlayerSettings.bundleVersion) || PlayerSettings.bundleVersion == "0.1" || PlayerSettings.bundleVersion == "1.0")
+                PlayerSettings.bundleVersion = "0.2.0";
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Thermo-Tactics] Built: Main Menu, Baguio battle scene, Levels 1–10 and the boss.");
         }
 
         // =====================================================================
@@ -71,16 +99,18 @@ namespace ThermoTactics.EditorTools
                     string path = AssetDatabase.GUIDToAssetPath(guid);
                     var importer = AssetImporter.GetAtPath(path) as TextureImporter;
                     if (importer == null) continue;
-
                     string file = Path.GetFileNameWithoutExtension(path);
+                    bool ui = path.StartsWith(ArtUI);
+                    bool smooth = ui && file.StartsWith("icon_");
+
                     importer.textureType = TextureImporterType.Sprite;
                     importer.spriteImportMode = SpriteImportMode.Single;
-                    importer.filterMode = FilterMode.Point;
+                    importer.filterMode = smooth ? FilterMode.Bilinear : FilterMode.Point;
                     importer.textureCompression = TextureImporterCompression.Uncompressed;
                     importer.mipmapEnabled = false;
                     importer.alphaIsTransparency = true;
-                    importer.wrapMode = TextureWrapMode.Clamp;
-                    importer.spritePixelsPerUnit = file == "fog_drift_tileable" ? 32 : file == "pixel" ? 4 : 64;
+                    importer.wrapMode = file == "weave_tile" ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
+                    importer.spritePixelsPerUnit = ui ? 100 : file == "fog_drift_tileable" ? 32 : file == "pixel" ? 4 : 64;
 
                     var settings = new TextureImporterSettings();
                     importer.ReadTextureSettings(settings);
@@ -88,6 +118,8 @@ namespace ThermoTactics.EditorTools
                     settings.spriteAlignment = (int)SpriteAlignment.Custom;
                     settings.spritePivot = PivotFor(path, file);
                     importer.SetTextureSettings(settings);
+                    importer.spriteBorder = file == "ui_frame3" || file == "ui_frame_dashed" ? new Vector4(3, 3, 3, 3)
+                                          : file == "ui_frame2" ? new Vector4(2, 2, 2, 2) : Vector4.zero;
                     importer.SaveAndReimport();
                 }
             }
@@ -101,6 +133,7 @@ namespace ThermoTactics.EditorTools
         private static Vector2 PivotFor(string path, string file)
         {
             if (file == "pixel") return new Vector2(0f, 0.5f);
+            if (path.StartsWith(ArtBosses) && file != "card") return BossPivot;
             if (path.StartsWith(ArtUnits) && file != "card")
                 foreach (var u in Units)
                     if (path.Contains("/" + u.Folder + "/")) return new Vector2(u.PivotX, PivotY);
@@ -108,7 +141,7 @@ namespace ThermoTactics.EditorTools
         }
 
         // =====================================================================
-        // 2. Animation clips + Animator controllers (Idle / Attack / Hurt)
+        // 2. Animation clips + Animator controllers
         // =====================================================================
         [MenuItem("Thermo-Tactics/Steps/2. Build Animations")]
         public static void BuildAnimationsMenu() => BuildAnimations();
@@ -120,13 +153,11 @@ namespace ThermoTactics.EditorTools
             {
                 string dir = $"{AnimDir}/{u.Folder}";
                 EnsureFolder(dir);
-                AnimationClip idle = MakeClip($"{dir}/{u.Folder}_Idle.anim", LoadFrames(u.Folder, "idle", 12), 12f, true);
-                AnimationClip attack = MakeClip($"{dir}/{u.Folder}_Attack.anim", LoadFrames(u.Folder, "attack", 12), 14f, false);
-                AnimationClip hurt = MakeClip($"{dir}/{u.Folder}_Hurt.anim", LoadFrames(u.Folder, "hurt", 8), 16f, false);
+                AnimationClip idle = MakeClip($"{dir}/{u.Folder}_Idle.anim", LoadFrames(ArtUnits, u.Folder, "idle", 12), 12f, true);
+                AnimationClip attack = MakeClip($"{dir}/{u.Folder}_Attack.anim", LoadFrames(ArtUnits, u.Folder, "attack", 12), 14f, false);
+                AnimationClip hurt = MakeClip($"{dir}/{u.Folder}_Hurt.anim", LoadFrames(ArtUnits, u.Folder, "hurt", 8), 16f, false);
 
-                string ctrlPath = $"{dir}/{u.Folder}.controller";
-                AssetDatabase.DeleteAsset(ctrlPath);
-                var ctrl = AnimatorController.CreateAnimatorControllerAtPath(ctrlPath);
+                var ctrl = ResetController($"{dir}/{u.Folder}.controller");
                 ctrl.AddParameter("Attack", AnimatorControllerParameterType.Trigger);
                 ctrl.AddParameter("Hurt", AnimatorControllerParameterType.Trigger);
                 var sm = ctrl.layers[0].stateMachine;
@@ -134,7 +165,6 @@ namespace ThermoTactics.EditorTools
                 var sAtk = sm.AddState("Attack");  sAtk.motion = attack;
                 var sHurt = sm.AddState("Hurt");   sHurt.motion = hurt;
                 sm.defaultState = sIdle;
-
                 AddTrigger(sm.AddAnyStateTransition(sAtk), "Attack");
                 AddTrigger(sm.AddAnyStateTransition(sHurt), "Hurt");
                 foreach (var s in new[] { sAtk, sHurt })
@@ -145,8 +175,63 @@ namespace ThermoTactics.EditorTools
                 EditorUtility.SetDirty(ctrl);
                 result[u.Folder] = ctrl;
             }
+            result[BossFolder] = BuildBossAnimations();
             AssetDatabase.SaveAssets();
             return result;
+        }
+
+        /// <summary>Boss: Idle / Enraged idle (bool "Enraged") / Cleave (trigger "Attack") / Slam / Hurt.</summary>
+        private static AnimatorController BuildBossAnimations()
+        {
+            string dir = $"{AnimDir}/{BossFolder}";
+            EnsureFolder(dir);
+            AnimationClip idle = MakeClip($"{dir}/{BossFolder}_Idle.anim", LoadFrames(ArtBosses, BossFolder, "idle", 12), 12f, true);
+            AnimationClip enraged = MakeClip($"{dir}/{BossFolder}_Enraged.anim", LoadFrames(ArtBosses, BossFolder, "enraged", 12), 15f, true);
+            AnimationClip cleave = MakeClip($"{dir}/{BossFolder}_Cleave.anim", LoadFrames(ArtBosses, BossFolder, "cleave", 12), 14f, false);
+            AnimationClip slam = MakeClip($"{dir}/{BossFolder}_Slam.anim", LoadFrames(ArtBosses, BossFolder, "slam", 12), 14f, false);
+            AnimationClip hurt = MakeClip($"{dir}/{BossFolder}_Hurt.anim", LoadFrames(ArtBosses, BossFolder, "hurt", 8), 16f, false);
+
+            var ctrl = ResetController($"{dir}/{BossFolder}.controller");
+            ctrl.AddParameter("Attack", AnimatorControllerParameterType.Trigger);
+            ctrl.AddParameter("Slam", AnimatorControllerParameterType.Trigger);
+            ctrl.AddParameter("Hurt", AnimatorControllerParameterType.Trigger);
+            ctrl.AddParameter("Enraged", AnimatorControllerParameterType.Bool);
+            var sm = ctrl.layers[0].stateMachine;
+            var sIdle = sm.AddState("Idle"); sIdle.motion = idle;
+            var sRage = sm.AddState("Enraged"); sRage.motion = enraged;
+            var sCleave = sm.AddState("Cleave"); sCleave.motion = cleave;
+            var sSlam = sm.AddState("Slam"); sSlam.motion = slam;
+            var sHurt = sm.AddState("Hurt"); sHurt.motion = hurt;
+            sm.defaultState = sIdle;
+
+            var toRage = sIdle.AddTransition(sRage);
+            toRage.AddCondition(AnimatorConditionMode.If, 0f, "Enraged"); toRage.hasExitTime = false; toRage.duration = 0f;
+            AddTrigger(sm.AddAnyStateTransition(sCleave), "Attack");
+            AddTrigger(sm.AddAnyStateTransition(sSlam), "Slam");
+            AddTrigger(sm.AddAnyStateTransition(sHurt), "Hurt");
+            foreach (var s in new[] { sCleave, sSlam, sHurt })
+            {
+                var calm = s.AddTransition(sIdle);
+                calm.AddCondition(AnimatorConditionMode.IfNot, 0f, "Enraged");
+                calm.hasExitTime = true; calm.exitTime = 1f; calm.duration = 0f;
+                var rage = s.AddTransition(sRage);
+                rage.AddCondition(AnimatorConditionMode.If, 0f, "Enraged");
+                rage.hasExitTime = true; rage.exitTime = 1f; rage.duration = 0f;
+            }
+            EditorUtility.SetDirty(ctrl);
+            return ctrl;
+        }
+
+        /// <summary>Loads the controller and empties it (keeps its asset ID), or creates it.</summary>
+        private static AnimatorController ResetController(string path)
+        {
+            var ctrl = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
+            if (ctrl == null) return AnimatorController.CreateAnimatorControllerAtPath(path);
+            foreach (var p in ctrl.parameters) ctrl.RemoveParameter(p);
+            var sm = ctrl.layers[0].stateMachine;
+            foreach (var t in sm.anyStateTransitions) sm.RemoveAnyStateTransition(t);
+            foreach (var s in sm.states) sm.RemoveState(s.state);
+            return ctrl;
         }
 
         private static void AddTrigger(AnimatorStateTransition t, string trigger)
@@ -155,22 +240,26 @@ namespace ThermoTactics.EditorTools
             t.hasExitTime = false; t.duration = 0f; t.canTransitionToSelf = true;
         }
 
-        private static Sprite[] LoadFrames(string folder, string anim, int count)
+        private static Sprite[] LoadFrames(string root, string folder, string anim, int count)
         {
             var frames = new Sprite[count];
             for (int i = 0; i < count; i++)
             {
-                string p = $"{ArtUnits}/{folder}/{anim}_{i:00}.png";
+                string p = $"{root}/{folder}/{anim}_{i:00}.png";
                 frames[i] = AssetDatabase.LoadAssetAtPath<Sprite>(p);
                 if (frames[i] == null) Debug.LogError("[Thermo-Tactics] Missing sprite " + p);
             }
             return frames;
         }
 
+        /// <summary>Creates the clip, or rewrites an existing one in place so its asset ID stays the same.</summary>
         private static AnimationClip MakeClip(string path, Sprite[] frames, float fps, bool loop)
         {
-            AssetDatabase.DeleteAsset(path);
-            var clip = new AnimationClip { frameRate = fps };
+            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+            bool isNew = clip == null;
+            if (isNew) clip = new AnimationClip();
+            clip.ClearCurves();
+            clip.frameRate = fps;
             var binding = EditorCurveBinding.PPtrCurve("", typeof(SpriteRenderer), "m_Sprite");
             var keys = new ObjectReferenceKeyframe[frames.Length + 1];
             for (int i = 0; i < frames.Length; i++) keys[i] = new ObjectReferenceKeyframe { time = i / fps, value = frames[i] };
@@ -179,27 +268,77 @@ namespace ThermoTactics.EditorTools
             var settings = AnimationUtility.GetAnimationClipSettings(clip);
             settings.loopTime = loop;
             AnimationUtility.SetAnimationClipSettings(clip, settings);
-            AssetDatabase.CreateAsset(clip, path);
+            if (isNew) AssetDatabase.CreateAsset(clip, path); else EditorUtility.SetDirty(clip);
             return clip;
         }
 
         // =====================================================================
-        // 3. ScriptableObject game data
+        // 3. ScriptableObject game data: units, elites, boss, 10 levels, the stage
         // =====================================================================
-        private static LevelData BuildData(Dictionary<string, AnimatorController> controllers)
+        private struct LevelDef
+        {
+            public string Name, Caption, Subtitle, Note; public int Threat; public float Scale; public bool Spike, Boss;
+            public (int op, string[] enemies)[] Waves;
+        }
+
+        // Stage 1 level plan (Part III, Table III-5). Enemy keys: unit folder, "elite:<folder>", or "boss".
+        private static readonly LevelDef[] Levels =
+        {
+            new LevelDef { Name = "Kennon Road", Caption = "Kennon Road", Subtitle = "The zigzag climb into the mountains", Threat = 1, Scale = 0.60f,
+                Note = "Tutorial pace. Learn to deploy, end the turn, and cool empty lanes.",
+                Waves = new[] { (5, new[] { "IllegalLogger", "MethaneCloud" }), (6, new[] { "OilSlick", "MethaneCloud" }), (7, new[] { "IllegalLogger", "OilSlick", "MethaneCloud" }) } },
+            new LevelDef { Name = "Lion's Head", Caption = "Lion's Head", Subtitle = "The guardian of Kennon Road", Threat = 2, Scale = 0.65f,
+                Note = "New enemy: Plastic Golem, a slow tank with 24 HP.",
+                Waves = new[] { (5, new[] { "IllegalLogger", "MethaneCloud" }), (7, new[] { "OilSlick", "IllegalLogger", "PlasticGolem" }), (8, new[] { "PlasticGolem", "MethaneCloud", "OilSlick" }) } },
+            new LevelDef { Name = "Camp John Hay", Caption = "Camp John Hay", Subtitle = "Old pine forest", Threat = 3, Scale = 0.75f,
+                Note = "New enemy: Quarry Colossus hits for 7. Put a sturdy unit in its lane.",
+                Waves = new[] { (5, new[] { "IllegalLogger", "MethaneCloud" }), (7, new[] { "OilSlick", "IllegalLogger", "PlasticGolem" }), (10, new[] { "QuarryColossus", "PlasticGolem", "MethaneCloud", "OilSlick" }) } },
+            new LevelDef { Name = "Burnham Park", Caption = "Burnham Park", Subtitle = "The lake in the city centre", Threat = 4, Scale = 0.80f,
+                Note = "Two Quarry Colossi. Geothermal Sentinels (22 HP) hold their lanes best.",
+                Waves = new[] { (6, new[] { "IllegalLogger", "OilSlick", "MethaneCloud" }), (8, new[] { "QuarryColossus", "PlasticGolem", "IllegalLogger" }), (10, new[] { "QuarryColossus", "PlasticGolem", "OilSlick", "MethaneCloud" }) } },
+            new LevelDef { Name = "Session Road", Caption = "Session Road", Subtitle = "The elite invasion", Threat = 7, Scale = 0.85f, Spike = true,
+                Note = "Difficulty spike. Elite variants (+50% HP, +1 damage, red tint) and the new Mining Ravager. A 4th wave is added.",
+                Waves = new[] { (6, new[] { "elite:IllegalLogger", "MethaneCloud", "OilSlick" }), (8, new[] { "MiningRavager", "elite:OilSlick", "IllegalLogger" }),
+                                (10, new[] { "elite:QuarryColossus", "MiningRavager", "PlasticGolem", "MethaneCloud" }), (11, new[] { "elite:PlasticGolem", "MiningRavager", "elite:IllegalLogger", "SmogWraith", "OilSlick" }) } },
+            new LevelDef { Name = "Mines View Park", Caption = "Mines View", Subtitle = "Overlooking the old mines", Threat = 5, Scale = 0.80f,
+                Note = "A breather after Level 5. New enemy: Smog Wraith.",
+                Waves = new[] { (6, new[] { "MiningRavager", "IllegalLogger", "MethaneCloud" }), (8, new[] { "SmogWraith", "PlasticGolem", "OilSlick", "IllegalLogger" }), (10, new[] { "QuarryColossus", "MiningRavager", "SmogWraith", "MethaneCloud" }) } },
+            new LevelDef { Name = "Strawberry Farm", Caption = "La Trinidad", Subtitle = "Strawberry fields of La Trinidad", Threat = 6, Scale = 0.85f,
+                Note = "New enemy: Deforestation Beast, the boss in miniature.",
+                Waves = new[] { (6, new[] { "SmogWraith", "MiningRavager", "OilSlick" }), (8, new[] { "elite:IllegalLogger", "PlasticGolem", "SmogWraith", "MethaneCloud" }), (10, new[] { "DeforestationBeast", "QuarryColossus", "MiningRavager", "OilSlick" }) } },
+            new LevelDef { Name = "Busol Watershed", Caption = "Busol", Subtitle = "The city water source", Threat = 7, Scale = 0.90f,
+                Note = "Four waves with elites mixed in.",
+                Waves = new[] { (7, new[] { "MiningRavager", "SmogWraith", "IllegalLogger", "MethaneCloud" }), (9, new[] { "DeforestationBeast", "elite:OilSlick", "PlasticGolem", "SmogWraith" }),
+                                (11, new[] { "elite:QuarryColossus", "DeforestationBeast", "MiningRavager", "SmogWraith", "OilSlick" }), (11, new[] { "elite:PlasticGolem", "elite:IllegalLogger", "DeforestationBeast", "SmogWraith", "OilSlick" }) } },
+            new LevelDef { Name = "Tam-awan Village", Caption = "Tam-awan", Subtitle = "Artists' village in the hills", Threat = 8, Scale = 0.90f,
+                Note = "Five-enemy waves. The last test before the boss.",
+                Waves = new[] { (7, new[] { "DeforestationBeast", "SmogWraith", "IllegalLogger", "OilSlick" }), (9, new[] { "elite:MiningRavager", "PlasticGolem", "SmogWraith", "MethaneCloud" }),
+                                (10, new[] { "elite:QuarryColossus", "DeforestationBeast", "SmogWraith", "OilSlick", "IllegalLogger" }), (11, new[] { "elite:DeforestationBeast", "elite:PlasticGolem", "MiningRavager", "SmogWraith", "elite:IllegalLogger" }) } },
+            new LevelDef { Name = "Mt. Santo Tomas", Caption = "Mt. Santo Tomas", Subtitle = "The last stand", Threat = 10, Scale = 0.90f, Boss = true,
+                Note = "Climax. Four waves, then Wave 5: the Clearcut Behemoth, a solo boss filling all 6 lanes, with cleave and area attacks.",
+                Waves = new[] { (7, new[] { "MiningRavager", "SmogWraith", "IllegalLogger", "MethaneCloud" }), (9, new[] { "DeforestationBeast", "elite:OilSlick", "PlasticGolem", "SmogWraith" }),
+                                (10, new[] { "elite:QuarryColossus", "DeforestationBeast", "MiningRavager", "OilSlick", "MethaneCloud" }),
+                                (11, new[] { "elite:DeforestationBeast", "elite:MiningRavager", "elite:PlasticGolem", "SmogWraith", "SmogWraith", "OilSlick" }), (8, new[] { "boss" }) } },
+        };
+
+        private static StageData BuildData(Dictionary<string, AnimatorController> controllers)
         {
             EnsureFolder(DataDir + "/Units");
             EnsureFolder(DataDir + "/Waves");
+            EnsureFolder(DataDir + "/Levels");
             var byFolder = new Dictionary<string, UnitData>();
+            var catalog = new List<UnitData>();
             foreach (var u in Units)
             {
                 var data = LoadOrCreate<UnitData>($"{DataDir}/Units/{u.Id}_{u.Folder}.asset");
                 data.unitId = u.Id;
                 data.displayName = u.Display;
                 data.faction = u.Side;
+                data.isElite = false;
                 data.opCost = u.Cost;
                 data.damage = u.Damage;
                 data.maxHp = u.Hp;
+                data.tint = Color.white;
                 data.card = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtUnits}/{u.Folder}/card.png");
                 data.idlePose = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtUnits}/{u.Folder}/idle_00.png");
                 data.animator = controllers[u.Folder];
@@ -207,35 +346,103 @@ namespace ThermoTactics.EditorTools
                 data.attackDuration = 12f / 14f;
                 EditorUtility.SetDirty(data);
                 byFolder[u.Folder] = data;
+                catalog.Add(data);
             }
 
-            WaveData W(int n, int op, params string[] enemies)
+            var elites = new Dictionary<string, UnitData>();
+            foreach (var e in Elites)
             {
-                var w = LoadOrCreate<WaveData>($"{DataDir}/Waves/Baguio_Wave{n}.asset");
-                w.waveNumber = n; w.opAllowance = op;
-                w.enemies = System.Array.ConvertAll(enemies, e => byFolder[e]);
-                EditorUtility.SetDirty(w);
-                return w;
+                UnitData src = byFolder[e.baseFolder];
+                var data = LoadOrCreate<UnitData>($"{DataDir}/Units/{e.id}_{e.display.Replace(" ", "")}.asset");
+                data.unitId = e.id; data.displayName = e.display; data.faction = Faction.Enemy; data.isElite = true;
+                data.opCost = 0; data.maxHp = e.hp; data.damage = e.dmg; data.tint = EliteTint;
+                data.card = src.card; data.idlePose = src.idlePose; data.animator = src.animator;
+                data.hitDelay = src.hitDelay; data.attackDuration = src.attackDuration;
+                EditorUtility.SetDirty(data);
+                elites[e.baseFolder] = data;
+                catalog.Add(data);
             }
 
-            var level = LoadOrCreate<LevelData>($"{DataDir}/Baguio_Level1.asset");
-            level.levelName = "Stage 1 · Baguio — Kennon Road";
-            level.startingTemperature = 1.0f;
-            level.lossThreshold = 1.5f;
-            level.heatPerUndefendedHit = 0.10f;
-            level.coolingPerEmptyLaneAttack = 0.05f;
-            level.opPenaltyByTurn = new[] { 0, 0, 1, 2, 4, 8 };
-            level.enemyHpScale = 0.75f;
-            level.allyRoster = new[] { byFolder["MangroveGuardian"], byFolder["CoralDefender"], byFolder["WindCaller"], byFolder["GeothermalSentinel"], byFolder["ReefSentinel"] };
-            level.waves = new[]
+            var boss = LoadOrCreate<BossData>($"{DataDir}/Units/B01_ClearcutBehemoth.asset");
+            boss.unitId = "B01"; boss.displayName = "Clearcut Behemoth"; boss.faction = Faction.Enemy;
+            boss.opCost = 0; boss.maxHp = 300; boss.damage = 8;
+            boss.enragedCleaveDamage = 10; boss.slamDamage = 7; boss.slamEvery = 3; boss.enragedSlamEvery = 2;
+            boss.enrageAtFraction = 0.4f; boss.cleaveRadius = 1;
+            boss.boardAnchor = new Vector2(4.5f, 3.0f); boss.worldScale = 1.25f; boss.tint = Color.white;
+            boss.card = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtBosses}/{BossFolder}/card.png");
+            boss.idlePose = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtBosses}/{BossFolder}/idle_00.png");
+            boss.animator = controllers[BossFolder];
+            boss.hitDelay = 6f / 14f; boss.attackDuration = 12f / 14f;
+            boss.description = "Stage 1 boss: felled pine logs, landslide mud and stone, with a chainsaw arm (Cleave) and a boulder fist (Landslide Slam).";
+            EditorUtility.SetDirty(boss);
+            catalog.Add(boss);
+
+            UnitData Enemy(string key)
             {
-                W(1, 5, "IllegalLogger", "MethaneCloud"),
-                W(2, 7, "OilSlick", "IllegalLogger", "PlasticGolem"),
-                W(3, 10, "QuarryColossus", "PlasticGolem", "MethaneCloud", "OilSlick"),
-            };
-            EditorUtility.SetDirty(level);
+                if (key == "boss") return boss;
+                if (key.StartsWith("elite:")) return elites[key.Substring(6)];
+                return byFolder[key];
+            }
+
+            // Level 1 keeps its original asset IDs (Baguio_Wave1–3 become Baguio_L1_Wave1–3).
+            for (int w = 1; w <= 3; w++)
+                MoveIfExists($"{DataDir}/Waves/Baguio_Wave{w}.asset", $"{DataDir}/Waves/Baguio_L1_Wave{w}.asset");
+            MoveIfExists($"{DataDir}/Baguio_Level1.asset", $"{DataDir}/Levels/Baguio_Level1.asset");
+
+            UnitData[] roster = { byFolder["MangroveGuardian"], byFolder["CoralDefender"], byFolder["WindCaller"], byFolder["GeothermalSentinel"], byFolder["ReefSentinel"] };
+            var levels = new LevelData[Levels.Length];
+            for (int i = 0; i < Levels.Length; i++)
+            {
+                LevelDef d = Levels[i];
+                int n = i + 1;
+                var waves = new WaveData[d.Waves.Length];
+                for (int w = 0; w < d.Waves.Length; w++)
+                {
+                    var wave = LoadOrCreate<WaveData>($"{DataDir}/Waves/Baguio_L{n}_Wave{w + 1}.asset");
+                    wave.waveNumber = w + 1;
+                    wave.opAllowance = d.Waves[w].op;
+                    wave.enemies = System.Array.ConvertAll(d.Waves[w].enemies, Enemy);
+                    wave.ignorePenalty = wave.HasBoss;
+                    EditorUtility.SetDirty(wave);
+                    waves[w] = wave;
+                }
+                var level = LoadOrCreate<LevelData>($"{DataDir}/Levels/Baguio_Level{n}.asset");
+                level.levelName = $"Stage 1 · Baguio — {d.Name}";
+                level.stageId = 1; level.levelNumber = n;
+                level.locationName = d.Name; level.pathCaption = d.Caption; level.subtitle = d.Subtitle; level.note = d.Note;
+                level.threat = d.Threat; level.isEliteSpike = d.Spike; level.isBossLevel = d.Boss;
+                level.startingTemperature = 1.0f;
+                level.lossThreshold = 1.5f;
+                level.heatPerUndefendedHit = 0.10f;
+                level.coolingPerEmptyLaneAttack = 0.05f;
+                level.opPenaltyByTurn = new[] { 0, 0, 1, 2, 4, 8 };
+                level.enemyHpScale = d.Scale;
+                level.allyRoster = roster;
+                level.waves = waves;
+                EditorUtility.SetDirty(level);
+                levels[i] = level;
+            }
+
+            var stage = LoadOrCreate<StageData>(StagePath);
+            stage.stageId = 1;
+            stage.stageName = "Baguio Forest";
+            stage.region = "Cordillera mountains · pine forest, fog, Kennon Road";
+            stage.threats = "illegal logging, mining, smog";
+            stage.difficulty = "Easy";
+            stage.thumbnail = Ui("stage1_thumb");
+            stage.levels = levels;
+            stage.unitCatalog = catalog.ToArray();
+            EditorUtility.SetDirty(stage);
             AssetDatabase.SaveAssets();
-            return level;
+            return AssetDatabase.LoadAssetAtPath<StageData>(StagePath);
+        }
+
+        private static void MoveIfExists(string from, string to)
+        {
+            if (AssetDatabase.LoadAssetAtPath<Object>(from) == null || AssetDatabase.LoadAssetAtPath<Object>(to) != null) return;
+            EnsureFolder(Path.GetDirectoryName(to).Replace('\\', '/'));
+            string err = AssetDatabase.MoveAsset(from, to);
+            if (!string.IsNullOrEmpty(err)) Debug.LogWarning("[Thermo-Tactics] " + err);
         }
 
         private static T LoadOrCreate<T>(string path) where T : ScriptableObject
@@ -248,26 +455,25 @@ namespace ThermoTactics.EditorTools
         }
 
         // =====================================================================
-        // 4. Scene
+        // 4. Battle scene (plays every Baguio level; the level comes from GameSession)
         // =====================================================================
-        private static Font _font;
-
-        private static void BuildScene(LevelData level)
+        private static void BuildScene(StageData stage)
         {
             EnsureFolder(Root + "/Scenes");
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(OldScenePath) != null) AssetDatabase.DeleteAsset(OldScenePath);
             AssetDatabase.DeleteAsset(ScenePath);
             var scene = AssetDatabase.CopyAsset(TemplateScene, ScenePath)
                 ? EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single)
                 : EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            LoadFonts();
 
-            // ---- camera ----
+            // ---- camera: the 21 × 9 board fills the space between the HUD header (84 px) and footer (87 px) ----
             Camera cam = Camera.main != null ? Camera.main : new GameObject("Main Camera", typeof(Camera)).GetComponent<Camera>();
             cam.tag = "MainCamera";
             cam.orthographic = true;
-            cam.orthographicSize = 4.5f;
-            cam.transform.position = new Vector3(0f, 0f, -10f);
-            cam.backgroundColor = new Color(0.16f, 0.18f, 0.22f);
+            cam.orthographicSize = 4.5f * 720f / 549f;
+            cam.transform.position = new Vector3(0f, -0.02f, -10f);
+            cam.backgroundColor = Night;
             cam.clearFlags = CameraClearFlags.SolidColor;
             if (cam.GetComponent<Physics2DRaycaster>() == null) cam.gameObject.AddComponent<Physics2DRaycaster>();
 
@@ -310,37 +516,51 @@ namespace ThermoTactics.EditorTools
             var db = sys.AddComponent<ResultsDatabase>();
 
             // ---- UI ----
-            var ui = BuildUI(out var refs);
-            var uiManager = ui.AddComponent<UIManager>();
+            var refs = new Dictionary<string, Object>();
+            var cards = new List<DeployCard>();
+            Canvas canvas = BuildBattleUI(refs, cards);
+            var ui = canvas.gameObject.AddComponent<UIManager>();
 
             // ---- wiring ----
-            // Reload by path: the instance returned while assets were being created can go stale.
-            level = AssetDatabase.LoadAssetAtPath<LevelData>($"{DataDir}/Baguio_Level1.asset");
-            Ref(gm, "_level", level); Ref(gm, "_turns", turns); Ref(gm, "_waves", waves); Ref(gm, "_oxygen", oxygen);
+            stage = AssetDatabase.LoadAssetAtPath<StageData>(StagePath);   // reload: a stale instance would serialize as null
+            Ref(gm, "_defaultStage", stage); Ref(gm, "_turns", turns); Ref(gm, "_waves", waves); Ref(gm, "_oxygen", oxygen);
             Ref(gm, "_temperature", temp); Ref(gm, "_grid", grid); Ref(gm, "_lanes", lanes); Ref(gm, "_deploy", deploy);
-            Ref(gm, "_database", db); Ref(gm, "_ui", uiManager); Ref(gm, "_fog", fog);
+            Ref(gm, "_factory", factory); Ref(gm, "_database", db); Ref(gm, "_ui", ui); Ref(gm, "_fog", fog);
             Ref(turns, "_grid", grid); Ref(turns, "_waves", waves); Ref(turns, "_oxygen", oxygen);
-            Ref(turns, "_temperature", temp); Ref(turns, "_lanes", lanes); Ref(turns, "_ui", uiManager);
+            Ref(turns, "_temperature", temp); Ref(turns, "_lanes", lanes); Ref(turns, "_ui", ui);
             Ref(waves, "_grid", grid); Ref(waves, "_factory", factory);
             RefArray(grid, "_allySlots", allySlots); RefArray(grid, "_enemySlots", enemySlots);
-            Ref(lanes, "_temperature", temp); Ref(lanes, "_ui", uiManager);
-            Ref(deploy, "_grid", grid); Ref(deploy, "_oxygen", oxygen); Ref(deploy, "_factory", factory); Ref(deploy, "_ui", uiManager);
+            Ref(lanes, "_temperature", temp); Ref(lanes, "_ui", ui);
+            Ref(deploy, "_grid", grid); Ref(deploy, "_oxygen", oxygen); Ref(deploy, "_factory", factory); Ref(deploy, "_ui", ui);
             Ref(factory, "_shadowSprite", Sprite(ArtEnv + "/unit_shadow.png")); Ref(factory, "_pixelSprite", Sprite(ArtEnv + "/pixel.png"));
 
-            foreach (var kv in refs) Ref(uiManager, kv.Key, kv.Value);
-            RefArray(uiManager, "_cards", refs_cards.ToArray());
-            Ref(uiManager, "_temperature", temp); Ref(uiManager, "_oxygen", oxygen); Ref(uiManager, "_waves", waves);
-            Ref(uiManager, "_deploy", deploy); Ref(uiManager, "_turns", turns); Ref(uiManager, "_database", db); Ref(uiManager, "_font", _font);
+            foreach (var kv in refs) Ref(ui, kv.Key, kv.Value);
+            RefArray(ui, "_cards", cards.ToArray());
+            Ref(ui, "_temperature", temp); Ref(ui, "_oxygen", oxygen); Ref(ui, "_waves", waves); Ref(ui, "_grid", grid);
+            Ref(ui, "_deploy", deploy); Ref(ui, "_turns", turns); Ref(ui, "_database", db); Ref(ui, "_font", BodyBold);
 
-            // ---- event system (new Input System module) ----
-            var es = new GameObject("EventSystem", typeof(EventSystem));
-            es.AddComponent<InputSystemUIInputModule>();
-
+            NewEventSystem();
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
+        }
 
-            var list = new List<EditorBuildSettingsScene> { new EditorBuildSettingsScene(ScenePath, true) };
-            foreach (var s in EditorBuildSettings.scenes) if (s.path != ScenePath) list.Add(s);
+        public static void NewEventSystem()
+        {
+            var es = new GameObject("EventSystem", typeof(EventSystem));
+            es.AddComponent<InputSystemUIInputModule>();
+        }
+
+        /// <summary>Main Menu first (build index 0), then the battle scene.</summary>
+        private static void SetBuildScenes()
+        {
+            var list = new List<EditorBuildSettingsScene>
+            {
+                new EditorBuildSettingsScene(MenuSceneBuilder.ScenePath, true),
+                new EditorBuildSettingsScene(ScenePath, true),
+            };
+            foreach (var s in EditorBuildSettings.scenes)
+                if (s.path != ScenePath && s.path != MenuSceneBuilder.ScenePath && s.path != OldScenePath)
+                    list.Add(new EditorBuildSettingsScene(s.path, false));
             EditorBuildSettings.scenes = list.ToArray();
         }
 
@@ -352,287 +572,169 @@ namespace ThermoTactics.EditorTools
             var hl = NewSprite("DeployHighlight", marker.transform, Sprite(ArtEnv + "/slot_highlight_deploy.png"), -499);
             hl.transform.localPosition = Vector3.zero;
             hl.enabled = false;
+            var danger = NewSprite("BossWarning", marker.transform, Sprite(ArtEnv + "/slot_highlight_attack.png"), -498);
+            danger.transform.localPosition = Vector3.zero;
+            danger.color = new Color(1f, 0.35f, 0.28f, 0.95f);
+            danger.enabled = false;
             var col = marker.gameObject.AddComponent<PolygonCollider2D>();
             col.points = new[] { new Vector2(0f, 0.45f), new Vector2(0.9f, 0f), new Vector2(0f, -0.45f), new Vector2(-0.9f, 0f) };
             var slot = marker.gameObject.AddComponent<BoardSlot>();
             slot.Configure(lane, enemy, hl);
-            Ref(slot, "_lane", lane); Ref(slot, "_isEnemySide", enemy); Ref(slot, "_highlight", hl);
+            RefInt(slot, "_lane", lane); RefBool(slot, "_isEnemySide", enemy); Ref(slot, "_highlight", hl); Ref(slot, "_danger", danger);
             return slot;
         }
 
         // =====================================================================
-        // UI construction
+        // Battle UI (design board "Level 10 boss wave", 1280 × 720)
         // =====================================================================
-        private static readonly Color PanelColor = new Color(0.07f, 0.09f, 0.12f, 0.94f);
-        private static readonly Color Dim = new Color(0f, 0f, 0f, 0.6f);
-        private static readonly Color Green = new Color(0.22f, 0.62f, 0.36f);
-        private static readonly Color Blue = new Color(0.2f, 0.42f, 0.7f);
-        private static readonly Color Orange = new Color(0.86f, 0.42f, 0.16f);
-        private static readonly Color Grey = new Color(0.3f, 0.34f, 0.4f);
-        private static List<DeployCard> refs_cards = new List<DeployCard>();
-
-        private static GameObject BuildUI(out Dictionary<string, Object> refs)
+        private static Canvas BuildBattleUI(Dictionary<string, Object> refs, List<DeployCard> cards)
         {
-            refs = new Dictionary<string, Object>();
-            refs_cards = new List<DeployCard>();
+            Canvas canvas = NewCanvas("UI", 10);
+            Transform c = canvas.transform;
 
-            var canvasGo = new GameObject("UI", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            var canvas = canvasGo.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 10;
-            var scaler = canvasGo.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = 0.5f;
-            Transform c = canvasGo.transform;
-
-            // ---------------- HUD ----------------
-            var hud = Rect("HUD", c); Stretch(hud);
+            var hud = NewRect("HUD", c); Stretch(hud);
             refs["_hud"] = hud.gameObject;
 
-            var top = Image("TopBar", hud, new Color(0.05f, 0.07f, 0.1f, 0.82f));
-            Place(top.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), Vector2.zero, new Vector2(0, 118));
+            // ---------------- header (84 px, red woven line under it) ----------------
+            var header = Img("Header", hud, Night);
+            var hrt = header.rectTransform;
+            hrt.anchorMin = new Vector2(0, 1); hrt.anchorMax = new Vector2(1, 1); hrt.pivot = new Vector2(0.5f, 1); hrt.sizeDelta = new Vector2(0, 84); hrt.anchoredPosition = Vector2.zero;
+            var hline = Img("RedLine", header.transform, Red);
+            hline.rectTransform.anchorMin = new Vector2(0, 0); hline.rectTransform.anchorMax = new Vector2(1, 0); hline.rectTransform.pivot = new Vector2(0.5f, 0);
+            hline.rectTransform.sizeDelta = new Vector2(0, 3); hline.rectTransform.anchoredPosition = Vector2.zero;
 
-            var playerLbl = Text("PlayerLabel", top.transform, "PLAYER", 20, new Color(0.6f, 0.7f, 0.8f), TextAnchor.UpperLeft);
-            Place(playerLbl.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(36, -18), new Vector2(300, 30));
-            var player = Text("PlayerValue", top.transform, "-", 30, Color.white, TextAnchor.UpperLeft, true);
-            Place(player.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(36, -50), new Vector2(320, 44));
-            refs["_playerValue"] = player;
+            refs["_levelTitle"] = TxtAt("LevelTitle", header.transform, "LEVEL 1 · KENNON ROAD", BodyBold, 20, Cream, 20, 14, 330, 26, TextAnchor.MiddleLeft);
+            refs["_waveValue"] = TxtAt("WaveValue", header.transform, "WAVE 1 / 3 · TURN 1", BodyBold, 14, GoldLight, 20, 42, 320, 22, TextAnchor.MiddleLeft);
 
-            var tLbl = Text("TemperatureLabel", top.transform, "GLOBAL TEMPERATURE", 20, new Color(0.6f, 0.7f, 0.8f), TextAnchor.UpperLeft);
-            Place(tLbl.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(390, -16), new Vector2(560, 30));
-            var tBack = Image("TemperatureBar", top.transform, new Color(0.1f, 0.12f, 0.16f, 0.95f));
-            Place(tBack.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(390, -48), new Vector2(560, 28));
-            var tFill = Image("Fill", tBack.transform, new Color(0.3f, 0.8f, 0.45f), Sprite(ArtEnv + "/pixel.png"));
-            Stretch(tFill.rectTransform, 3);
-            tFill.type = UnityEngine.UI.Image.Type.Filled;
-            tFill.fillMethod = UnityEngine.UI.Image.FillMethod.Horizontal;
-            tFill.fillOrigin = 0;
-            tFill.fillAmount = 0.05f;
-            var tVal = Text("TemperatureValue", top.transform, "1.00°C / limit 1.5°C", 24, Color.white, TextAnchor.UpperLeft, true);
-            Place(tVal.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(390, -80), new Vector2(560, 34));
-            refs["_temperatureFill"] = tFill; refs["_temperatureBack"] = tBack; refs["_temperatureValue"] = tVal;
+            // temperature (stretches between the title and the Oxygen box)
+            var tGroup = NewRect("Temperature", header.transform);
+            tGroup.anchorMin = new Vector2(0, 0); tGroup.anchorMax = new Vector2(1, 1); tGroup.pivot = new Vector2(0.5f, 0.5f);
+            tGroup.offsetMin = new Vector2(360, 18); tGroup.offsetMax = new Vector2(-286, -18);
+            var tLabel = Txt("Label", tGroup, "Global temperature", BodyBold, 14, Cream, TextAnchor.UpperLeft);
+            tLabel.rectTransform.anchorMin = new Vector2(0, 1); tLabel.rectTransform.anchorMax = new Vector2(1, 1); tLabel.rectTransform.pivot = new Vector2(0.5f, 1);
+            tLabel.rectTransform.sizeDelta = new Vector2(0, 20); tLabel.rectTransform.anchoredPosition = Vector2.zero;
+            var tValue = Txt("TemperatureValue", tGroup, "1.00 °C / limit 1.5 °C", Body, 14, Cream, TextAnchor.UpperRight);
+            tValue.rectTransform.anchorMin = new Vector2(0, 1); tValue.rectTransform.anchorMax = new Vector2(1, 1); tValue.rectTransform.pivot = new Vector2(0.5f, 1);
+            tValue.rectTransform.sizeDelta = new Vector2(0, 20); tValue.rectTransform.anchoredPosition = Vector2.zero;
+            var tBack = Img("TemperatureBar", tGroup, Hex("#22332A"));
+            tBack.rectTransform.anchorMin = new Vector2(0, 0); tBack.rectTransform.anchorMax = new Vector2(1, 0); tBack.rectTransform.pivot = new Vector2(0.5f, 0);
+            tBack.rectTransform.sizeDelta = new Vector2(0, 18); tBack.rectTransform.anchoredPosition = new Vector2(0, 2);
+            Border(tBack.transform, Color.black, "ui_frame2");
+            var tFill = Img("Fill", tBack.transform, Hex("#D9532F"));
+            Stretch(tFill.rectTransform, 2);
+            tFill.type = Image.Type.Filled; tFill.fillMethod = Image.FillMethod.Horizontal; tFill.fillOrigin = 0; tFill.fillAmount = 0.05f;
+            tFill.transform.SetSiblingIndex(0);
+            foreach (float at in new[] { 0.4f, 0.8f })   // 1.2 °C and 1.4 °C marks
+            {
+                var tick = Img("Tick", tBack.transform, Cream);
+                tick.rectTransform.anchorMin = new Vector2(at, 0); tick.rectTransform.anchorMax = new Vector2(at, 1); tick.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                tick.rectTransform.sizeDelta = new Vector2(2, 8); tick.rectTransform.anchoredPosition = Vector2.zero;
+            }
+            refs["_temperatureFill"] = tFill; refs["_temperatureBack"] = tBack; refs["_temperatureValue"] = tValue;
 
-            var wave = Text("WaveValue", top.transform, "WAVE 1 / 3", 34, Color.white, TextAnchor.MiddleCenter, true);
-            Place(wave.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(150, -20), new Vector2(560, 76));
-            refs["_waveValue"] = wave;
+            // Oxygen box and pause button (right edge)
+            var ox = AtRight(Img("Oxygen", header.transform, MossDim), 96, 14, 170, 56);
+            Border(ox.transform, Moss, "ui_frame2");
+            Icon("Icon", ox.transform, "icon_oxygen", Mint, 12, 16, 24);
+            refs["_oxygenValue"] = TxtAt("OxygenValue", ox.transform, "5 / 5", BodyBold, 22, Cream, 46, 4, 120, 28, TextAnchor.MiddleLeft);
+            refs["_oxygenSub"] = TxtAt("OxygenSub", ox.transform, "Oxygen", Body, 12, CreamDim, 46, 30, 124, 18, TextAnchor.MiddleLeft);
+            var pause = AtRight(Img("PauseButton", header.transform, Clear, null, true), 20, 16, 52, 52);
+            Border(pause.transform, Slate);
+            Icon("Icon", pause.transform, "icon_pause", Cream, 16, 16, 20);
+            var pb = pause.gameObject.AddComponent<Button>(); pb.targetGraphic = pause;
+            refs["_pauseButton"] = pb;
 
-            var oLbl = Text("OxygenLabel", top.transform, "OXYGEN POINTS", 20, new Color(0.6f, 0.8f, 0.7f), TextAnchor.UpperRight);
-            Place(oLbl.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-36, -16), new Vector2(360, 30));
-            var oVal = Text("OxygenValue", top.transform, "5 / 5", 50, new Color(0.55f, 1f, 0.7f), TextAnchor.UpperRight, true);
-            Place(oVal.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-36, -44), new Vector2(360, 64));
-            refs["_oxygenValue"] = oVal;
+            // ---------------- footer (87 px, green line on top) ----------------
+            var footer = Img("Footer", hud, Night);
+            var frt = footer.rectTransform;
+            frt.anchorMin = new Vector2(0, 0); frt.anchorMax = new Vector2(1, 0); frt.pivot = new Vector2(0.5f, 0); frt.sizeDelta = new Vector2(0, 87); frt.anchoredPosition = Vector2.zero;
+            var fline = Img("GreenLine", footer.transform, Moss);
+            fline.rectTransform.anchorMin = new Vector2(0, 1); fline.rectTransform.anchorMax = new Vector2(1, 1); fline.rectTransform.pivot = new Vector2(0.5f, 1);
+            fline.rectTransform.sizeDelta = new Vector2(0, 3); fline.rectTransform.anchoredPosition = Vector2.zero;
+            for (int i = 0; i < LevelData.MaxRosterTypes; i++) cards.Add(Card(footer.transform, i));
 
-            var bottom = Image("DeployBar", hud, new Color(0.05f, 0.07f, 0.1f, 0.78f));
-            Place(bottom.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), Vector2.zero, new Vector2(0, 232));
-            var hint = Text("Hint", bottom.transform, "Tap a card, then tap a glowing slot on the road.  Tap END TURN when ready.", 22, new Color(0.75f, 0.82f, 0.9f), TextAnchor.MiddleLeft);
-            Place(hint.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(40, -6), new Vector2(1200, 34));
+            var hint = Txt("Hint", footer.transform, "", Body, 14, CreamDim, TextAnchor.MiddleLeft);
+            hint.rectTransform.anchorMin = new Vector2(0, 0); hint.rectTransform.anchorMax = new Vector2(1, 1); hint.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            hint.rectTransform.offsetMin = new Vector2(450, 10); hint.rectTransform.offsetMax = new Vector2(-250, -8);
+            refs["_hint"] = hint;
 
-            for (int i = 0; i < 5; i++)
-                refs_cards.Add(Card(bottom.transform, i));
-
-            var endTurn = Button("EndTurnButton", bottom.transform, "END TURN", Orange, 40);
-            Place((RectTransform)endTurn.transform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-40, 34), new Vector2(330, 150));
+            var endShadow = AtRight(Img("EndTurn_Shadow", footer.transform, Color.black), 16, 21, 210, 60);
+            var endTurn = Btn("EndTurnButton", footer.transform, "END TURN", Red, Hex("#FFF6E6"), Ink, 0, 0, 210, 60, 22, 0f);
+            AtRight(endTurn, 20, 17, 210, 60);
             refs["_endTurnButton"] = endTurn;
 
-            var floating = Rect("FloatingLayer", hud); Stretch(floating);
+            var floating = NewRect("FloatingLayer", hud); Stretch(floating);
             refs["_floatingLayer"] = floating;
 
-            var announce = Text("Announcement", hud, "", 38, Color.white, TextAnchor.MiddleCenter, true);
-            Place(announce.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -140), new Vector2(1500, 70));
-            announce.gameObject.AddComponent<Outline>().effectColor = new Color(0, 0, 0, 0.9f);
-            announce.raycastTarget = false;
+            var announce = Txt("Announcement", hud, "", BodyBold, 22, Cream, TextAnchor.MiddleCenter);
+            var art = announce.rectTransform;
+            art.anchorMin = art.anchorMax = new Vector2(0.5f, 1); art.pivot = new Vector2(0.5f, 1); art.sizeDelta = new Vector2(900, 60); art.anchoredPosition = new Vector2(120, -230);
+            var aol = announce.gameObject.AddComponent<Outline>(); aol.effectColor = new Color(0, 0, 0, 0.95f); aol.effectDistance = new Vector2(2, -2);
             announce.gameObject.SetActive(false);
             refs["_announcement"] = announce;
 
-            // ---------------- Login ----------------
-            var login = Image("LoginPanel", c, Dim); Stretch(login.rectTransform);
-            refs["_loginPanel"] = login.gameObject;
-            var lbox = Image("Box", login.transform, PanelColor);
-            Place(lbox.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(860, 640));
-            Title(lbox.transform, "THERMO-TACTICS", 76, -50, new Color(1f, 0.82f, 0.35f));
-            Title(lbox.transform, "Stage 1 · Baguio — Kennon Road", 30, -140, new Color(0.75f, 0.85f, 0.95f));
-            var nameLbl = Text("UsernameLabel", lbox.transform, "USERNAME", 24, new Color(0.65f, 0.75f, 0.85f), TextAnchor.MiddleLeft);
-            Place(nameLbl.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -215), new Vector2(620, 34));
-            var input = InputField(lbox.transform, "UsernameInput", "Enter your username");
-            Place((RectTransform)input.transform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -255), new Vector2(620, 84));
-            refs["_nameInput"] = input;
-            var msg = Text("Message", lbox.transform, "", 24, new Color(1f, 0.5f, 0.45f), TextAnchor.MiddleCenter);
-            Place(msg.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -350), new Vector2(620, 36));
-            refs["_loginMessage"] = msg;
-            var start = Button("StartButton", lbox.transform, "START", Green, 40);
-            Place((RectTransform)start.transform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -400), new Vector2(620, 96));
-            refs["_startButton"] = start;
-            var lres = Button("ResultsButton", lbox.transform, "Results", Blue, 32);
-            Place((RectTransform)lres.transform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -514), new Vector2(620, 76));
-            refs["_loginResultsButton"] = lres;
+            // ---------------- boss panel ----------------
+            var boss = At(Img("BossPanel", hud, new Color(0.055f, 0.04f, 0.03f, 0.92f)), 20, 96, 470, 124);
+            Border(boss.transform, Red);
+            Weave(boss.transform, 0, -3, 470, 6);
+            refs["_bossPanel"] = boss.gameObject;
+            refs["_bossName"] = TxtAt("Name", boss.transform, "CLEARCUT BEHEMOTH", BodyBold, 20, Cream, 14, 10, 330, 28, TextAnchor.MiddleLeft);
+            refs["_bossHp"] = TxtAt("Hp", boss.transform, "300 / 300", BodyBold, 15, Cream, 330, 10, 126, 28, TextAnchor.MiddleRight);
+            Bar("HpBar", boss.transform, Hex("#2A1512"), RedSoft, 14, 42, 442, 14, out Image bossFill);
+            var enrage = At(Img("EnrageTick", boss.transform, Gold), 14 + 442 * 0.4f - 1, 37, 3, 24);
+            refs["_bossHpFill"] = bossFill;
+            refs["_bossNext"] = TxtAt("Next", boss.transform, "", Body, 13, Cream, 14, 62, 442, 18, TextAnchor.MiddleLeft);
+            refs["_bossSlam"] = TxtAt("Slam", boss.transform, "", Body, 13, Cream, 14, 80, 442, 18, TextAnchor.MiddleLeft);
+            refs["_bossNote"] = TxtAt("Note", boss.transform, "", Body, 12, CreamDim, 14, 100, 442, 18, TextAnchor.MiddleLeft);
 
-            // ---------------- End ----------------
-            var end = Image("EndPanel", c, Dim); Stretch(end.rectTransform);
+            // ---------------- pause ----------------
+            var pausePanel = Img("PausePanel", c, new Color(0.024f, 0.04f, 0.03f, 0.78f), null, true); Stretch(pausePanel.rectTransform);
+            var pf = Frame("Frame", pausePanel.transform);
+            var pd = Box("Dialog", pf, Panel, Moss, 380, 150, 520, 420, 8f);
+            Weave(pd.transform, 0, 0, 520);
+            TxtAt("Title", pd.transform, "PAUSED", Pixel, 32, Cream, 28, 40, 460, 40, TextAnchor.MiddleLeft);
+            refs["_pauseInfo"] = TxtAt("Info", pd.transform, "", Body, 15, CreamDim, 28, 86, 464, 60, TextAnchor.UpperLeft);
+            refs["_resumeButton"] = Btn("ResumeButton", pd.transform, "RESUME", Gold, Ink, Ink, 28, 156, 464, 54, 22);
+            refs["_restartButton"] = Btn("RestartButton", pd.transform, "RESTART LEVEL", Clear, Cream, Slate, 28, 224, 464, 50, 19, 0f);
+            refs["_pauseLevelSelectButton"] = Btn("LevelSelectButton", pd.transform, "LEVEL SELECT", Clear, Cream, Slate, 28, 286, 226, 50, 19, 0f);
+            refs["_pauseMenuButton"] = Btn("MainMenuButton", pd.transform, "MAIN MENU", Clear, Cream, Slate, 266, 286, 226, 50, 19, 0f);
+            TxtAt("Saved", pd.transform, "Leaving keeps your saved game. Continue on the Main Menu returns to this turn.", Body, 13, CreamDim, 28, 350, 464, 40);
+            refs["_pausePanel"] = pausePanel.gameObject;
+
+            // ---------------- end ----------------
+            var end = Img("EndPanel", c, new Color(0.024f, 0.04f, 0.03f, 0.78f), null, true); Stretch(end.rectTransform);
+            var ef = Frame("Frame", end.transform);
+            var ed = Box("Dialog", ef, Panel, Gold, 290, 130, 700, 440, 8f);
+            Weave(ed.transform, 0, 0, 700);
+            refs["_endTitle"] = TxtAt("Title", ed.transform, "VICTORY", Pixel, 56, Gold, 0, 40, 700, 70, TextAnchor.MiddleCenter);
+            refs["_endBody"] = TxtAt("Body", ed.transform, "", Body, 17, Cream, 40, 120, 620, 200, TextAnchor.UpperCenter);
+            refs["_nextButton"] = Btn("NextLevelButton", ed.transform, "NEXT LEVEL", Gold, Ink, Ink, 40, 330, 300, 54, 22);
+            refs["_playAgainButton"] = Btn("PlayAgainButton", ed.transform, "PLAY AGAIN", Red, Hex("#FFF6E6"), Ink, 360, 330, 300, 54, 22);
+            refs["_endLevelSelectButton"] = Btn("LevelSelectButton", ed.transform, "LEVEL SELECT", Clear, Cream, Slate, 40, 396, 300, 30, 16, 0f);
+            refs["_endResultsButton"] = Btn("ResultsButton", ed.transform, "RESULTS", Clear, Cream, Slate, 360, 396, 300, 30, 16, 0f);
             refs["_endPanel"] = end.gameObject;
-            var ebox = Image("Box", end.transform, PanelColor);
-            Place(ebox.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1000, 600));
-            var etitle = Title(ebox.transform, "VICTORY", 90, -50, Color.white);
-            refs["_endTitle"] = etitle;
-            var ebody = Text("Body", ebox.transform, "", 30, new Color(0.88f, 0.92f, 0.96f), TextAnchor.UpperCenter);
-            Place(ebody.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -170), new Vector2(880, 250));
-            refs["_endBody"] = ebody;
-            var again = Button("PlayAgainButton", ebox.transform, "Play Again", Green, 32);
-            Place((RectTransform)again.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-300, 50), new Vector2(270, 90));
-            var eres = Button("ResultsButton", ebox.transform, "Results", Blue, 32);
-            Place((RectTransform)eres.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 50), new Vector2(270, 90));
-            var menu = Button("MainMenuButton", ebox.transform, "Main Menu", Grey, 32);
-            Place((RectTransform)menu.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(300, 50), new Vector2(270, 90));
-            refs["_playAgainButton"] = again; refs["_endResultsButton"] = eres; refs["_menuButton"] = menu;
 
-            // ---------------- Results ----------------
-            var resRoot = Image("ResultsPanel", c, Dim); Stretch(resRoot.rectTransform);
-            var results = resRoot.gameObject.AddComponent<ResultsPanel>();
-            var rbox = Image("Box", resRoot.transform, PanelColor);
-            Place(rbox.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1240, 860));
-            Title(rbox.transform, "Results", 64, -36, new Color(1f, 0.82f, 0.35f));
-            var header = Image("Header", rbox.transform, new Color(0.13f, 0.2f, 0.32f, 1f));
-            Place(header.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -130), new Vector2(1140, 56));
-            RowTexts(header.transform, "NAME", "RESULT", "DATE CREATED", new Color(0.75f, 0.85f, 1f), true);
+            // ---------------- results ----------------
+            refs["_results"] = MenuSceneBuilder.BuildResults(c);
 
-            var scroll = Image("Scroll", rbox.transform, new Color(0, 0, 0, 0.25f));
-            Place(scroll.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -192), new Vector2(1140, 520));
-            var sr = scroll.gameObject.AddComponent<ScrollRect>();
-            var viewport = Rect("Viewport", scroll.transform); Stretch(viewport);
-            viewport.gameObject.AddComponent<RectMask2D>();
-            var content = Rect("Content", viewport);
-            content.anchorMin = new Vector2(0, 1); content.anchorMax = new Vector2(1, 1); content.pivot = new Vector2(0.5f, 1);
-            content.anchoredPosition = Vector2.zero; content.sizeDelta = Vector2.zero;
-            var vlg = content.gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.childControlHeight = true; vlg.childControlWidth = true; vlg.childForceExpandHeight = false; vlg.spacing = 4;
-            vlg.padding = new RectOffset(0, 0, 6, 6);
-            content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            sr.viewport = viewport; sr.content = content; sr.horizontal = false; sr.movementType = ScrollRect.MovementType.Clamped;
-            sr.scrollSensitivity = 30;
-
-            var row = Image("RowTemplate", content, new Color(1f, 1f, 1f, 0.05f));
-            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 54;
-            RowTexts(row.transform, "-", "-", "-", Color.white, false);
-
-            var empty = Text("EmptyText", scroll.transform, "No results yet. Finish a level to record one.", 28, new Color(0.7f, 0.75f, 0.8f), TextAnchor.MiddleCenter);
-            Stretch(empty.rectTransform);
-            var footer = Text("Footer", rbox.transform, "", 20, new Color(0.55f, 0.6f, 0.68f), TextAnchor.MiddleLeft);
-            Place(footer.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-170, 54), new Vector2(800, 60));
-            footer.horizontalOverflow = HorizontalWrapMode.Wrap;
-            var close = Button("CloseButton", rbox.transform, "Close", Grey, 32);
-            Place((RectTransform)close.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(440, 44), new Vector2(240, 84));
-
-            Ref(results, "_root", resRoot.gameObject); Ref(results, "_content", content); Ref(results, "_rowTemplate", row.gameObject);
-            Ref(results, "_emptyText", empty); Ref(results, "_footer", footer); Ref(results, "_closeButton", close);
-            refs["_results"] = results;
-
-            end.gameObject.SetActive(false);
-            return canvasGo;
+            return canvas;
         }
 
         private static DeployCard Card(Transform parent, int index)
         {
-            var frame = Image($"Card_{index + 1}", parent, new Color(0.12f, 0.14f, 0.18f, 0.95f));
-            Place(frame.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-560 + index * 190, 14), new Vector2(176, 182));
+            var frame = At(Img($"Card_{index + 1}", parent, Hex("#3B5446"), Ui("ui_frame3"), true), 20 + index * 82, 9, 70, 70);
+            frame.type = Image.Type.Sliced;
+            var back = Img("Back", frame.transform, MossDim); Stretch(back.rectTransform, 3); back.transform.SetAsFirstSibling();
             var btn = frame.gameObject.AddComponent<Button>();
             btn.targetGraphic = frame;
-            var icon = Image("Icon", frame.transform, Color.white);
-            Place(icon.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -8), new Vector2(118, 118));
-            icon.raycastTarget = false;
-            var name = Text("Name", frame.transform, "Unit", 17, Color.white, TextAnchor.MiddleCenter, true);
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 26), new Vector2(170, 26));
-            var cost = Text("Cost", frame.transform, "2 OP", 22, new Color(0.55f, 1f, 0.65f), TextAnchor.MiddleCenter, true);
-            Place(cost.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 2), new Vector2(170, 28));
+            var cb = btn.colors; cb.disabledColor = new Color(0.7f, 0.7f, 0.7f, 1f); btn.colors = cb;
+            var icon = At(Img("Icon", frame.transform, Color.white), 3, 3, 64, 64);
+            icon.preserveAspect = true;
+            var badge = AtRight(Img("CostBadge", frame.transform, Ink), -2, 50, 22, 22);
+            var cost = Txt("Cost", badge.transform, "2", BodyBold, 14, Mint, TextAnchor.MiddleCenter); Stretch(cost.rectTransform);
             var card = frame.gameObject.AddComponent<DeployCard>();
-            Ref(card, "_button", btn); Ref(card, "_icon", icon); Ref(card, "_frame", frame); Ref(card, "_name", name); Ref(card, "_cost", cost);
+            Ref(card, "_button", btn); Ref(card, "_icon", icon); Ref(card, "_frame", frame); Ref(card, "_cost", cost);
             return card;
-        }
-
-        private static void RowTexts(Transform row, string a, string b, string d, Color color, bool bold)
-        {
-            void Col(string name, string value, float x0, float x1)
-            {
-                var t = Text(name, row, value, 26, color, TextAnchor.MiddleLeft, bold);
-                t.rectTransform.anchorMin = new Vector2(x0, 0); t.rectTransform.anchorMax = new Vector2(x1, 1);
-                t.rectTransform.offsetMin = new Vector2(24, 0); t.rectTransform.offsetMax = Vector2.zero;
-            }
-            Col("Name", a, 0f, 0.42f);
-            Col("Result", b, 0.42f, 0.6f);
-            Col("Date", d, 0.6f, 1f);
-        }
-
-        // ---------------- UI helpers ----------------
-        private static RectTransform Rect(string name, Transform parent)
-        {
-            var go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-            return (RectTransform)go.transform;
-        }
-
-        private static void Stretch(RectTransform rt, float inset = 0f)
-        {
-            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.offsetMin = new Vector2(inset, inset); rt.offsetMax = new Vector2(-inset, -inset);
-        }
-
-        private static void Place(RectTransform rt, Vector2 aMin, Vector2 aMax, Vector2 pivot, Vector2 pos, Vector2 size)
-        {
-            rt.anchorMin = aMin; rt.anchorMax = aMax; rt.pivot = pivot; rt.anchoredPosition = pos; rt.sizeDelta = size;
-        }
-
-        private static Image Image(string name, Transform parent, Color color, Sprite sprite = null)
-        {
-            var img = Rect(name, parent).gameObject.AddComponent<Image>();
-            img.color = color;
-            if (sprite != null) img.sprite = sprite;
-            return img;
-        }
-
-        private static Text Text(string name, Transform parent, string value, int size, Color color, TextAnchor align, bool bold = false)
-        {
-            var t = Rect(name, parent).gameObject.AddComponent<Text>();
-            t.font = _font; t.text = value; t.fontSize = size; t.color = color; t.alignment = align;
-            t.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
-            t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow;
-            t.raycastTarget = false;
-            return t;
-        }
-
-        private static Text Title(Transform parent, string value, int size, float y, Color color)
-        {
-            var t = Text("Title_" + value.Split(' ')[0], parent, value, size, color, TextAnchor.MiddleCenter, true);
-            Place(t.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, y), new Vector2(900, size + 24));
-            return t;
-        }
-
-        private static Button Button(string name, Transform parent, string label, Color color, int size)
-        {
-            var img = Image(name, parent, color);
-            var b = img.gameObject.AddComponent<Button>();
-            b.targetGraphic = img;
-            var colors = b.colors;
-            colors.highlightedColor = new Color(1.12f, 1.12f, 1.12f); colors.pressedColor = new Color(0.8f, 0.8f, 0.8f);
-            colors.disabledColor = new Color(0.45f, 0.45f, 0.45f, 0.8f);
-            b.colors = colors;
-            var t = Text("Label", img.transform, label, size, Color.white, TextAnchor.MiddleCenter, true);
-            Stretch(t.rectTransform);
-            return b;
-        }
-
-        private static InputField InputField(Transform parent, string name, string placeholder)
-        {
-            var bg = Image(name, parent, new Color(0.93f, 0.95f, 0.97f));
-            var field = bg.gameObject.AddComponent<InputField>();
-            var text = Text("Text", bg.transform, "", 36, new Color(0.08f, 0.1f, 0.14f), TextAnchor.MiddleLeft);
-            Stretch(text.rectTransform); text.rectTransform.offsetMin = new Vector2(24, 6); text.rectTransform.offsetMax = new Vector2(-24, -6);
-            text.supportRichText = false;
-            var ph = Text("Placeholder", bg.transform, placeholder, 34, new Color(0.45f, 0.5f, 0.58f), TextAnchor.MiddleLeft);
-            ph.fontStyle = FontStyle.Italic;
-            Stretch(ph.rectTransform); ph.rectTransform.offsetMin = new Vector2(24, 6); ph.rectTransform.offsetMax = new Vector2(-24, -6);
-            field.textComponent = text; field.placeholder = ph; field.targetGraphic = bg;
-            field.characterLimit = ResultsDatabase.MaxNameLength;
-            field.lineType = UnityEngine.UI.InputField.LineType.SingleLine;
-            return field;
         }
 
         // ---------------- general helpers ----------------
@@ -652,35 +754,7 @@ namespace ThermoTactics.EditorTools
             return s;
         }
 
-        private static void Ref(Object target, string field, Object value)
-        {
-            var so = new SerializedObject(target);
-            var p = so.FindProperty(field);
-            if (p == null) { Debug.LogError($"[Thermo-Tactics] {target.GetType().Name}.{field} not found"); return; }
-            p.objectReferenceValue = value;
-            so.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void Ref(Object target, string field, int value)
-        {
-            var so = new SerializedObject(target); so.FindProperty(field).intValue = value; so.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void Ref(Object target, string field, bool value)
-        {
-            var so = new SerializedObject(target); so.FindProperty(field).boolValue = value; so.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void RefArray<T>(Object target, string field, T[] values) where T : Object
-        {
-            var so = new SerializedObject(target);
-            var p = so.FindProperty(field);
-            p.arraySize = values.Length;
-            for (int i = 0; i < values.Length; i++) p.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
-            so.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void EnsureFolder(string path)
+        public static void EnsureFolder(string path)
         {
             if (AssetDatabase.IsValidFolder(path)) return;
             string parent = Path.GetDirectoryName(path).Replace('\\', '/');
