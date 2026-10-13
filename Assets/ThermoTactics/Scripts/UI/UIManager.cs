@@ -44,14 +44,47 @@ namespace ThermoTactics
         [SerializeField] private Button _pauseLevelSelectButton;
         [SerializeField] private Button _pauseMenuButton;
 
-        [Header("End screen")]
+        [Header("Lane caption (shown while End Turn resolves)")]
+        [SerializeField] private GameObject _laneCaption;
+        [SerializeField] private Text _laneTitle;
+        [SerializeField] private Text _laneDetail;
+        [SerializeField] private Image _laneAccent;
+
+        [Header("End screen (level complete / failed)")]
         [SerializeField] private GameObject _endPanel;
+        [SerializeField] private Image _endBorder;
         [SerializeField] private Text _endTitle;
         [SerializeField] private Text _endBody;
-        [SerializeField] private Button _nextButton;
-        [SerializeField] private Button _playAgainButton;
-        [SerializeField] private Button _endLevelSelectButton;
+        [SerializeField] private Image[] _endStars = new Image[3];
+        [SerializeField] private Text _endStarHint;
+        [SerializeField] private GameObject _endNewBest;
+        [SerializeField] private Button _endPrimary;
+        [SerializeField] private Text _endPrimaryLabel;
+        [SerializeField] private Image _endPrimaryIcon;
+        [SerializeField] private Button[] _endSecondary = new Button[3];
+        [SerializeField] private Text[] _endSecondaryLabels = new Text[3];
+        [SerializeField] private Image[] _endSecondaryIcons = new Image[3];
         [SerializeField] private Button _endResultsButton;
+
+        [Header("Stage complete (after the stage's last level)")]
+        [SerializeField] private GameObject _stagePanel;
+        [SerializeField] private Text _stageTitle;
+        [SerializeField] private Text _stageStats;
+        [SerializeField] private Text _stageStarCount;
+        [SerializeField] private Image _stageStarFill;
+        [SerializeField] private Image[] _stageLevelStars = new Image[3];
+        [SerializeField] private Text _stageNext;
+        [SerializeField] private Button _stageSelectButton;
+        [SerializeField] private Button _stageLevelSelectButton;
+        [SerializeField] private Button _stageRetryButton;
+        [SerializeField] private Button _stageResultsButton;
+
+        [Header("Icons")]
+        [SerializeField] private Sprite _iconNext;
+        [SerializeField] private Sprite _iconRetry;
+        [SerializeField] private Sprite _iconLevels;
+        [SerializeField] private Sprite _iconStages;
+        [SerializeField] private Sprite _iconResults;
 
         [Header("Results")]
         [SerializeField] private ResultsPanel _results;
@@ -80,10 +113,17 @@ namespace ThermoTactics
             _restartButton.onClick.AddListener(() => { ShowPause(false); GameManager.Instance.Restart(); });
             _pauseLevelSelectButton.onClick.AddListener(() => GameManager.Instance.ToLevelSelect());
             _pauseMenuButton.onClick.AddListener(() => GameManager.Instance.ToMainMenu());
-            _nextButton.onClick.AddListener(() => GameManager.Instance.NextLevel());
-            _playAgainButton.onClick.AddListener(() => GameManager.Instance.Restart());
-            _endLevelSelectButton.onClick.AddListener(() => GameManager.Instance.ToLevelSelect());
+            _endPrimary.onClick.AddListener(() => _primaryAction?.Invoke());
+            for (int i = 0; i < _endSecondary.Length; i++)
+            {
+                int index = i;
+                _endSecondary[i].onClick.AddListener(() => _secondaryActions[index]?.Invoke());
+            }
             _endResultsButton.onClick.AddListener(OpenResults);
+            _stageSelectButton.onClick.AddListener(() => GameManager.Instance.ToStageSelect());
+            _stageLevelSelectButton.onClick.AddListener(() => GameManager.Instance.ToLevelSelect());
+            _stageRetryButton.onClick.AddListener(() => GameManager.Instance.Restart());
+            _stageResultsButton.onClick.AddListener(OpenResults);
 
             _temperature.Changed += _ => RefreshHud();
             _oxygen.Changed += RefreshHud;
@@ -92,7 +132,9 @@ namespace ThermoTactics
 
             _pausePanel.SetActive(false);
             _endPanel.SetActive(false);
+            _stagePanel.SetActive(false);
             _bossPanel.SetActive(false);
+            _laneCaption.SetActive(false);
         }
 
         // ---------------- screens ----------------
@@ -100,6 +142,8 @@ namespace ThermoTactics
         public void ShowHud()
         {
             _endPanel.SetActive(false);
+            _stagePanel.SetActive(false);
+            _laneCaption.SetActive(false);
             _pausePanel.SetActive(false);
             _results.Hide();
             _hud.SetActive(true);
@@ -121,28 +165,158 @@ namespace ThermoTactics
             _pauseInfo.text = $"{gm.PlayerName} · Baguio Level {gm.LevelNumber} · Wave {_waves.WaveNumber} of {_waves.TotalWaves} · Turn {_waves.TurnInWave}\n{saved}. Continue from the Main Menu returns here.";
         }
 
-        public void ShowEnd(bool won, GameResult record, float threshold, bool canGoNext)
+        /// <summary>Everything the end screens need about the level that just ended.</summary>
+        public class EndSummary
+        {
+            public bool Won;
+            public GameResult Record;
+            public float Threshold;
+            public bool CanGoNext;
+            public int Stars;            // stars earned this time (0 on a loss)
+            public float Peak;           // highest temperature reached in the level
+            public int BestStars;        // best stars ever on this level
+            public bool NewBest;         // lower winning temperature than before
+            public bool StageComplete;   // the stage's last level was won
+            public int StageCleared;     // levels cleared in the stage
+            public int StageLevels;
+            public int StageStars;       // stars in the whole stage
+        }
+
+        private System.Action _primaryAction;
+        private readonly System.Action[] _secondaryActions = new System.Action[3];
+
+        public void ShowEnd(EndSummary e)
         {
             RefreshHud();
             _bossPanel.SetActive(false);
+            _laneCaption.SetActive(false);
+            GameManager gm = GameManager.Instance;
+            if (e.StageComplete) { ShowStageComplete(e, gm); return; }
+
             _endPanel.SetActive(true);
             _endPanel.transform.SetAsLastSibling();
-            _nextButton.gameObject.SetActive(canGoNext);
-            // With no next level, Play Again moves to the centre of the dialog.
-            var again = (RectTransform)_playAgainButton.transform;
-            again.anchoredPosition = new Vector2(canGoNext ? 360f : 200f, again.anchoredPosition.y);
-            GameManager gm = GameManager.Instance;
-            _endTitle.text = won ? "VICTORY" : "DEFEAT";
-            _endTitle.color = won ? new Color(0.89f, 0.68f, 0.17f) : new Color(1f, 0.45f, 0.38f);
+            Color gold = new Color(0.89f, 0.68f, 0.17f), red = new Color(1f, 0.45f, 0.38f);
+            _endTitle.text = e.Won ? "LEVEL COMPLETE" : "LEVEL FAILED";
+            _endTitle.color = e.Won ? gold : red;
+            _endBorder.color = e.Won ? gold : new Color(0.64f, 0.14f, 0.11f);
+            GameResult r = e.Record;
             string where = $"Level {gm.LevelNumber} · {gm.Level.locationName}";
-            _endBody.text = won
-                ? $"{where} is safe, {record.player_name}!\nAll {record.waves_cleared} waves cleared at {record.final_temperature:0.00} °C, below the {threshold:0.0} °C limit."
-                  + (canGoNext ? $"\nLevel {gm.LevelNumber + 1} is now unlocked." : (gm.Level.isBossLevel ? $"\nYou defeated the {BossName(gm)}, the Baguio boss!" : ""))
-                : $"{where}: the temperature reached {record.final_temperature:0.00} °C, crossing the {threshold:0.0} °C limit.\nWaves cleared: {record.waves_cleared} of {_waves.TotalWaves}.";
-            _endBody.text += record.id > 0
-                ? $"\n\nResult saved · {record.created_at}"
-                : "\n\nResult not saved: the database could not be written.";
+            _endBody.text = e.Won
+                ? $"{where} is safe, {r.player_name}!\nAll {r.waves_cleared} waves cleared. Highest temperature: <b>{e.Peak:0.00} °C</b> (limit {e.Threshold:0.0} °C)."
+                  + (e.CanGoNext ? $"\n<color=#F3C95A>Level {gm.LevelNumber + 1} is now unlocked.</color>" : "")
+                : $"{where}: the temperature reached <b>{r.final_temperature:0.00} °C</b> and crossed the {e.Threshold:0.0} °C limit.\nWaves cleared: {r.waves_cleared} of {_waves.TotalWaves}. Fill more lanes so enemies can't heat the planet.";
+            _endBody.text += r.id > 0 ? $"\n<size=13><color=#CFC6B2>Result saved · {r.created_at}</color></size>"
+                                      : "\n<size=13><color=#FF9A86>Result not saved: the database could not be written.</color></size>";
+
+            foreach (Image star in _endStars) star.gameObject.SetActive(e.Won);
+            _endNewBest.SetActive(e.Won && e.NewBest);
+            _endStarHint.text = e.Won
+                ? (e.Stars < e.BestStars ? $"Your best on this level: {e.BestStars} stars. " : "") + StarRating.NextStarHint(e.Stars)
+                : $"Win to earn stars. Keep the temperature at {StarRating.TwoStarAt:0.00} °C or lower for 2, {StarRating.ThreeStarAt:0.00} °C for 3.";
+            if (e.Won) StartCoroutine(PopStars(_endStars, e.Stars));
+
+            if (e.Won && e.CanGoNext)
+            {
+                SetPrimary("NEXT LEVEL", _iconNext, gold, () => gm.NextLevel());
+                SetSecondary(0, "RETRY", _iconRetry, () => gm.Restart());
+                SetSecondary(1, "LEVEL SELECT", _iconLevels, () => gm.ToLevelSelect());
+                SetSecondary(2, "STAGE SELECT", _iconStages, () => gm.ToStageSelect());
+            }
+            else if (e.Won)
+            {
+                SetPrimary("LEVEL SELECT", _iconLevels, gold, () => gm.ToLevelSelect());
+                SetSecondary(0, "RETRY", _iconRetry, () => gm.Restart());
+                SetSecondary(1, "STAGE SELECT", _iconStages, () => gm.ToStageSelect());
+                SetSecondary(2, "RESULTS", _iconResults, OpenResults);
+            }
+            else
+            {
+                SetPrimary("RETRY LEVEL", _iconRetry, new Color(0.64f, 0.14f, 0.11f), () => gm.Restart());
+                SetSecondary(0, "LEVEL SELECT", _iconLevels, () => gm.ToLevelSelect());
+                SetSecondary(1, "STAGE SELECT", _iconStages, () => gm.ToStageSelect());
+                SetSecondary(2, "RESULTS", _iconResults, OpenResults);
+            }
+            _endResultsButton.gameObject.SetActive(e.Won && e.CanGoNext);
         }
+
+        private void SetPrimary(string label, Sprite icon, Color fill, System.Action action)
+        {
+            _primaryAction = action;
+            _endPrimaryLabel.text = label;
+            bool dark = fill.r + fill.g + fill.b > 1.5f;   // gold → dark text; red → light text
+            _endPrimaryLabel.color = dark ? new Color(0.102f, 0.078f, 0.039f) : new Color(1f, 0.965f, 0.9f);
+            _endPrimary.GetComponent<Image>().color = fill;
+            if (_endPrimaryIcon != null) { _endPrimaryIcon.sprite = icon; _endPrimaryIcon.color = _endPrimaryLabel.color; }
+        }
+
+        private void SetSecondary(int i, string label, Sprite icon, System.Action action)
+        {
+            _secondaryActions[i] = action;
+            _endSecondaryLabels[i].text = label;
+            if (_endSecondaryIcons[i] != null) _endSecondaryIcons[i].sprite = icon;
+        }
+
+        private void ShowStageComplete(EndSummary e, GameManager gm)
+        {
+            _stagePanel.SetActive(true);
+            _stagePanel.transform.SetAsLastSibling();
+            StageData stage = gm.Stage;
+            int maxStars = e.StageLevels * StarRating.MaxStars;
+            _stageTitle.text = $"{stage.stageName.ToUpperInvariant()} CLEARED";
+            _stageStats.text =
+                $"You defeated the <b>{BossName(gm)}</b>. Highest temperature: {e.Peak:0.00} °C.\n" +
+                $"Levels cleared: <b>{e.StageCleared} / {e.StageLevels}</b>\n" +
+                $"Stage {stage.stageId} saved by <b>{e.Record.player_name}</b>." +
+                (e.Record.id > 0 ? "" : "\n<color=#FF9A86>Result not saved: the database could not be written.</color>");
+            _stageStarCount.text = $"{e.StageStars} / {maxStars}";
+            _stageStarFill.fillAmount = maxStars > 0 ? e.StageStars / (float)maxStars : 0f;
+            _stageNext.text = e.StageStars >= maxStars
+                ? "Every star in the stage! <b>Stage 2 · Sierra Madre & Mangrove Coast</b> is unlocked (coming soon)."
+                : $"<b>Stage 2 · Sierra Madre & Mangrove Coast</b> is unlocked (coming soon). Replay levels for the {maxStars - e.StageStars} missing stars.";
+            StartCoroutine(PopStars(_stageLevelStars, e.Stars));
+        }
+
+        /// <summary>Stars pop in one by one: earned ones gold, the rest dim outlines.</summary>
+        private IEnumerator PopStars(Image[] stars, int earned)
+        {
+            Color gold = new Color(0.95f, 0.75f, 0.2f), dim = new Color(0.29f, 0.35f, 0.31f);
+            for (int i = 0; i < stars.Length; i++)
+            {
+                stars[i].color = i < earned ? gold : dim;
+                stars[i].transform.localScale = Vector3.zero;
+            }
+            yield return new WaitForSecondsRealtime(0.25f);
+            for (int i = 0; i < stars.Length; i++)
+            {
+                Transform t = stars[i].transform;
+                for (float k = 0f; k < 1f; k += Time.unscaledDeltaTime / 0.22f)
+                {
+                    float s = k < 0.7f ? Mathf.Lerp(0f, 1.25f, k / 0.7f) : Mathf.Lerp(1.25f, 1f, (k - 0.7f) / 0.3f);
+                    t.localScale = Vector3.one * s;
+                    yield return null;
+                }
+                t.localScale = Vector3.one;
+                yield return new WaitForSecondsRealtime(0.08f);
+            }
+        }
+
+        // ---------------- lane caption ----------------
+
+        /// <summary>The banner under the header while End Turn resolves: "LANE 3" and what happened there.</summary>
+        public void ShowLaneCaption(string title, string detail, Color tone)
+        {
+            _laneCaption.SetActive(true);
+            // In the boss wave the boss panel sits at the top left, so the banner moves right of it.
+            var rt = (RectTransform)_laneCaption.transform;
+            bool boss = _bossPanel.activeSelf;
+            rt.anchoredPosition = new Vector2(boss ? 230f : 0f, rt.anchoredPosition.y);
+            rt.sizeDelta = new Vector2(boss ? 700f : 760f, rt.sizeDelta.y);
+            _laneTitle.text = title;
+            _laneDetail.text = detail;
+            if (_laneAccent != null) _laneAccent.color = tone;
+        }
+
+        public void HideLaneCaption() => _laneCaption.SetActive(false);
 
         private static string BossName(GameManager gm)
         {
@@ -298,10 +472,11 @@ namespace ThermoTactics
             var rt = (RectTransform)go.transform;
             rt.sizeDelta = new Vector2(160f, 36f);
 
-            Vector3 start = Camera.main.WorldToScreenPoint(worldPos);
             for (float t = 0f; t < 1f; t += Time.deltaTime)
             {
-                rt.position = start + Vector3.up * (50f * t * rt.lossyScale.y * 1.5f);
+                if (Camera.main == null) break;
+                // Recomputed every frame, so the number stays on its unit while the lane camera moves.
+                rt.position = Camera.main.WorldToScreenPoint(worldPos) + Vector3.up * (50f * t * rt.lossyScale.y * 1.5f);
                 Color c = color; c.a = t < 0.6f ? 1f : 1f - (t - 0.6f) / 0.4f;
                 text.color = c;
                 yield return null;

@@ -28,6 +28,7 @@ namespace ThermoTactics
         [SerializeField] private ResultsDatabase _database;
         [SerializeField] private UIManager _ui;
         [SerializeField] private FogScroller _fog;
+        [SerializeField] private BattleCamera _camera;
 
         public State Current { get; private set; } = State.Loading;
         public StageData Stage { get; private set; }
@@ -101,7 +102,7 @@ namespace ThermoTactics
             Level = level;
             PrepareBoard();
             _temperature.Init(Level.startingTemperature, Level.lossThreshold);
-            _temperature.Restore(s.temperature);
+            _temperature.Restore(s.temperature, s.peakTemperature);
             _waves.Restore(Level, s.waveNumber, s.turnNumber);
 
             foreach (SavedUnit u in s.allies)
@@ -165,6 +166,7 @@ namespace ThermoTactics
                 oxygenPenalty = _oxygen.Penalty,
                 temperature = _temperature.Current,
                 bossTurn = _grid.Boss != null ? _grid.Boss.BossTurn : 0,
+                peakTemperature = _temperature.Peak,
             };
             foreach (UnitBase a in _grid.Allies)
                 if (!a.IsDead) s.allies.Add(new SavedUnit { lane = a.Lane, unitId = a.Data.unitId, hp = a.Hp, maxHp = a.MaxHp });
@@ -188,15 +190,53 @@ namespace ThermoTactics
             Current = State.Ended;
             Time.timeScale = 1f;
             _grid.SetDeployHighlights(false);
+            if (_camera != null) _camera.SnapHome();
             int waves = won ? _waves.TotalWaves : _waves.WavesCleared;
+            float final = _temperature.Current;
+
+            LevelProgress before = FindProgress(LevelNumber);
             _database.DeleteSession(PlayerName);
-            _database.RecordAttempt(PlayerName, Stage.stageId, LevelNumber, won, _temperature.Current);
-            GameResult record = _database.Insert(PlayerName, won, _temperature.Current, waves);
-            _ui.ShowEnd(won, record, Level.lossThreshold, HasNextLevel && won);
+            int stars = won ? StarRating.For(_temperature.Peak) : 0;
+            _database.RecordAttempt(PlayerName, Stage.stageId, LevelNumber, won, final, stars);
+            GameResult record = _database.Insert(PlayerName, won, final, waves);
+
+            // Stars and stage totals, read back from level_progress after this attempt.
+            int cleared = 0, stageStars = 0;
+            LevelProgress after = null;
+            foreach (LevelProgress p in _database.GetProgress(PlayerName, Stage.stageId))
+            {
+                if (p.IsCleared == 1) cleared++;
+                stageStars += StarRating.For(p);
+                if (p.LevelNumber == LevelNumber) after = p;
+            }
+            var summary = new UIManager.EndSummary
+            {
+                Won = won,
+                Record = record,
+                Threshold = Level.lossThreshold,
+                CanGoNext = won && HasNextLevel,
+                Stars = stars,
+                Peak = _temperature.Peak,
+                BestStars = StarRating.For(after),
+                NewBest = won && before != null && before.IsCleared == 1 && stars > StarRating.For(before),
+                StageComplete = won && !HasNextLevel && cleared >= Stage.LevelCount,
+                StageCleared = cleared,
+                StageLevels = Stage.LevelCount,
+                StageStars = stageStars,
+            };
+            _ui.ShowEnd(summary);
+        }
+
+        private LevelProgress FindProgress(int level)
+        {
+            foreach (LevelProgress p in _database.GetProgress(PlayerName, Stage.stageId))
+                if (p.LevelNumber == level) return p;
+            return null;
         }
 
         public void Restart()
         {
+            if (_camera != null) _camera.SnapHome();
             Time.timeScale = 1f;
             _database.DeleteSession(PlayerName);
             StartLevel(LevelNumber);
@@ -240,6 +280,14 @@ namespace ThermoTactics
         {
             Autosave();
             GameSession.OpenLevelSelect = true;
+            LoadMenu();
+        }
+
+        /// <summary>Back to the stage cards.</summary>
+        public void ToStageSelect()
+        {
+            Autosave();
+            GameSession.OpenStageSelect = true;
             LoadMenu();
         }
 

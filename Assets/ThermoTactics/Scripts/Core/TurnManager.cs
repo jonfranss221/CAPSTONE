@@ -15,6 +15,7 @@ namespace ThermoTactics
         [SerializeField] private TemperatureSystem _temperature;
         [SerializeField] private LaneController _lanes;
         [SerializeField] private UIManager _ui;
+        [SerializeField] private BattleCamera _camera;
 
         public bool IsResolving { get; private set; }
 
@@ -54,32 +55,56 @@ namespace ThermoTactics
             _ui.Announce($"Warning: {boss.Data.displayName} will slam ALL 6 lanes this turn! Fill every lane.", UIManager.Warning);
         }
 
+        /// <summary>
+        /// Resolves the turn one lane at a time, left to right. In each lane the camera zooms in, the ally attacks
+        /// (an enemy, or the empty slot to cool the planet), then the enemy, if still standing, attacks (the ally,
+        /// or the undefended lane to heat the planet). A lane with no units is shown briefly and skipped.
+        /// In the boss wave, allies hit the boss lane by lane, then the boss makes its one move.
+        /// </summary>
         private IEnumerator ResolveTurn()
         {
             IsResolving = true;
             var gm = GameManager.Instance;
             _grid.SetDeployHighlights(false);
             _ui.RefreshHud();
-
-            // 1. Allies attack the enemy in their lane (or cool an empty lane, at most once per phase).
             _lanes.BeginAllyPhase();
-            yield return RunPhase(Faction.Ally);
-            yield return new WaitForSeconds(0.25f);
 
-            // 2. Wave cleared? Then enemies do not get to act.
+            bool bossWave = _grid.Boss != null;
+            for (int lane = 0; lane < _grid.LaneCount; lane++)
+            {
+                yield return ResolveLane(lane, bossWave);
+                if (_temperature.HasReachedThreshold) break;
+                if (bossWave && (_grid.Boss == null || _grid.Boss.IsDead)) break;
+            }
+            _ui.HideLaneCaption();
+
+            // Loss: the temperature reached the limit during the lanes.
+            if (_temperature.HasReachedThreshold)
+            {
+                yield return CameraHome();
+                IsResolving = false;
+                gm.EndLevel(false);
+                yield break;
+            }
+
+            // Wave cleared? Then the next wave comes (or the level is won).
             if (_waves.IsCurrentWaveCleared)
             {
+                yield return CameraHome();
                 yield return HandleWaveCleared(gm);
                 IsResolving = false;
                 yield break;
             }
 
-            // 3. Enemies attack the ally in their lane (or heat an undefended lane). A boss acts once for all lanes.
-            if (_grid.Boss != null) yield return BossPhase(_grid.Boss);
-            else yield return RunPhase(Faction.Enemy);
-            yield return new WaitForSeconds(0.25f);
+            // The boss acts once for all lanes, after every ally has hit it.
+            if (_grid.Boss != null)
+            {
+                yield return BossPhase(_grid.Boss);
+                _ui.HideLaneCaption();
+                yield return Wait(0.3f);
+            }
+            yield return CameraHome();
 
-            // 4. Climate check: reaching the threshold ends the level.
             if (_temperature.HasReachedThreshold)
             {
                 IsResolving = false;
@@ -87,13 +112,97 @@ namespace ThermoTactics
                 yield break;
             }
 
-            // 5. Next turn of the same wave, with the OP punishment.
+            // Next turn of the same wave, with the OP punishment.
             _waves.AdvanceTurn();
             IsResolving = false;
             BeginPlayerTurn(gm.Level);
             if (_oxygen.Penalty > 0)
                 _ui.Announce($"Turn {_waves.TurnInWave}: the wave is dragging on. Oxygen −{_oxygen.Penalty}.", UIManager.Warning);
             _ui.RefreshHud();
+        }
+
+        private IEnumerator ResolveLane(int lane, bool bossWave)
+        {
+            UnitBase ally = Alive(_grid.GetAlly(lane));
+            UnitBase enemy = Alive(_grid.GetEnemy(lane));
+            string title = $"LANE {lane + 1}";
+
+            // Nothing fights here: a quick look, then on to the next lane.
+            if (ally == null && (enemy == null || bossWave))
+            {
+                if (!BattleCamera.Enabled || _camera == null) yield break;
+                _ui.ShowLaneCaption(title, bossWave ? "No defender here. The boss can hit this lane." : "Empty lane. Nothing happens.", UIManager.Info);
+                yield return _camera.FocusLane(lane, bossWave);
+                yield return Wait(0.3f);
+                yield break;
+            }
+
+            _ui.ShowLaneCaption(title, Matchup(ally, enemy, bossWave), UIManager.Info);
+            if (_camera != null) yield return _camera.FocusLane(lane, bossWave);
+            yield return Wait(0.15f);
+
+            var result = new System.Text.StringBuilder();
+            float climate = 0f;
+
+            // 1. The ally attacks.
+            if (ally != null)
+            {
+                bool hadTarget = enemy != null;
+                int hpBefore = hadTarget ? enemy.Hp : 0;
+                bool coolingUsed = _lanes.CooledThisTurn;
+                yield return Attack(ally, enemy, lane, Faction.Ally, d => climate += d);
+                if (hadTarget)
+                {
+                    result.Append($"{ally.Data.displayName} hits {enemy.Data.displayName} for {Mathf.Min(hpBefore, ally.Damage)}");
+                    if (enemy.IsDead) result.Append(bossWave ? ". The boss falls!" : $". {enemy.Data.displayName} defeated!");
+                }
+                else if (climate < 0f) result.Append($"{ally.Data.displayName} attacks the empty lane: the air cools {climate:0.00} °C");
+                else if (!coolingUsed) result.Append($"{ally.Data.displayName} attacks the empty lane (already at the {_temperature.Baseline:0.00} °C minimum)");
+                else result.Append($"{ally.Data.displayName} attacks the empty lane (cooling counts once per turn)");
+            }
+
+            // 2. The enemy, if still standing, attacks (not in the boss wave: the boss moves once after all lanes).
+            enemy = bossWave ? null : Alive(_grid.GetEnemy(lane));
+            if (enemy != null && !_temperature.HasReachedThreshold)
+            {
+                if (result.Length > 0) yield return Wait(0.1f);
+                UnitBase target = Alive(_grid.GetAlly(lane));
+                bool hadTarget = target != null;
+                int hpBefore = hadTarget ? target.Hp : 0;
+                float heat = 0f;
+                yield return Attack(enemy, target, lane, Faction.Enemy, d => heat += d);
+                climate += heat;
+                if (result.Length > 0) result.Append(" · ");
+                if (hadTarget)
+                {
+                    result.Append($"{enemy.Data.displayName} hits back for {Mathf.Min(hpBefore, enemy.Damage)}");
+                    if (target.IsDead) result.Append($". {target.Data.displayName} is down!");
+                }
+                else result.Append($"{enemy.Data.displayName} attacks the undefended lane: +{heat:0.00} °C");
+            }
+
+            Color tone = climate > 0f ? new Color(1f, 0.6f, 0.5f) : climate < 0f ? new Color(0.55f, 0.85f, 1f) : UIManager.Good;
+            _ui.ShowLaneCaption(title, result.ToString(), tone);
+            yield return Wait(0.45f);
+        }
+
+        private static string Matchup(UnitBase ally, UnitBase enemy, bool bossWave)
+        {
+            if (ally != null && enemy != null) return $"{ally.Data.displayName}  vs  {enemy.Data.displayName}";
+            if (ally != null) return $"{ally.Data.displayName}  vs  empty lane";
+            return $"Undefended lane  vs  {enemy.Data.displayName}";
+        }
+
+        private static UnitBase Alive(UnitBase u) => u != null && !u.IsDead ? u : null;
+
+        private IEnumerator CameraHome()
+        {
+            if (_camera != null) yield return _camera.Home();
+        }
+
+        private static IEnumerator Wait(float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
         }
 
         private IEnumerator HandleWaveCleared(GameManager gm)
@@ -114,22 +223,7 @@ namespace ThermoTactics
                 _ui.Announce($"Wave {_waves.WaveNumber} of {_waves.TotalWaves} incoming! +{_waves.CurrentWave.opAllowance} Oxygen each turn.", UIManager.Info);
         }
 
-        /// <summary>All units of one side attack at the same time; waits until every animation finishes.</summary>
-        private IEnumerator RunPhase(Faction side)
-        {
-            int running = 0;
-            for (int lane = 0; lane < _grid.LaneCount; lane++)
-            {
-                UnitBase attacker = side == Faction.Ally ? _grid.GetAlly(lane) : _grid.GetEnemy(lane);
-                if (attacker == null || attacker.IsDead) continue;
-                UnitBase target = side == Faction.Ally ? _grid.GetEnemy(lane) : _grid.GetAlly(lane);
-                running++;
-                StartCoroutine(Track(Attack(attacker, target, lane, side), () => running--));
-            }
-            while (running > 0) yield return null;
-        }
-
-        private IEnumerator Attack(UnitBase attacker, UnitBase target, int lane, Faction side)
+        private IEnumerator Attack(UnitBase attacker, UnitBase target, int lane, Faction side, System.Action<float> climate)
         {
             bool hadTarget = target != null && !target.IsDead;
             yield return attacker.AttackRoutine(() =>
@@ -146,11 +240,11 @@ namespace ThermoTactics
                 }
                 else if (side == Faction.Ally)
                 {
-                    _lanes.ReportAllyAttack(lane, false, attacker.TopPosition);
+                    climate?.Invoke(_lanes.ReportAllyAttack(lane, false, attacker.TopPosition));
                 }
                 else
                 {
-                    _lanes.ReportEnemyAttack(lane, false, attacker.TopPosition);
+                    climate?.Invoke(_lanes.ReportEnemyAttack(lane, false, attacker.TopPosition));
                 }
                 _ui.RefreshHud();
             });
@@ -161,6 +255,16 @@ namespace ThermoTactics
         {
             BossUnit.BossMove move = boss.PlanNext(_grid);
             _ui.ShowBossMove(move, boss);
+            string what = move.IsSlam
+                ? $"LANDSLIDE SLAM on all 6 lanes, {move.Damage} damage each"
+                : $"CLEAVE on lanes {move.Lanes[0] + 1}–{move.Lanes[move.Lanes.Count - 1] + 1}, {move.Damage} damage each";
+            _ui.ShowLaneCaption(boss.Data.displayName.ToUpperInvariant(), what, new Color(1f, 0.6f, 0.5f));
+            if (_camera != null)
+            {
+                if (move.IsSlam) yield return _camera.Home();
+                else yield return _camera.FocusLanes(move.Lanes[0], move.Lanes[move.Lanes.Count - 1]);
+            }
+            int hits = 0, exposed = 0, downed = 0;
             yield return boss.PerformRoutine(move.IsSlam, () =>
             {
                 foreach (int lane in move.Lanes)
@@ -170,23 +274,24 @@ namespace ThermoTactics
                     if (ally != null && !ally.IsDead)
                     {
                         ally.TakeDamage(move.Damage);
+                        hits++;
                         _ui.ShowFloatingText(ally.TopPosition, $"-{move.Damage}", new Color(1f, 0.25f, 0.2f));
-                        if (ally.IsDead) _grid.Remove(ally);
+                        if (ally.IsDead) { downed++; _grid.Remove(ally); }
                     }
                     else
                     {
+                        exposed++;
                         _lanes.ReportEnemyAttack(lane, false, lanePos);
                     }
                 }
                 _ui.RefreshHud();
             });
+            string outcome = $"{hits} defender{(hits == 1 ? "" : "s")} hit" + (downed > 0 ? $", {downed} down" : "")
+                + (exposed > 0 ? $" · {exposed} empty lane{(exposed == 1 ? "" : "s")}: +{exposed * GameManager.Instance.Level.heatPerUndefendedHit:0.00} °C" : " · no empty lanes, no heat");
+            _ui.ShowLaneCaption(boss.Data.displayName.ToUpperInvariant(), outcome, exposed > 0 ? new Color(1f, 0.6f, 0.5f) : UIManager.Good);
+            yield return Wait(0.6f);
             _ui.RefreshHud();
         }
 
-        private static IEnumerator Track(IEnumerator routine, System.Action done)
-        {
-            yield return routine;
-            done();
-        }
     }
 }

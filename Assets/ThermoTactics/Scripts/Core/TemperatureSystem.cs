@@ -12,6 +12,9 @@ namespace ThermoTactics
         public float Baseline { get; private set; } = 1f;
         public float Threshold { get; private set; } = 1.5f;
 
+        /// <summary>Highest temperature reached since the level started (rates the level's stars).</summary>
+        public float Peak { get; private set; } = 1f;
+
         /// <summary>True once the temperature has reached the loss threshold.</summary>
         public bool HasReachedThreshold => Current >= Threshold - 0.0001f;
 
@@ -23,13 +26,15 @@ namespace ThermoTactics
             Baseline = baseline;
             Threshold = threshold;
             Current = baseline;
+            Peak = baseline;
             Changed?.Invoke(Current);
         }
 
         /// <summary>Puts back the temperature of a saved game.</summary>
-        public void Restore(float value)
+        public void Restore(float value, float peak = 0f)
         {
             Current = Mathf.Round(Mathf.Max(Baseline, value) * 100f) / 100f;
+            Peak = Mathf.Max(Current, peak);
             Changed?.Invoke(Current);
         }
 
@@ -37,6 +42,7 @@ namespace ThermoTactics
         public void Add(float delta)
         {
             Current = Mathf.Round(Mathf.Max(Baseline, Current + delta) * 100f) / 100f;
+            Peak = Mathf.Max(Peak, Current);
             Changed?.Invoke(Current);
         }
     }

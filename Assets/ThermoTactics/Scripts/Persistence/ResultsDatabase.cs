@@ -52,6 +52,7 @@ namespace ThermoTactics
         [Column("is_cleared")]      public int     IsCleared     { get; set; }
         [Column("attempts")]        public int     Attempts      { get; set; }
         [Column("best_final_temp")] public double? BestFinalTemp { get; set; }
+        [Column("best_stars")]      public int     BestStars     { get; set; }
     }
 
     /// <summary>Row shape for the saved_session table.</summary>
@@ -68,6 +69,7 @@ namespace ThermoTactics
         [Column("oxygen_penalty")]   public int OxygenPenalty   { get; set; }
         [Column("temperature")]  public double Temperature { get; set; }
         [Column("boss_turn")]    public int    BossTurn    { get; set; }
+        [Column("peak_temperature")] public double PeakTemperature { get; set; }
         [Column("allies")]       public string Allies      { get; set; }
         [Column("enemies")]      public string Enemies     { get; set; }
         [Column("saved_at")]     public string SavedAt     { get; set; }
@@ -78,7 +80,7 @@ namespace ThermoTactics
     /// Local database: SQLite file at Application.persistentDataPath/thermo_tactics.db
     /// (package com.gilzoide.sqlite-net, native SQLite for Android and Windows).
     ///
-    /// Tables (schema version 2):
+    /// Tables (schema version 3; version 3 added best_stars and peak_temperature):
     ///   game_results(id, player_name, result, created_at, final_temperature, waves_cleared) — one row per finished level
     ///   level_progress(player_name, stage_id, level_number, is_cleared, attempts, best_final_temp) — drives unlocking
     ///   saved_session(player_name, stage_id, level_number, wave_number, turn_number, …) — the Continue save, one per player
@@ -87,7 +89,7 @@ namespace ThermoTactics
     public class ResultsDatabase : MonoBehaviour
     {
         public const int MaxNameLength = 20;
-        public const int SchemaVersion = 2;
+        public const int SchemaVersion = 3;
         private const string FileName = "thermo_tactics.db";
         private const string LegacyJsonName = "results_db.json";
 
@@ -121,6 +123,7 @@ namespace ThermoTactics
             "  is_cleared      INTEGER NOT NULL DEFAULT 0 CHECK (is_cleared IN (0,1))," +
             "  attempts        INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0)," +
             "  best_final_temp REAL," +
+            "  best_stars      INTEGER NOT NULL DEFAULT 0 CHECK (best_stars BETWEEN 0 AND 3)," +
             "  PRIMARY KEY (player_name, stage_id, level_number))";
 
         private const string CreateSessionSql =
@@ -135,6 +138,7 @@ namespace ThermoTactics
             "  oxygen_penalty   INTEGER NOT NULL DEFAULT 0," +
             "  temperature      REAL    NOT NULL," +
             "  boss_turn        INTEGER NOT NULL DEFAULT 0," +
+            "  peak_temperature REAL    NOT NULL DEFAULT 0," +
             "  allies           TEXT    NOT NULL," +
             "  enemies          TEXT    NOT NULL," +
             "  saved_at         TEXT    NOT NULL," +
@@ -142,19 +146,20 @@ namespace ThermoTactics
 
         // A win sets is_cleared (never back to 0) and keeps the lowest winning temperature.
         private const string RecordAttemptSql =
-            "INSERT INTO level_progress (player_name, stage_id, level_number, is_cleared, attempts, best_final_temp) " +
-            "VALUES (?, ?, ?, ?, 1, ?) " +
+            "INSERT INTO level_progress (player_name, stage_id, level_number, is_cleared, attempts, best_final_temp, best_stars) " +
+            "VALUES (?, ?, ?, ?, 1, ?, ?) " +
             "ON CONFLICT (player_name, stage_id, level_number) DO UPDATE SET " +
             "  attempts = attempts + 1," +
             "  is_cleared = MAX(is_cleared, excluded.is_cleared)," +
             "  best_final_temp = CASE WHEN excluded.best_final_temp IS NOT NULL AND " +
             "    (best_final_temp IS NULL OR excluded.best_final_temp < best_final_temp) " +
-            "    THEN excluded.best_final_temp ELSE best_final_temp END";
+            "    THEN excluded.best_final_temp ELSE best_final_temp END," +
+            "  best_stars = MAX(best_stars, excluded.best_stars)";
 
         private const string SaveSessionSql =
             "INSERT OR REPLACE INTO saved_session (player_name, stage_id, level_number, wave_number, turn_number, " +
-            "oxygen_left, oxygen_allowance, oxygen_penalty, temperature, boss_turn, allies, enemies, saved_at, app_version) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "oxygen_left, oxygen_allowance, oxygen_penalty, temperature, boss_turn, peak_temperature, allies, enemies, saved_at, app_version) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         private SQLiteConnection _db;
 
@@ -221,13 +226,13 @@ namespace ThermoTactics
         // ---------------------------------------------------------------- level_progress
 
         /// <summary>Records one finished attempt. A win marks the level cleared and may improve the best temperature.</summary>
-        public void RecordAttempt(string playerName, int stageId, int levelNumber, bool won, float finalTemperature)
+        public void RecordAttempt(string playerName, int stageId, int levelNumber, bool won, float finalTemperature, int stars = 0)
         {
             if (!EnsureOpen()) return;
             try
             {
                 object best = won ? (object)(double)(Mathf.Round(finalTemperature * 100f) / 100f) : null;
-                _db.Execute(RecordAttemptSql, Sanitize(playerName), stageId, levelNumber, won ? 1 : 0, best);
+                _db.Execute(RecordAttemptSql, Sanitize(playerName), stageId, levelNumber, won ? 1 : 0, best, won ? Mathf.Clamp(stars, 1, 3) : 0);
             }
             catch (Exception e) { Debug.LogError($"[ResultsDatabase] Progress update failed: {e.Message}"); }
         }
@@ -240,7 +245,7 @@ namespace ThermoTactics
             try
             {
                 list.AddRange(_db.Query<LevelProgress>(
-                    "SELECT stage_id, level_number, is_cleared, attempts, best_final_temp FROM level_progress " +
+                    "SELECT stage_id, level_number, is_cleared, attempts, best_final_temp, best_stars FROM level_progress " +
                     "WHERE player_name = ? AND stage_id = ? ORDER BY level_number", Sanitize(playerName), stageId));
             }
             catch (Exception e) { Debug.LogError($"[ResultsDatabase] Progress query failed: {e.Message}"); }
@@ -279,7 +284,7 @@ namespace ThermoTactics
                 s.savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 s.appVersion = Application.version;
                 _db.Execute(SaveSessionSql, s.playerName, s.stageId, s.levelNumber, Mathf.Max(1, s.waveNumber), Mathf.Max(1, s.turnNumber),
-                    Mathf.Max(0, s.oxygenLeft), s.oxygenAllowance, s.oxygenPenalty, (double)s.temperature, s.bossTurn,
+                    Mathf.Max(0, s.oxygenLeft), s.oxygenAllowance, s.oxygenPenalty, (double)s.temperature, s.bossTurn, (double)s.peakTemperature,
                     SessionSnapshot.ToJson(s.allies), SessionSnapshot.ToJson(s.enemies), s.savedAt, s.appVersion);
                 return true;
             }
@@ -307,7 +312,7 @@ namespace ThermoTactics
                     playerName = r.PlayerName, stageId = r.StageId, levelNumber = r.LevelNumber,
                     waveNumber = r.WaveNumber, turnNumber = r.TurnNumber,
                     oxygenLeft = r.OxygenLeft, oxygenAllowance = r.OxygenAllowance, oxygenPenalty = r.OxygenPenalty,
-                    temperature = (float)r.Temperature, bossTurn = r.BossTurn,
+                    temperature = (float)r.Temperature, bossTurn = r.BossTurn, peakTemperature = (float)r.PeakTemperature,
                     allies = SessionSnapshot.FromJson(r.Allies), enemies = SessionSnapshot.FromJson(r.Enemies),
                     savedAt = r.SavedAt, appVersion = r.AppVersion,
                 };
@@ -388,8 +393,17 @@ namespace ThermoTactics
                     _db.Execute(CreateProgressSql);
                     _db.Execute(CreateSessionSql);
                 });
-                if (from > 0) Debug.Log($"[ResultsDatabase] Upgraded database from version {from} to 2.");
+                }
+            else if (from < 3)
+            {
+                // Version 3: stars (rated by the highest temperature reached) and the peak kept in the saved game.
+                _db.RunInTransaction(() =>
+                {
+                    _db.Execute("ALTER TABLE level_progress ADD COLUMN best_stars INTEGER NOT NULL DEFAULT 0 CHECK (best_stars BETWEEN 0 AND 3)");
+                    _db.Execute("ALTER TABLE saved_session ADD COLUMN peak_temperature REAL NOT NULL DEFAULT 0");
+                });
             }
+            if (from > 0 && from < SchemaVersion) Debug.Log($"[ResultsDatabase] Upgraded database from version {from} to {SchemaVersion}.");
             _db.Execute($"PRAGMA user_version = {SchemaVersion}");
         }
 

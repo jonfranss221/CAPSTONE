@@ -20,6 +20,8 @@ namespace ThermoTactics
         public static bool PopupsEnabled { get => GetB("tt.popups_enabled", true); set => SetB("tt.popups_enabled", value); }
         public static bool ShowNumbers { get => GetB("tt.show_numbers", true); set => SetB("tt.show_numbers", value); }
         public static bool BossWarning { get => GetB("tt.boss_warning", true); set => SetB("tt.boss_warning", value); }
+        /// <summary>Zoom the camera in on each lane while End Turn resolves.</summary>
+        public static bool LaneCamera { get => GetB("tt.lane_camera", true); set => SetB("tt.lane_camera", value); }
 
         /// <summary>Index into BattleSpeeds (0 = 1x, 1 = 1.5x, 2 = 2x).</summary>
         public static int BattleSpeedIndex

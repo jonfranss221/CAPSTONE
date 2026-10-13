@@ -33,6 +33,7 @@ namespace ThermoTactics
         public int oxygenPenalty;
         public float temperature;
         public int bossTurn;        // boss turns taken so far (0 when no boss)
+        public float peakTemperature; // highest °C reached so far in this level (rates the stars)
         public List<SavedUnit> allies = new List<SavedUnit>();
         public List<SavedUnit> enemies = new List<SavedUnit>();
         public string savedAt;      // yyyy-MM-dd HH:mm:ss

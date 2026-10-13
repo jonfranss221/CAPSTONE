@@ -19,6 +19,9 @@ namespace ThermoTactics
         /// <summary>The menu opens on the level path instead of the title (after "Level Select" in battle).</summary>
         public static bool OpenLevelSelect;
 
+        /// <summary>The menu opens on the stage cards (after "Stage Select" in battle).</summary>
+        public static bool OpenStageSelect;
+
         public static void Play(string player, StageData stage, int level, SessionSnapshot resume = null)
         {
             PlayerName = player;
