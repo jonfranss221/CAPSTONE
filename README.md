@@ -4,7 +4,10 @@ A Philippine climate-themed 2D turn-based strategy game for Android, built in Un
 Players defend Philippine ecosystems from fossil-fuel threats while keeping the global
 temperature below the **1.5 °C** limit. Capstone project.
 
-> **Status:** Stage 1 (Baguio — Kennon Road) playable prototype · Level 1 · 3 waves
+> **Status (v0.2.0):** Stage 1 (Baguio) playable from the Main Menu: 10 levels with unlocking,
+> a difficulty spike at Level 5, the Clearcut Behemoth boss at Level 10, and save / Continue.
+
+All names, text and dialogue are in English. The Filipino theme is in the environments and UI art.
 
 ---
 
@@ -12,7 +15,7 @@ temperature below the **1.5 °C** limit. Capstone project.
 
 | Item | Version |
 | --- | --- |
-| Unity | **6 (6000.0.84f1)** — Universal Render Pipeline 2D |
+| Unity | **6 (6000.0.84f1)** with the Universal Render Pipeline 2D |
 | Target | Android, minimum API 23 (Android 6.0), IL2CPP, ARM64 |
 | Input | Unity Input System (touch and mouse) |
 | Packages | 2D feature set, uGUI, Input System, SQLite-net (installed through `Packages/manifest.json`; Git must be installed) |
@@ -25,95 +28,121 @@ temperature below the **1.5 °C** limit. Capstone project.
    ```
 2. Open the folder in **Unity Hub → Add → Add project from disk** (Unity 6000.0.84f1).
    The first open rebuilds the `Library/` folder and takes a few minutes.
-3. Open `Assets/ThermoTactics/Scenes/Baguio_Level1.unity` and press **Play**.
+3. Open `Assets/ThermoTactics/Scenes/MainMenu.unity` and press **Play**.
+   (Playing `Baguio_Battle.unity` directly starts the level set on its GameManager, Level 1 by default.)
 
 ## How to play
 
-1. Enter a **username** and press **Start**.
-2. Tap a unit card in the deploy bar, then tap a glowing ally slot on the road.
-3. Tap **End Turn**: allies attack, then enemies attack, then the temperature is checked.
-4. Clear all **3 waves** while the temperature stays **below 1.5 °C** to win.
-5. Press **Results** (login or end screen) to see every saved result.
+1. On the title screen, type a **player name** (2–20 characters). A tester code is optional.
+2. Press **Start**, pick **Baguio Forest**, then a level on the path. Level 1 is open; clearing a level opens the next.
+3. Tap a unit card in the deploy bar, then a glowing ally slot on the road. Each level offers up to 5 unit types.
+4. Tap **End Turn**: allies attack, then enemies attack, then the temperature is checked.
+5. Clear every wave while the temperature stays **below 1.5 °C** to win.
+6. The game saves itself at the start of every turn, after every deploy and when the app is paused or closed.
+   Next time, type the same name and press **Continue** to return to the same level, wave and turn.
 
 | Rule | Value |
 | --- | --- |
 | Starting temperature | 1.00 °C |
 | Enemy hits an undefended lane | +0.10 °C |
-| Ally attacks an empty lane | −0.05 °C |
+| Ally attacks an empty enemy slot | −0.05 °C (at most once per ally phase) |
 | Loss | temperature reaches 1.50 °C |
-| Oxygen per turn | Wave 1: 5 · Wave 2: 7 · Wave 3: 10 (unspent OP does not carry over) |
-| Oxygen punishment | turn 2: −1 · turn 3: −2 · turn 4: −4 · turn 5+: −8 (minimum 1) |
+| Oxygen per turn | set per wave: 5–11 (Level 1: 5 · 6 · 7); unspent Oxygen does not carry over |
+| Oxygen penalty | turn 2: −1 · turn 3: −2 · turn 4: −4 · turn 5+: −8 (by turn within a wave), never below 2; none in the boss wave |
+
+### Baguio levels
+
+| Level | Location | Waves | Oxygen per wave | Notes |
+| --- | --- | --- | --- | --- |
+| 1 | Kennon Road | 3 | 5 · 6 · 7 | |
+| 2 | Lion's Head | 3 | 5 · 7 · 8 | |
+| 3 | Camp John Hay | 3 | 5 · 7 · 10 | |
+| 4 | Burnham Park | 3 | 6 · 8 · 10 | |
+| 5 | Session Road | 4 | 6 · 8 · 10 · 11 | Difficulty spike: elite enemies |
+| 6 | Mines View Park | 3 | 6 · 8 · 10 | |
+| 7 | Strawberry Farm | 3 | 6 · 8 · 10 | |
+| 8 | Busol Watershed | 4 | 7 · 9 · 11 · 11 | |
+| 9 | Tam-awan Village | 4 | 7 · 9 · 10 · 11 | |
+| 10 | Mt. Santo Tomas | 5 | 7 · 9 · 10 · 11 · 8 | Wave 5: Clearcut Behemoth (boss) |
+
+**Clearcut Behemoth:** 300 HP and fills all 6 enemy slots. **Cleave** hits the lane of your strongest unit and the lanes beside it for 8.
+**Landslide Slam** hits all 6 lanes for 7 every 3rd turn. At 40% HP it **enrages**: cleave 10, slam every 2nd turn.
+The boss panel always shows its next move.
 
 ## Implemented features
 
-- Username input with validation (2–20 characters)
-- Baguio environment with drifting fog and 12 deployment slots (6 lanes × ally/enemy)
-- 5 ally units and 5 enemy units, each with **idle**, **attack** and **hurt** animations
-- Oxygen Point system with punishment for long waves
-- Wave logic (3 waves) and turn order
-- Win / loss at the 1.5 °C threshold
-- Local **SQLite** results database (name, WIN/LOSS, date created) shown in the **Results** panel
+- Main Menu: player profile, Continue, Start, Settings, Quit (with confirmation), Credits, Results
+- Stage Select (Baguio open; four more stages locked) and the 10-node Baguio level path with best temperatures
+- Settings: music and effects volume (used once audio is added), battle speed (1× / 1.5× / 2×), large text, high contrast, climate pop-ups,
+  damage numbers, boss warning, and resetting a player's progress
+- 13 unit types (5 allies, 8 enemies) and 6 elite variants, each with **idle**, **attack** and **hurt** animations
+- Clearcut Behemoth boss with cleave, Landslide Slam and enrage; HUD boss panel and danger rings on target lanes
+- Oxygen system with turn penalty, minimum of 2 and no penalty in the boss wave
+- Pause menu; Victory / Defeat screen with Next Level, Play Again and Level Select
+- Local **SQLite** database: results, level progress (unlocks) and the saved game behind Continue
+
+Planned: pre-/post-quizzes, climate-fact pop-ups and Codex, quiz CSV export, audio, enemy movement (EnemyAI),
+stages 2–5 with their own bosses.
 
 ## Project structure
 
 ```
 Assets/ThermoTactics/
-├── Art/            Units/<Unit>/ (idle, attack, hurt frames + card) · Environment/ (Baguio)
-├── Animations/     Idle / Attack / Hurt clips + Animator controller per unit
-├── GameData/       UnitData (10) · WaveData (3) · LevelData (Baguio_Level1) — tune numbers here
-├── Scenes/         Baguio_Level1.unity
+├── Art/            Units/<Unit>/ · Bosses/ClearcutBehemoth/ · Environment/ (Baguio) · UI/ (icons, thumbnails, level path)
+├── Animations/     Idle / Attack / Hurt clips + Animator controller per unit and for the boss
+├── Fonts/          Pixelify Sans, Atkinson Hyperlegible (SIL Open Font Licence)
+├── GameData/       Stage1_Baguio · Levels/ (Baguio_Level1–10) · Waves/ (35) · Units/ (20 incl. elites and boss)
+├── Scenes/         MainMenu.unity · Baguio_Battle.unity
 ├── Scripts/
-│   ├── Core/          GameManager, TurnManager, WaveManager, OxygenPointSystem, TemperatureSystem
+│   ├── Core/          GameManager, GameSession, SettingsStore, TurnManager, WaveManager, OxygenPointSystem, TemperatureSystem
 │   ├── Board/         GridManager, BoardSlot, IsoBoardLayout, LaneController, DeploySystem, UnitFactory
-│   ├── Units/         UnitBase, AllyUnit, EnemyUnit
-│   ├── Data/          UnitData, WaveData, LevelData (ScriptableObjects)
-│   ├── UI/            UIManager, DeployCard, ResultsPanel
-│   ├── Persistence/   ResultsDatabase
+│   ├── Units/         UnitBase, AllyUnit, EnemyUnit, BossUnit
+│   ├── Data/          StageData, LevelData, WaveData, UnitData, BossData (ScriptableObjects)
+│   ├── UI/            UIManager, DeployCard, ResultsPanel, TextScaler
+│   │   └── Menu/      MainMenuController, SettingsPanel, StageSelectPanel, LevelSelectPanel, LevelNode
+│   ├── Persistence/   ResultsDatabase, SessionSnapshot
 │   └── Presentation/  FogScroller
-└── Editor/         ThermoTacticsBuilder (menu: Thermo-Tactics ▸ Build Baguio Level)
+└── Editor/         ThermoTacticsBuilder, MenuSceneBuilder, UiKit
 ```
 
-To rebuild the scene after changing art or stats, use **Thermo-Tactics ▸ Build Baguio Level**.
-Rebuilding replaces the scene, so make manual scene edits after rebuilding.
+**Thermo-Tactics ▸ Build Everything** imports the art, builds the animations, the 10 levels and both scenes.
+Single steps are under **Thermo-Tactics ▸ Steps**. Rebuilding replaces the scenes, so make manual scene edits after rebuilding.
+Tune levels and units in the `GameData` assets.
 
-## Results database (SQLite)
+## Database (SQLite)
 
-Results are stored offline in a **SQLite** database, `thermo_tactics.db`, in `Application.persistentDataPath`.
-On Windows, the editor puts it in `%USERPROFILE%\AppData\LocalLow\<Company>\<Product>\thermo_tactics.db`; on Android it lives in the app's private storage.
-The database is accessed with [SQLite-net for Unity](https://github.com/gilzoide/unity-sqlite-net) (`com.gilzoide.sqlite-net` 1.3.2, MIT). Unity installs it from `Packages/manifest.json`, which needs Git to be installed.
-Script: `Assets/ThermoTactics/Scripts/Persistence/ResultsDatabase.cs`.
+Player data is stored offline in **`thermo_tactics.db`** in `Application.persistentDataPath`
+(Windows editor: `%USERPROFILE%\AppData\LocalLow\DefaultCompany\Thermo-Tactics\`; Android: the app's private storage).
+It is accessed with [SQLite-net for Unity](https://github.com/gilzoide/unity-sqlite-net) (`com.gilzoide.sqlite-net` 1.3.2, MIT)
+by one script, `Scripts/Persistence/ResultsDatabase.cs`. The schema version is kept in `PRAGMA user_version` (now **2**).
 
-```sql
-CREATE TABLE game_results (
-  id                INTEGER PRIMARY KEY AUTOINCREMENT,
-  player_name       TEXT    NOT NULL CHECK (length(player_name) BETWEEN 1 AND 20),
-  result            TEXT    NOT NULL CHECK (result IN ('WIN','LOSS')),
-  created_at        TEXT    NOT NULL,          -- yyyy-MM-dd HH:mm:ss
-  final_temperature REAL    NOT NULL,          -- °C when the level ended
-  waves_cleared     INTEGER NOT NULL DEFAULT 0 CHECK (waves_cleared >= 0)
-);
-CREATE INDEX idx_game_results_created_at ON game_results(created_at);
-```
+| Table | One row per | Used for |
+| --- | --- | --- |
+| `game_results` | finished level | Results list (name, WIN / LOSS, date, final °C, waves cleared) |
+| `level_progress` | player + stage + level | Unlocking levels; attempts; best (lowest) winning °C |
+| `saved_session` | player | Continue: level, wave, turn, Oxygen, °C, boss turn, units with HP (JSON) |
 
-| Operation | SQL |
-| --- | --- |
-| Save a result (end of level) | `INSERT INTO game_results (player_name, result, created_at, final_temperature, waves_cleared) VALUES (?, ?, ?, ?, ?)` |
-| Results panel | `SELECT ... FROM game_results ORDER BY id DESC` |
+Player names match without case ("Jon" = "jon"). Values are bound as parameters (`?`), never concatenated into the SQL.
+A saved game from a different app version is discarded. Results from the older JSON version (`results_db.json`) are imported once.
+The file can be opened with [DB Browser for SQLite](https://sqlitebrowser.org/).
 
-Values are bound as parameters (`?`), never concatenated into the SQL. Results saved by the older JSON version (`results_db.json`) are imported automatically the first time the game runs.
-The `.db` file can be opened with [DB Browser for SQLite](https://sqlitebrowser.org/) for checking.
+Settings are kept in PlayerPrefs (keys starting with `tt.`) by `Scripts/Core/SettingsStore.cs`.
+
+## Documentation
+
+`Docs/` holds the architecture documents (Parts I–VI, .docx) and `Docs/Figures/` the diagrams.
 
 ## Version control
 
 | Item | Status |
 | --- | --- |
-| `.gitignore` | Present — Unity template; excludes `Library/`, `Temp/`, `Obj/`, `Build/`, `Logs/`, `UserSettings/`, IDE files and builds |
-| `.gitattributes` | Present — text/LF rules for Unity YAML; Git LFS rules for audio and layered art |
+| `.gitignore` | Unity template; excludes `Library/`, `Temp/`, `Obj/`, `Build/`, `Logs/`, `UserSettings/`, IDE files and builds |
+| `.gitattributes` | Text/LF rules for Unity YAML; Git LFS rules for audio and layered art |
 | Git LFS | Configured for `*.wav *.mp3 *.ogg *.psd *.aseprite *.mp4` (no such files yet) |
-| Branches | Current: `main` only. Planned: `main` = stable · `develop` = integration · `feature/<name>` per system |
+| Branches | `main` = stable · `develop` = integration · `feature/<name>` per system |
+| Unity settings | Asset Serialization **Force Text**; Version Control mode **Visible Meta Files** |
 
-Commit `.meta` files together with their assets. Unity settings: Asset Serialization **Force Text** (set).
-Version Control mode is still Unity Version Control; switch it to **Visible Meta Files** (Edit ▸ Project Settings ▸ Version Control).
+Commit `.meta` files together with their assets.
 
 ## Team
 
