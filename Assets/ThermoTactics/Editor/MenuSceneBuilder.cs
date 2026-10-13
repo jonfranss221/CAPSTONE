@@ -85,12 +85,34 @@ namespace ThermoTactics.EditorTools
             fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent; fit.aspectRatio = 1344f / 576f;
             bg.color = new Color(0.55f, 0.55f, 0.55f, 1f);
             var dim = Img("Dim", screen, new Color(0.047f, 0.07f, 0.055f, 0.55f)); Stretch(dim.rectTransform);
+
+            // ---- living background: rolling fog and drifting pollen (MenuAmbience) ----
+            var fogTex = AssetDatabase.LoadAssetAtPath<Texture2D>(Root + "/Art/Environment/fog_drift_tileable.png");
+            var fogs = new RawImage[2];
+            for (int i = 0; i < 2; i++)
+            {
+                var fogImg = NewRect($"Fog_{i + 1}", screen).gameObject.AddComponent<RawImage>();
+                Stretch(fogImg.rectTransform);
+                fogImg.texture = fogTex; fogImg.raycastTarget = false;
+                fogImg.uvRect = new Rect(i * 0.37f, 0f, i == 0 ? 1f : 0.7f, 1f);
+                fogImg.color = new Color(0.86f, 0.92f, 0.9f, 0.25f);
+                fogs[i] = fogImg;
+            }
+            var motes = NewRect("Motes", screen); Stretch(motes);
+            var mote = Img("Mote", motes, Hex("#E9E4B8"));
+            var ambience = screen.gameObject.AddComponent<MenuAmbience>();
+            Ref(ambience, "_background", bg.rectTransform);
+            RefArray(ambience, "_fog", fogs);
+            Ref(ambience, "_motesRoot", motes);
+            Ref(ambience, "_moteTemplate", mote);
             WeaveEdge(screen, true); WeaveEdge(screen, false);
 
             var f = Frame("Frame", screen);
             TxtAt("Eyebrow", f, "A CLIMATE STRATEGY GAME", BodyBold, 15, Gold, 64, 56, 620, 22);
             var title = TxtAt("Title", f, "THERMO-\nTACTICS", Pixel, 84, Cream, 64, 80, 620, 170);
             title.lineSpacing = 0.9f;
+            HardShadow(title, 5f, 0.6f);
+            Ref(ambience, "_title", title.rectTransform);
             TxtAt("Tagline", f, "Defend the Philippines. Keep the planet below <b>1.5 °C</b>.", Body, 19, Hex("#DCD2BD"), 64, 254, 620, 28);
 
             // ---- navigation ----
@@ -152,7 +174,23 @@ namespace ThermoTactics.EditorTools
             TxtAt("Privacy", form.transform, "Your name is stored only on this device with your results and progress. Not you? Type your own name to switch player.",
                 Body, 13, CreamDim, 28, 364, 384, 54);
 
+            // ---- Baguio progress on the title (levels cleared and stars) ----
+            var prog = Box("StageProgress", f, new Color(0.067f, 0.094f, 0.078f, 0.92f), Moss, 64, 560, 400, 86, 0f, "ui_frame2");
+            TxtAt("Stage", prog.transform, "STAGE 1 · BAGUIO FOREST", BodyBold, 14, GoldLight, 16, 10, 260, 20, TextAnchor.MiddleLeft);
+            Icon("StarIcon", prog.transform, "icon_star", Gold, 300, 9, 20);
+            Ref(menu, "_progressStars", TxtAt("Stars", prog.transform, "0 / 30", BodyBold, 15, Cream, 324, 9, 64, 22, TextAnchor.MiddleLeft));
+            var segs = new Image[10];
+            float segW = (368f - 9 * 4f) / 10f;
+            for (int i = 0; i < 10; i++)
+            {
+                segs[i] = At(Img($"Level_{i + 1}", prog.transform, Line), 16 + i * (segW + 4), 38, segW, 14);
+            }
+            RefArray(menu, "_progressSegments", segs);
+            Ref(menu, "_progressInfo", TxtAt("Info", prog.transform, "", Body, 13, CreamDim, 16, 58, 370, 20, TextAnchor.MiddleLeft));
+            Ref(menu, "_progressRoot", prog.gameObject);
+
             Ref(menu, "_versionText", TxtAt("Version", f, "v0.2 · Stage 1 prototype", Body, 13, CreamDim, 64, 664, 400, 18));
+            AddPanelFx(screen.gameObject, f);
             Icon("OfflineIcon", f, "icon_offline", CreamDim, 976, 665, 16);
             TxtAt("Offline", f, "Works offline · saved on this phone", Body, 13, CreamDim, 1000, 664, 216, 18);
         }
@@ -170,6 +208,7 @@ namespace ThermoTactics.EditorTools
         {
             var o = Img(name, c, new Color(0.024f, 0.04f, 0.03f, 0.72f), null, true); Stretch(o.rectTransform);
             frame = Frame("Frame", o.transform);
+            AddPanelFx(o.gameObject, frame);
             return o.rectTransform;
         }
 
@@ -202,6 +241,7 @@ namespace ThermoTactics.EditorTools
             Legend(d.transform, "DISPLAY", L, 290);
             Ref(panel, "_largeText", Check("LargeText", d.transform, "Large text", L, 320, W));
             Ref(panel, "_highContrast", Check("HighContrast", d.transform, "High-contrast lane highlights", L, 366, W));
+            Ref(panel, "_laneCamera", Check("LaneCamera", d.transform, "Zoom in on each lane during battle", L, 412, W));
 
             Legend(d.transform, "GAMEPLAY", R, 116);
             TxtAt("SpeedLabel", d.transform, "Battle animation speed", BodyBold, 16, Cream, R, 150, W, 22, TextAnchor.MiddleLeft);
@@ -299,6 +339,7 @@ namespace ThermoTactics.EditorTools
             Ref(panel, "_root", root.gameObject);
             WeaveEdge(root.transform, true); WeaveEdge(root.transform, false);
             var f = Frame("Frame", root.transform);
+            AddPanelFx(root.gameObject, f);
 
             var back = Btn("BackButton", f, "", Clear, Cream, Slate, 48, 40, 52, 52, 18, 0f);
             Icon("Icon", back.transform, "icon_back", Cream, 14, 14, 24);
@@ -318,6 +359,7 @@ namespace ThermoTactics.EditorTools
             At(Img("Stage1_Shadow", f, Color.black), 48 + 6, Top + 6, W, H);
             var s1 = At(Img("Stage1", f, Hex("#142019"), null, true), 48, Top, W, H);
             var b1 = s1.gameObject.AddComponent<Button>(); b1.targetGraphic = s1;
+            s1.gameObject.AddComponent<ButtonFx>();
             Ref(panel, "_stage1Button", b1);
             var th = At(Img("Thumb", s1.transform, Color.white, Ui("stage1_thumb")), 0, 0, W, 190);
             At(Img("ThumbLine", s1.transform, Gold), 0, 190, W, 3);
@@ -327,6 +369,9 @@ namespace ThermoTactics.EditorTools
             TxtAt("Region", s1.transform, stage.region, Body, 14, CreamDim, 16, 240, W - 32, 40);
             TxtAt("Threat", s1.transform, "<color=#CFC6B2>Threat:</color> " + stage.threats, Body, 14, Cream, 16, 284, W - 32, 40);
             TxtAt("Difficulty", s1.transform, "<color=#CFC6B2>Difficulty:</color> " + stage.difficulty, Body, 14, Cream, 16, 324, W - 32, 20);
+            Icon("StarIcon", s1.transform, "icon_star", Gold, 16, 354, 18);
+            TxtAt("StarsLabel", s1.transform, "Stars", BodyBold, 14, Cream, 40, 354, 80, 20, TextAnchor.MiddleLeft);
+            Ref(panel, "_stage1Stars", TxtAt("StarsCount", s1.transform, "0 / 30", BodyBold, 14, GoldLight, W - 116, 354, 100, 20, TextAnchor.MiddleRight));
             TxtAt("LevelsLabel", s1.transform, "Levels", BodyBold, 14, Cream, 16, 384, 100, 20, TextAnchor.MiddleLeft);
             Ref(panel, "_stage1Count", TxtAt("LevelsCount", s1.transform, "0 / 10", BodyBold, 14, Cream, W - 116, 384, 100, 20, TextAnchor.MiddleRight));
             var bar = At(Img("Progress", s1.transform, Hex("#2A3A30")), 16, 410, W - 32, 10);
@@ -374,6 +419,7 @@ namespace ThermoTactics.EditorTools
             Ref(panel, "_root", root.gameObject);
             WeaveEdge(root.transform, true); WeaveEdge(root.transform, false);
             var f = Frame("Frame", root.transform);
+            AddPanelFx(root.gameObject, f);
             At(Img("PathArt", f, Color.white, Ui("levelpath_background")), 0, 20, 820, 680);
 
             // gold progress over the grey road: one segment between each pair of nodes
@@ -410,9 +456,13 @@ namespace ThermoTactics.EditorTools
             Ref(panel, "_tagBack", tag);
             var tagT = Txt("Text", tag.transform, "LEVEL 4", BodyBold, 14, Hex("#FFF6E6"), TextAnchor.MiddleCenter); Stretch(tagT.rectTransform);
             Ref(panel, "_tag", tagT);
-            Ref(panel, "_status", TxtAt("Status", d.transform, "Next to play", Body, 14, CreamDim, 152, 18, 240, 24, TextAnchor.MiddleLeft));
+            Ref(panel, "_status", TxtAt("Status", d.transform, "Next to play", Body, 14, CreamDim, 152, 18, 150, 24, TextAnchor.MiddleLeft));
+            var detailStars = new Image[3];
+            for (int i = 0; i < 3; i++) detailStars[i] = Icon($"Star_{i + 1}", d.transform, "icon_star", Gold, 318 + i * 28, 18, 24);
+            RefArray(panel, "_detailStars", detailStars);
+            Ref(panel, "_starHint", TxtAt("StarHint", d.transform, "", Body, 12, GoldLight, 22, 108, 376, 16));
             Ref(panel, "_name", TxtAt("Name", d.transform, "", BodyBold, 24, Cream, 22, 52, 376, 34, TextAnchor.MiddleLeft));
-            Ref(panel, "_description", TxtAt("Desc", d.transform, "", Body, 15, CreamDim, 22, 88, 376, 20));
+            Ref(panel, "_description", TxtAt("Desc", d.transform, "", Body, 15, CreamDim, 22, 86, 376, 20));
             At(Img("Divider", d.transform, Line), 0, 122, 420, 2);
 
             string[] statLabels = { "WAVES", "OP / TURN", "BEST" };
@@ -481,16 +531,21 @@ namespace ThermoTactics.EditorTools
             var border = Border(fill.transform, Slate);
             var label = Txt("Label", holder, level.ToString(), BodyBold, boss ? 22 : 26, Hex("#9F978A"), TextAnchor.MiddleCenter); Stretch(label.rectTransform);
             var btn = fill.gameObject.AddComponent<Button>(); btn.targetGraphic = fill;
+            holder.gameObject.AddComponent<ButtonFx>();
             var cb = btn.colors; cb.highlightedColor = new Color(1.12f, 1.12f, 1.12f); btn.colors = cb;
 
+            var nodeStars = new Image[3];
+            for (int i = 0; i < 3; i++)
+                nodeStars[i] = Icon($"Star_{i + 1}", f, "icon_star", Gold, centre.x - 26 + i * 18 - 7, centre.y + size / 2 + 6, 14);
             var cap = Txt("Caption", f, "", BodyBold, 13, Cream, TextAnchor.UpperCenter);
-            At(cap, centre.x - 70, centre.y + size / 2 + 8, 140, 20);
+            At(cap, centre.x - 70, centre.y + size / 2 + 22, 140, 20);
             var capShadow = cap.gameObject.AddComponent<Shadow>(); capShadow.effectColor = Color.black; capShadow.effectDistance = new Vector2(0, -1);
 
             var node = holder.gameObject.AddComponent<LevelNode>();
             RefInt(node, "_levelNumber", level);
             Ref(node, "_button", btn); Ref(node, "_fill", fill); Ref(node, "_border", border); Ref(node, "_label", label);
             Ref(node, "_caption", cap); Ref(node, "_selectRing", ring.gameObject);
+            RefArray(node, "_stars", nodeStars);
             RefBool(node, "_isSpike", spike); RefBool(node, "_isBoss", boss);
             return node;
         }

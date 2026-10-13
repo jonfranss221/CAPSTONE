@@ -18,6 +18,7 @@ namespace ThermoTactics
         [SerializeField] private Toggle _popups;
         [SerializeField] private Toggle _numbers;
         [SerializeField] private Toggle _bossWarning;
+        [SerializeField] private Toggle _laneCamera;
         [SerializeField] private Button _resetButton;
         [SerializeField] private Button _creditsButton;
         [SerializeField] private Button _resultsButton;
@@ -38,6 +39,7 @@ namespace ThermoTactics
             _popups.onValueChanged.AddListener(v => SettingsStore.PopupsEnabled = v);
             _numbers.onValueChanged.AddListener(v => SettingsStore.ShowNumbers = v);
             _bossWarning.onValueChanged.AddListener(v => SettingsStore.BossWarning = v);
+            if (_laneCamera != null) _laneCamera.onValueChanged.AddListener(v => SettingsStore.LaneCamera = v);
             for (int i = 0; i < _speedButtons.Length; i++)
             {
                 int index = i;
@@ -59,6 +61,7 @@ namespace ThermoTactics
             _popups.SetIsOnWithoutNotify(SettingsStore.PopupsEnabled);
             _numbers.SetIsOnWithoutNotify(SettingsStore.ShowNumbers);
             _bossWarning.SetIsOnWithoutNotify(SettingsStore.BossWarning);
+            if (_laneCamera != null) _laneCamera.SetIsOnWithoutNotify(SettingsStore.LaneCamera);
             Labels();
             Speeds();
             bool named = _menu.NameIsValid;

@@ -34,6 +34,12 @@ namespace ThermoTactics
         [SerializeField] private Text _infoNewText;
         [SerializeField] private Text _versionText;
 
+        [Header("Stage progress strip (title screen)")]
+        [SerializeField] private GameObject _progressRoot;
+        [SerializeField] private Text _progressStars;
+        [SerializeField] private Text _progressInfo;
+        [SerializeField] private Image[] _progressSegments = new Image[10];
+
         [Header("Panels")]
         [SerializeField] private SettingsPanel _settings;
         [SerializeField] private StageSelectPanel _stageSelect;
@@ -104,7 +110,13 @@ namespace ThermoTactics
                 GameSession.OpenLevelSelect = false;
                 ShowLevelSelect(GameSession.LevelNumber);
             }
+            else if (GameSession.OpenStageSelect && NameIsValid)
+            {
+                GameSession.OpenStageSelect = false;
+                ShowStageSelect();
+            }
             else ShowTitle();
+            GameSession.OpenLevelSelect = GameSession.OpenStageSelect = false;
         }
 
         // ---------------------------------------------------------------- navigation
@@ -185,6 +197,39 @@ namespace ThermoTactics
             else
                 _infoNewText.text = "New player. Press <b>Start</b> to begin in Baguio Forest. Your progress saves automatically on this phone.";
             _nameMessage.text = "";
+            RefreshProgress(name);
+        }
+
+        /// <summary>The Baguio strip on the title: one block per level (gold = cleared, red = next) and the star total.</summary>
+        private void RefreshProgress(string name)
+        {
+            if (_progressRoot == null) return;
+            _progressRoot.SetActive(NameIsValid);
+            if (!NameIsValid) return;
+            var progress = new System.Collections.Generic.Dictionary<int, LevelProgress>();
+            int stars = 0;
+            foreach (LevelProgress p in _database.GetProgress(name, _stage.stageId))
+            {
+                progress[p.LevelNumber] = p;
+                stars += StarRating.For(p);
+            }
+            int levels = _stage.LevelCount, next = 0, cleared = 0;
+            for (int i = 0; i < _progressSegments.Length; i++)
+            {
+                int level = i + 1;
+                bool done = progress.TryGetValue(level, out LevelProgress p) && p.IsCleared == 1;
+                if (done) cleared++;
+                else if (next == 0 && level <= levels) next = level;
+                _progressSegments[i].gameObject.SetActive(level <= levels);
+                _progressSegments[i].color = done ? new Color(0.886f, 0.682f, 0.173f)
+                    : level == next ? new Color(0.64f, 0.14f, 0.11f)
+                    : new Color(0.133f, 0.2f, 0.165f);
+            }
+            _progressStars.text = $"{stars} / {levels * StarRating.MaxStars}";
+            LevelData nl = next > 0 ? _stage.GetLevel(next) : null;
+            _progressInfo.text = cleared >= levels ? $"All {levels} levels cleared! Replay levels for more stars."
+                : nl != null ? $"{cleared} of {levels} cleared · Next: Level {next}, {nl.locationName}"
+                : $"{cleared} of {levels} cleared";
         }
 
         private static string Escape(string s) => s.Replace("<", "‹").Replace(">", "›");

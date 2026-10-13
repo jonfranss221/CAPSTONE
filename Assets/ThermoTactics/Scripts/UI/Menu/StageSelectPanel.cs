@@ -18,6 +18,7 @@ namespace ThermoTactics
         [SerializeField] private Button _stage1Button;
         [SerializeField] private Text _stage1Count;
         [SerializeField] private Image _stage1Fill;
+        [SerializeField] private Text _stage1Stars;
         [Tooltip("Status text of stages 2–5 (\"Locked. Clear …\").")]
         [SerializeField] private Text[] _lockedTexts = new Text[4];
 
@@ -42,6 +43,12 @@ namespace ThermoTactics
             _playerProgress.text = $"{total} of {TotalLevels} levels cleared";
             _stage1Count.text = $"{cleared} / {levels}";
             _stage1Fill.fillAmount = cleared / (float)levels;
+            if (_stage1Stars != null)
+            {
+                int stars = 0;
+                foreach (LevelProgress p in menu.Database.GetProgress(name, menu.Stage.stageId)) stars += StarRating.For(p);
+                _stage1Stars.text = $"{stars} / {levels * StarRating.MaxStars}";
+            }
 
             bool baguioDone = cleared >= levels;
             for (int i = 0; i < _lockedTexts.Length; i++)

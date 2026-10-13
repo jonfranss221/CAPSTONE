@@ -17,14 +17,21 @@ namespace ThermoTactics
         [SerializeField] private GameObject _selectRing;
         [SerializeField] private bool _isSpike;
         [SerializeField] private bool _isBoss;
+        [SerializeField] private Image[] _stars = new Image[3];
 
         public int LevelNumber => _levelNumber;
         public Button Button => _button;
 
         private static Color Hex(string h) { ColorUtility.TryParseHtmlString(h, out Color c); return c; }
 
-        public void Set(NodeState state, bool selected, string caption)
+        public void Set(NodeState state, bool selected, string caption, int stars = 0)
         {
+            for (int i = 0; i < _stars.Length; i++)
+            {
+                if (_stars[i] == null) continue;
+                _stars[i].gameObject.SetActive(state == NodeState.Cleared && stars > 0);
+                _stars[i].color = i < stars ? Hex("#F3C95A") : Hex("#3B4A40");
+            }
             Color bg = Hex("#1A2620"), fg = Hex("#9F978A"), border = Hex("#4A5A4E");
             if (state == NodeState.Cleared) { bg = Hex("#E2AE2C"); fg = Hex("#1A140A"); border = Hex("#1A140A"); }
             if (state == NodeState.Current) { bg = Hex("#A3241C"); fg = Hex("#FFF6E6"); border = Hex("#1A140A"); }

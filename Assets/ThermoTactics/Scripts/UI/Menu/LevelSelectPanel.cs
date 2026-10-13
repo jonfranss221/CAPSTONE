@@ -24,6 +24,8 @@ namespace ThermoTactics
         [SerializeField] private Image _tagBack;
         [SerializeField] private Text _tag;
         [SerializeField] private Text _status;
+        [SerializeField] private Image[] _detailStars = new Image[3];
+        [SerializeField] private Text _starHint;
         [SerializeField] private Text _name;
         [SerializeField] private Text _description;
         [SerializeField] private Text _waves;
@@ -107,7 +109,8 @@ namespace ThermoTactics
                           : IsUnlocked(node.LevelNumber) ? LevelNode.NodeState.Current
                           : LevelNode.NodeState.Locked;
                 if (state == LevelNode.NodeState.Current && node.LevelNumber != current) state = LevelNode.NodeState.Cleared;
-                node.Set(state, node.LevelNumber == level, d != null ? d.pathCaption : "");
+                _progress.TryGetValue(node.LevelNumber, out LevelProgress np);
+                node.Set(state, node.LevelNumber == level, d != null ? d.pathCaption : "", StarRating.For(np));
             }
             ShowDetail(_menu.Stage.GetLevel(level));
         }
@@ -124,6 +127,11 @@ namespace ThermoTactics
             _tagBack.color = special ? red : green;
             _tag.text = l.isBossLevel ? "BOSS LEVEL" : l.isEliteSpike ? "ELITE SPIKE" : $"LEVEL {l.levelNumber}";
             _status.text = cleared ? "Cleared" : unlocked ? "Next to play" : "Locked";
+            _progress.TryGetValue(l.levelNumber, out LevelProgress lp);
+            int stars = StarRating.For(lp);
+            for (int i = 0; i < _detailStars.Length; i++)
+                if (_detailStars[i] != null) _detailStars[i].color = i < stars ? Hex("#F3C95A") : Hex("#2E3B33");
+            if (_starHint != null) _starHint.text = stars == 0 ? $"Stars: keep the temperature at {StarRating.TwoStarAt:0.00} °C or lower for 2, {StarRating.ThreeStarAt:0.00} °C for 3." : StarRating.NextStarHint(stars);
             _name.text = $"LEVEL {l.levelNumber} · {l.locationName.ToUpperInvariant()}";
             _description.text = l.subtitle;
             _waves.text = l.waves.Length.ToString();

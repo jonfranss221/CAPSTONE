@@ -181,6 +181,7 @@ namespace ThermoTactics.EditorTools
             if (border.a > 0f) Border(img.transform, border);
             var b = img.gameObject.AddComponent<Button>();
             b.targetGraphic = img;
+            img.gameObject.AddComponent<ButtonFx>();
             var colors = b.colors;
             colors.normalColor = Color.white;
             colors.highlightedColor = new Color(1.1f, 1.1f, 1.1f);
@@ -292,6 +293,15 @@ namespace ThermoTactics.EditorTools
         }
 
         /// <summary>A Screen Space Overlay canvas scaled from the 1280 × 720 design, matching height.</summary>
+        /// <summary>Fade (and slide) a screen in each time it is shown.</summary>
+        public static void AddPanelFx(GameObject root, RectTransform slide = null)
+        {
+            if (root.GetComponent<CanvasGroup>() == null) root.AddComponent<CanvasGroup>();
+            var fx = root.GetComponent<PanelFx>();
+            if (fx == null) fx = root.AddComponent<PanelFx>();
+            if (slide != null) Ref(fx, "_slide", slide);
+        }
+
         public static Canvas NewCanvas(string name, int order)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));

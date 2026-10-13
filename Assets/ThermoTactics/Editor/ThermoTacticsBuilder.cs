@@ -109,7 +109,7 @@ namespace ThermoTactics.EditorTools
                     importer.textureCompression = TextureImporterCompression.Uncompressed;
                     importer.mipmapEnabled = false;
                     importer.alphaIsTransparency = true;
-                    importer.wrapMode = file == "weave_tile" ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
+                    importer.wrapMode = file == "weave_tile" || file == "fog_drift_tileable" ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
                     importer.spritePixelsPerUnit = ui ? 100 : file == "fog_drift_tileable" ? 32 : file == "pixel" ? 4 : 64;
 
                     var settings = new TextureImporterSettings();
@@ -476,6 +476,8 @@ namespace ThermoTactics.EditorTools
             cam.backgroundColor = Night;
             cam.clearFlags = CameraClearFlags.SolidColor;
             if (cam.GetComponent<Physics2DRaycaster>() == null) cam.gameObject.AddComponent<Physics2DRaycaster>();
+            var battleCam = cam.GetComponent<BattleCamera>();
+            if (battleCam == null) battleCam = cam.gameObject.AddComponent<BattleCamera>();
 
             // ---- environment ----
             var env = new GameObject("Environment").transform;
@@ -525,17 +527,22 @@ namespace ThermoTactics.EditorTools
             stage = AssetDatabase.LoadAssetAtPath<StageData>(StagePath);   // reload: a stale instance would serialize as null
             Ref(gm, "_defaultStage", stage); Ref(gm, "_turns", turns); Ref(gm, "_waves", waves); Ref(gm, "_oxygen", oxygen);
             Ref(gm, "_temperature", temp); Ref(gm, "_grid", grid); Ref(gm, "_lanes", lanes); Ref(gm, "_deploy", deploy);
-            Ref(gm, "_factory", factory); Ref(gm, "_database", db); Ref(gm, "_ui", ui); Ref(gm, "_fog", fog);
+            Ref(gm, "_factory", factory); Ref(gm, "_database", db); Ref(gm, "_ui", ui); Ref(gm, "_fog", fog); Ref(gm, "_camera", battleCam);
             Ref(turns, "_grid", grid); Ref(turns, "_waves", waves); Ref(turns, "_oxygen", oxygen);
-            Ref(turns, "_temperature", temp); Ref(turns, "_lanes", lanes); Ref(turns, "_ui", ui);
+            Ref(turns, "_temperature", temp); Ref(turns, "_lanes", lanes); Ref(turns, "_ui", ui); Ref(turns, "_camera", battleCam);
             Ref(waves, "_grid", grid); Ref(waves, "_factory", factory);
             RefArray(grid, "_allySlots", allySlots); RefArray(grid, "_enemySlots", enemySlots);
             Ref(lanes, "_temperature", temp); Ref(lanes, "_ui", ui);
             Ref(deploy, "_grid", grid); Ref(deploy, "_oxygen", oxygen); Ref(deploy, "_factory", factory); Ref(deploy, "_ui", ui);
             Ref(factory, "_shadowSprite", Sprite(ArtEnv + "/unit_shadow.png")); Ref(factory, "_pixelSprite", Sprite(ArtEnv + "/pixel.png"));
 
-            foreach (var kv in refs) Ref(ui, kv.Key, kv.Value);
+            foreach (var kv in refs) if (kv.Value != null) Ref(ui, kv.Key, kv.Value);
             RefArray(ui, "_cards", cards.ToArray());
+            RefArray(ui, "_endStars", _endArrays.stars);
+            RefArray(ui, "_endSecondary", _endArrays.secondary);
+            RefArray(ui, "_endSecondaryLabels", _endArrays.labels);
+            RefArray(ui, "_endSecondaryIcons", _endArrays.icons);
+            RefArray(ui, "_stageLevelStars", _stageStars);
             Ref(ui, "_temperature", temp); Ref(ui, "_oxygen", oxygen); Ref(ui, "_waves", waves); Ref(ui, "_grid", grid);
             Ref(ui, "_deploy", deploy); Ref(ui, "_turns", turns); Ref(ui, "_database", db); Ref(ui, "_font", BodyBold);
 
@@ -673,6 +680,18 @@ namespace ThermoTactics.EditorTools
             announce.gameObject.SetActive(false);
             refs["_announcement"] = announce;
 
+            // ---------------- lane caption (End Turn, lane by lane) ----------------
+            var lane = Img("LaneCaption", hud, new Color(0.055f, 0.08f, 0.066f, 0.93f));
+            var lrt = lane.rectTransform;
+            lrt.anchorMin = lrt.anchorMax = new Vector2(0.5f, 1); lrt.pivot = new Vector2(0.5f, 1);
+            lrt.sizeDelta = new Vector2(760, 64); lrt.anchoredPosition = new Vector2(0, -96);
+            Border(lane.transform, Moss, "ui_frame2");
+            var accent = At(Img("Accent", lane.transform, Mint), 0, 0, 8, 64);
+            refs["_laneAccent"] = accent;
+            refs["_laneTitle"] = TxtAt("Title", lane.transform, "LANE 1", BodyBold, 20, Cream, 24, 6, 700, 26, TextAnchor.MiddleLeft);
+            refs["_laneDetail"] = TxtAt("Detail", lane.transform, "", Body, 15, Cream, 24, 34, 720, 24, TextAnchor.MiddleLeft);
+            refs["_laneCaption"] = lane.gameObject;
+
             // ---------------- boss panel ----------------
             var boss = At(Img("BossPanel", hud, new Color(0.055f, 0.04f, 0.03f, 0.92f)), 20, 96, 470, 124);
             Border(boss.transform, Red);
@@ -690,6 +709,7 @@ namespace ThermoTactics.EditorTools
             // ---------------- pause ----------------
             var pausePanel = Img("PausePanel", c, new Color(0.024f, 0.04f, 0.03f, 0.78f), null, true); Stretch(pausePanel.rectTransform);
             var pf = Frame("Frame", pausePanel.transform);
+            AddPanelFx(pausePanel.gameObject, pf);
             var pd = Box("Dialog", pf, Panel, Moss, 380, 150, 520, 420, 8f);
             Weave(pd.transform, 0, 0, 520);
             TxtAt("Title", pd.transform, "PAUSED", Pixel, 32, Cream, 28, 40, 460, 40, TextAnchor.MiddleLeft);
@@ -701,23 +721,100 @@ namespace ThermoTactics.EditorTools
             TxtAt("Saved", pd.transform, "Leaving keeps your saved game. Continue on the Main Menu returns to this turn.", Body, 13, CreamDim, 28, 350, 464, 40);
             refs["_pausePanel"] = pausePanel.gameObject;
 
-            // ---------------- end ----------------
-            var end = Img("EndPanel", c, new Color(0.024f, 0.04f, 0.03f, 0.78f), null, true); Stretch(end.rectTransform);
+            // ---------------- end: level complete / level failed ----------------
+            var end = Img("EndPanel", c, new Color(0.024f, 0.04f, 0.03f, 0.8f), null, true); Stretch(end.rectTransform);
             var ef = Frame("Frame", end.transform);
-            var ed = Box("Dialog", ef, Panel, Gold, 290, 130, 700, 440, 8f);
-            Weave(ed.transform, 0, 0, 700);
-            refs["_endTitle"] = TxtAt("Title", ed.transform, "VICTORY", Pixel, 56, Gold, 0, 40, 700, 70, TextAnchor.MiddleCenter);
-            refs["_endBody"] = TxtAt("Body", ed.transform, "", Body, 17, Cream, 40, 120, 620, 200, TextAnchor.UpperCenter);
-            refs["_nextButton"] = Btn("NextLevelButton", ed.transform, "NEXT LEVEL", Gold, Ink, Ink, 40, 330, 300, 54, 22);
-            refs["_playAgainButton"] = Btn("PlayAgainButton", ed.transform, "PLAY AGAIN", Red, Hex("#FFF6E6"), Ink, 360, 330, 300, 54, 22);
-            refs["_endLevelSelectButton"] = Btn("LevelSelectButton", ed.transform, "LEVEL SELECT", Clear, Cream, Slate, 40, 396, 300, 30, 16, 0f);
-            refs["_endResultsButton"] = Btn("ResultsButton", ed.transform, "RESULTS", Clear, Cream, Slate, 360, 396, 300, 30, 16, 0f);
+            AddPanelFx(end.gameObject, ef);
+            var ed = Box("Dialog", ef, Panel, Clear, 250, 92, 780, 540, 8f);
+            refs["_endBorder"] = Border(ed.transform, Gold);
+            Weave(ed.transform, 0, 0, 780);
+            refs["_endTitle"] = TxtAt("Title", ed.transform, "LEVEL COMPLETE", Pixel, 50, Gold, 0, 34, 780, 62, TextAnchor.MiddleCenter);
+            var stars = new Image[3];
+            for (int s3 = 0; s3 < 3; s3++)
+            {
+                float size = s3 == 1 ? 68 : 56;
+                stars[s3] = Icon($"Star_{s3 + 1}", ed.transform, "icon_star", Gold, 390 - 34 + (s3 - 1) * 84 + (68 - size) / 2, 104 + (s3 == 1 ? 0 : 10), size);
+                stars[s3].rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                stars[s3].rectTransform.anchoredPosition += new Vector2(size / 2, -size / 2);
+            }
+            var badge = At(Img("NewBest", ed.transform, Red), 560, 120, 130, 30);
+            Border(badge.transform, Ink, "ui_frame2");
+            var bt = Txt("Text", badge.transform, "NEW BEST!", BodyBold, 15, Hex("#FFF6E6"), TextAnchor.MiddleCenter); Stretch(bt.rectTransform);
+            refs["_endNewBest"] = badge.gameObject;
+            refs["_endBody"] = TxtAt("Body", ed.transform, "", Body, 17, Cream, 50, 186, 680, 110, TextAnchor.UpperCenter);
+            refs["_endStarHint"] = TxtAt("StarHint", ed.transform, "", BodyBold, 14, GoldLight, 50, 300, 680, 22, TextAnchor.MiddleCenter);
+
+            var primary = Btn("PrimaryButton", ed.transform, "", Gold, Ink, Ink, 50, 340, 680, 62, 24);
+            refs["_endPrimary"] = primary;
+            refs["_endPrimaryIcon"] = Icon("Icon", primary.transform, "icon_next", Ink, 240, 18, 26);
+            refs["_endPrimaryLabel"] = TxtAt("Label", primary.transform, "NEXT LEVEL", Pixel, 26, Ink, 276, 0, 300, 62, TextAnchor.MiddleLeft);
+            var secondary = new Button[3]; var secLabels = new Text[3]; var secIcons = new Image[3];
+            for (int b = 0; b < 3; b++)
+            {
+                var sb = Btn($"SecondaryButton_{b + 1}", ed.transform, "", new Color(0.078f, 0.11f, 0.09f, 1f), Cream, Slate, 50 + b * 232, 420, 216, 54, 18, 0f);
+                secIcons[b] = Icon("Icon", sb.transform, "icon_restart", Cream, 18, 15, 24);
+                secLabels[b] = TxtAt("Label", sb.transform, "RETRY", Pixel, 18, Cream, 52, 0, 160, 54, TextAnchor.MiddleLeft);
+                secondary[b] = sb;
+            }
+            refs["_endResultsButton"] = Btn("ResultsButton", ed.transform, "See all results", Clear, CreamDim, Clear, 290, 486, 200, 30, 14, 0f, Body);
             refs["_endPanel"] = end.gameObject;
+            _endArrays = (stars, secondary, secLabels, secIcons);
+
+            // ---------------- stage complete ----------------
+            var stagePanel = Img("StageCompletePanel", c, new Color(0.024f, 0.04f, 0.03f, 0.86f), null, true); Stretch(stagePanel.rectTransform);
+            var sf = Frame("Frame", stagePanel.transform);
+            AddPanelFx(stagePanel.gameObject, sf);
+            var sd = Box("Dialog", sf, Panel, Gold, 170, 70, 940, 580, 8f);
+            Weave(sd.transform, 0, 0, 940);
+            TxtAt("Eyebrow", sd.transform, "STAGE COMPLETE", BodyBold, 16, GoldLight, 40, 40, 860, 22, TextAnchor.MiddleCenter);
+            refs["_stageTitle"] = TxtAt("Title", sd.transform, "BAGUIO FOREST CLEARED", Pixel, 44, Gold, 0, 64, 940, 56, TextAnchor.MiddleCenter);
+            var thumbFrame = At(Img("ThumbFrame", sd.transform, Gold), 40, 140, 344, 230);
+            At(Img("Thumb", thumbFrame.transform, Color.white, Ui("stage1_thumb")), 4, 4, 336, 222).preserveAspect = false;
+            var lvlStars = new Image[3];
+            TxtAt("BossLabel", sd.transform, "LEVEL 10 · BOSS", BodyBold, 13, CreamDim, 40, 384, 344, 18, TextAnchor.MiddleCenter);
+            for (int s3 = 0; s3 < 3; s3++)
+            {
+                lvlStars[s3] = Icon($"LevelStar_{s3 + 1}", sd.transform, "icon_star", Gold, 160 + s3 * 52, 432, 44);
+                lvlStars[s3].rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            }
+            refs["_stageStats"] = TxtAt("Stats", sd.transform, "", Body, 18, Cream, 412, 140, 488, 110);
+            TxtAt("StarsLabel", sd.transform, "STAGE STARS", BodyBold, 14, CreamDim, 412, 262, 240, 20, TextAnchor.MiddleLeft);
+            Icon("StarIcon", sd.transform, "icon_star", Gold, 412, 288, 34);
+            refs["_stageStarCount"] = TxtAt("StarCount", sd.transform, "0 / 30", Pixel, 30, Cream, 454, 284, 200, 40, TextAnchor.MiddleLeft);
+            Bar("StarBar", sd.transform, Hex("#2A3A30"), Gold, 412, 332, 488, 14, out Image starFill);
+            starFill.type = Image.Type.Filled; starFill.fillMethod = Image.FillMethod.Horizontal; starFill.fillAmount = 0.5f;
+            refs["_stageStarFill"] = starFill;
+            var next = At(Img("Next", sd.transform, new Color(0.184f, 0.365f, 0.27f, 0.25f)), 412, 360, 488, 92);
+            Border(next.transform, Moss, "ui_frame2");
+            Icon("Icon", next.transform, "icon_lock", Mint, 14, 14, 22);
+            refs["_stageNext"] = TxtAt("Text", next.transform, "", Body, 15, Cream, 46, 10, 430, 74);
+
+            refs["_stageSelectButton"] = StageBtn(sd.transform, "STAGE SELECT", "icon_map", Gold, Ink, 40, 486, 300, 60, 22, 4f);
+            refs["_stageLevelSelectButton"] = StageBtn(sd.transform, "LEVEL SELECT", "icon_list", new Color(0.078f, 0.11f, 0.09f, 1f), Cream, 356, 486, 260, 60, 19, 0f);
+            refs["_stageRetryButton"] = StageBtn(sd.transform, "RETRY BOSS", "icon_restart", new Color(0.078f, 0.11f, 0.09f, 1f), Cream, 632, 486, 268, 60, 19, 0f);
+            refs["_stageResultsButton"] = Btn("ResultsButton", sd.transform, "See all results", Clear, CreamDim, Clear, 370, 548, 200, 26, 14, 0f, Body);
+            refs["_stagePanel"] = stagePanel.gameObject;
+            _stageStars = lvlStars;
+
+            refs["_iconNext"] = Ui("icon_next"); refs["_iconRetry"] = Ui("icon_restart"); refs["_iconLevels"] = Ui("icon_list");
+            refs["_iconStages"] = Ui("icon_map"); refs["_iconResults"] = Ui("icon_list");
 
             // ---------------- results ----------------
             refs["_results"] = MenuSceneBuilder.BuildResults(c);
 
             return canvas;
+        }
+
+        // Arrays made inside BuildBattleUI, wired to UIManager after it is added.
+        private static (Image[] stars, Button[] secondary, Text[] labels, Image[] icons) _endArrays;
+        private static Image[] _stageStars;
+
+        private static Button StageBtn(Transform parent, string label, string icon, Color fill, Color text, float x, float y, float w, float h, int size, float shadow)
+        {
+            var b = Btn(label.Replace(" ", "") + "Button", parent, "", fill, text, fill.a > 0.5f && fill.r > 0.5f ? Ink : Slate, x, y, w, h, size, shadow);
+            Icon("Icon", b.transform, icon, text, 20, (h - 26) / 2, 26);
+            TxtAt("Label", b.transform, label, Pixel, size, text, 56, 0, w - 64, h, TextAnchor.MiddleLeft);
+            return b;
         }
 
         private static DeployCard Card(Transform parent, int index)
