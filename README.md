@@ -4,8 +4,9 @@ A Philippine climate-themed 2D turn-based strategy game for Android, built in Un
 Players defend Philippine ecosystems from fossil-fuel threats while keeping the global
 temperature below the **1.5 °C** limit. Capstone project.
 
-> **Status (v0.2.0):** Stage 1 (Baguio) playable from the Main Menu: 10 levels with unlocking,
-> a difficulty spike at Level 5, the Clearcut Behemoth boss at Level 10, and save / Continue.
+> **Status (v0.2.0):** Stage 1 (Baguio) playable from the Main Menu: 10 levels with unlocking and 1–3 stars,
+> a lane-by-lane battle camera, a difficulty spike at Level 5, the Clearcut Behemoth boss at Level 10,
+> a Stage Complete screen, and save / Continue.
 
 All names, text and dialogue are in English. The Filipino theme is in the environments and UI art.
 
@@ -36,16 +37,20 @@ All names, text and dialogue are in English. The Filipino theme is in the enviro
 1. On the title screen, type a **player name** (2–20 characters). A tester code is optional.
 2. Press **Start**, pick **Baguio Forest**, then a level on the path. Level 1 is open; clearing a level opens the next.
 3. Tap a unit card in the deploy bar, then a glowing ally slot on the road. Each level offers up to 5 unit types.
-4. Tap **End Turn**: allies attack, then enemies attack, then the temperature is checked.
-5. Clear every wave while the temperature stays **below 1.5 °C** to win.
-6. The game saves itself at the start of every turn, after every deploy and when the app is paused or closed.
+4. Tap **End Turn**. The camera zooms in on lanes 1 to 6 in turn: in each lane your unit attacks, then the enemy
+   (if still standing) hits back. A banner shows what happened in each lane. Settings can turn the zoom off.
+5. Clear every wave while the temperature stays **below 1.5 °C** to win. You earn **1–3 stars** from the highest
+   temperature reached: 3 stars at 1.20 °C or below, 2 at 1.35 °C or below.
+6. After a level: **Next Level**, **Retry**, **Level Select** or **Stage Select**. Beating Level 10 shows the
+   **Stage Complete** screen with your star total.
+7. The game saves itself at the start of every turn, after every deploy and when the app is paused or closed.
    Next time, type the same name and press **Continue** to return to the same level, wave and turn.
 
 | Rule | Value |
 | --- | --- |
 | Starting temperature | 1.00 °C |
 | Enemy hits an undefended lane | +0.10 °C |
-| Ally attacks an empty enemy slot | −0.05 °C (at most once per ally phase) |
+| Ally attacks an empty enemy slot | −0.05 °C (at most once per turn) |
 | Loss | temperature reaches 1.50 °C |
 | Oxygen per turn | set per wave: 5–11 (Level 1: 5 · 6 · 7); unspent Oxygen does not carry over |
 | Oxygen penalty | turn 2: −1 · turn 3: −2 · turn 4: −4 · turn 5+: −8 (by turn within a wave), never below 2; none in the boss wave |
@@ -71,15 +76,18 @@ The boss panel always shows its next move.
 
 ## Implemented features
 
-- Main Menu: player profile, Continue, Start, Settings, Quit (with confirmation), Credits, Results
-- Stage Select (Baguio open; four more stages locked) and the 10-node Baguio level path with best temperatures
+- Main Menu: living background (pan, fog, pollen), player profile, Continue, Start, Settings, Quit (with confirmation),
+  Credits, Results, and a Baguio progress strip with stars; buttons and screens animate
+- Stage Select (Baguio open; four more stages locked) and the 10-node Baguio level path with stars and best temperatures
 - Settings: music and effects volume (used once audio is added), battle speed (1× / 1.5× / 2×), large text, high contrast, climate pop-ups,
-  damage numbers, boss warning, and resetting a player's progress
+  damage numbers, boss warning, lane camera zoom, and resetting a player's progress
 - 13 unit types (5 allies, 8 enemies) and 6 elite variants, each with **idle**, **attack** and **hurt** animations
 - Clearcut Behemoth boss with cleave, Landslide Slam and enrage; HUD boss panel and danger rings on target lanes
 - Oxygen system with turn penalty, minimum of 2 and no penalty in the boss wave
-- Pause menu; Victory / Defeat screen with Next Level, Play Again and Level Select
-- Local **SQLite** database: results, level progress (unlocks) and the saved game behind Continue
+- Lane-by-lane End Turn with a zooming camera and a lane banner
+- Pause menu; Level Complete (stars) / Level Failed screens with Next Level, Retry, Level Select and Stage Select;
+  Stage Complete screen after Level 10
+- Local **SQLite** database: results, level progress (unlocks, best stars) and the saved game behind Continue
 
 Planned: pre-/post-quizzes, climate-fact pop-ups and Codex, quiz CSV export, audio, enemy movement (EnemyAI),
 stages 2–5 with their own bosses.
@@ -94,19 +102,22 @@ Assets/ThermoTactics/
 ├── GameData/       Stage1_Baguio · Levels/ (Baguio_Level1–10) · Waves/ (35) · Units/ (20 incl. elites and boss)
 ├── Scenes/         MainMenu.unity · Baguio_Battle.unity
 ├── Scripts/
-│   ├── Core/          GameManager, GameSession, SettingsStore, TurnManager, WaveManager, OxygenPointSystem, TemperatureSystem
+│   ├── Core/          GameManager, GameSession, SettingsStore, StarRating, TurnManager, WaveManager, OxygenPointSystem, TemperatureSystem
 │   ├── Board/         GridManager, BoardSlot, IsoBoardLayout, LaneController, DeploySystem, UnitFactory
 │   ├── Units/         UnitBase, AllyUnit, EnemyUnit, BossUnit
 │   ├── Data/          StageData, LevelData, WaveData, UnitData, BossData (ScriptableObjects)
-│   ├── UI/            UIManager, DeployCard, ResultsPanel, TextScaler
-│   │   └── Menu/      MainMenuController, SettingsPanel, StageSelectPanel, LevelSelectPanel, LevelNode
+│   ├── UI/            UIManager, DeployCard, ResultsPanel, TextScaler, ButtonFx, PanelFx
+│   │   └── Menu/      MainMenuController, MenuAmbience, SettingsPanel, StageSelectPanel, LevelSelectPanel, LevelNode
 │   ├── Persistence/   ResultsDatabase, SessionSnapshot
-│   └── Presentation/  FogScroller
-└── Editor/         ThermoTacticsBuilder, MenuSceneBuilder, UiKit
+│   ├── Presentation/  FogScroller, BattleCamera
+│   └── Dev/           AutoPlaytest, QuickCheck (editor only)
+└── Editor/         ThermoTacticsBuilder, MenuSceneBuilder, UiKit, PlaytestMenu
 ```
 
 **Thermo-Tactics ▸ Build Everything** imports the art, builds the animations, the 10 levels and both scenes.
-Single steps are under **Thermo-Tactics ▸ Steps**. Rebuilding replaces the scenes, so make manual scene edits after rebuilding.
+Single steps are under **Thermo-Tactics ▸ Steps**. **Thermo-Tactics ▸ Test ▸ Play Stage 1 Automatically** plays all 10 levels
+by itself as the player "Playtest" and saves a report and screenshots to `Logs/qa/auto/` (not committed).
+**Thermo-Tactics ▸ Test ▸ Quick Check of New Screens** checks the menus, Level 1, a loss and the Level 10 boss in about a minute (`Logs/qa/check/`). Rebuilding replaces the scenes, so make manual scene edits after rebuilding.
 Tune levels and units in the `GameData` assets.
 
 ## Database (SQLite)
@@ -114,13 +125,13 @@ Tune levels and units in the `GameData` assets.
 Player data is stored offline in **`thermo_tactics.db`** in `Application.persistentDataPath`
 (Windows editor: `%USERPROFILE%\AppData\LocalLow\DefaultCompany\Thermo-Tactics\`; Android: the app's private storage).
 It is accessed with [SQLite-net for Unity](https://github.com/gilzoide/unity-sqlite-net) (`com.gilzoide.sqlite-net` 1.3.2, MIT)
-by one script, `Scripts/Persistence/ResultsDatabase.cs`. The schema version is kept in `PRAGMA user_version` (now **2**).
+by one script, `Scripts/Persistence/ResultsDatabase.cs`. The schema version is kept in `PRAGMA user_version` (now **3**).
 
 | Table | One row per | Used for |
 | --- | --- | --- |
 | `game_results` | finished level | Results list (name, WIN / LOSS, date, final °C, waves cleared) |
-| `level_progress` | player + stage + level | Unlocking levels; attempts; best (lowest) winning °C |
-| `saved_session` | player | Continue: level, wave, turn, Oxygen, °C, boss turn, units with HP (JSON) |
+| `level_progress` | player + stage + level | Unlocking levels; attempts; best (lowest) winning °C; best stars |
+| `saved_session` | player | Continue: level, wave, turn, Oxygen, °C and peak °C, boss turn, units with HP (JSON) |
 
 Player names match without case ("Jon" = "jon"). Values are bound as parameters (`?`), never concatenated into the SQL.
 A saved game from a different app version is discarded. Results from the older JSON version (`results_db.json`) are imported once.
