@@ -89,6 +89,9 @@ namespace ThermoTactics
         [Header("Results")]
         [SerializeField] private ResultsPanel _results;
 
+        [Header("Post-quiz (after the stage's last level)")]
+        [SerializeField] private QuizPanel _quiz;
+
         [Header("Systems")]
         [SerializeField] private TemperatureSystem _temperature;
         [SerializeField] private OxygenPointSystem _oxygen;
@@ -145,8 +148,7 @@ namespace ThermoTactics
             _stagePanel.SetActive(false);
             _laneCaption.SetActive(false);
             _pausePanel.SetActive(false);
-            _results.Hide();
-            _hud.SetActive(true);
+            _results.Hide();            _hud.SetActive(true);
             GameManager gm = GameManager.Instance;
             UnitData[] roster = gm.Level.allyRoster;
             for (int i = 0; i < _cards.Length; i++)
@@ -191,7 +193,15 @@ namespace ThermoTactics
             _bossPanel.SetActive(false);
             _laneCaption.SetActive(false);
             GameManager gm = GameManager.Instance;
-            if (e.StageComplete) { ShowStageComplete(e, gm); return; }
+            if (e.StageComplete)
+            {
+                // The post-quiz comes first, once per player; the Stage Complete screen then shows its result.
+                if (_quiz != null && QuizManager.NeedsPost(_database, gm.PlayerName, gm.Stage))
+                    _quiz.Show(gm.Stage, QuizManager.Post, gm.PlayerName, _database, o => ShowStageComplete(e, gm, o));
+                else
+                    ShowStageComplete(e, gm, QuizManager.LoadPost(_database, gm.PlayerName, gm.Stage));
+                return;
+            }
 
             _endPanel.SetActive(true);
             _endPanel.transform.SetAsLastSibling();
@@ -256,7 +266,7 @@ namespace ThermoTactics
             if (_endSecondaryIcons[i] != null) _endSecondaryIcons[i].sprite = icon;
         }
 
-        private void ShowStageComplete(EndSummary e, GameManager gm)
+        private void ShowStageComplete(EndSummary e, GameManager gm, QuizOutcome quiz)
         {
             _stagePanel.SetActive(true);
             _stagePanel.transform.SetAsLastSibling();
@@ -267,7 +277,9 @@ namespace ThermoTactics
                 $"You defeated the <b>{BossName(gm)}</b>. Highest temperature: {e.Peak:0.00} °C.\n" +
                 $"Levels cleared: <b>{e.StageCleared} / {e.StageLevels}</b>\n" +
                 $"Stage {stage.stageId} saved by <b>{e.Record.player_name}</b>." +
-                (e.Record.id > 0 ? "" : "\n<color=#FF9A86>Result not saved: the database could not be written.</color>");
+                (e.Record.id > 0 ? "" : "\n<color=#FF9A86>Result not saved: the database could not be written.</color>") +
+                // One line only: the stats box sits right above the STAGE STARS label.
+                (quiz == null ? "" : $"\n<color=#F3C95A>Post-quiz {quiz.KeptScore} / {quiz.MaxScore} · knowledge gain {QuizManager.GainText(quiz.Gain)}</color>");
             _stageStarCount.text = $"{e.StageStars} / {maxStars}";
             _stageStarFill.fillAmount = maxStars > 0 ? e.StageStars / (float)maxStars : 0f;
             _stageNext.text = e.StageStars >= maxStars

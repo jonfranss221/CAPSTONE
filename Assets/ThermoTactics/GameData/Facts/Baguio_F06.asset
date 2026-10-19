@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Baguio_F06
+  m_EditorClassIdentifier: 
+  factId: S1_F06
+  stageId: 1
+  topicId: forests
+  title: Homes for wildlife
+  body: 'Forests shelter wildlife such as the Philippine Eagle, which lives in the
+    forests of Mindanao and the Sierra Madre. Protecting a forest protects its animals
+    and keeps its carbon stored: one action helps wildlife and the climate.'
+  icon: {fileID: 0}
+  levelNumber: 6
+  trigger: 0
+  waveNumber: 1

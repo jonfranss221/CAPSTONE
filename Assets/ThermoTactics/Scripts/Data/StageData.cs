@@ -19,6 +19,12 @@ namespace ThermoTactics
         [Tooltip("Every unit that can appear in this stage. Used to rebuild the board from a saved game.")]
         public UnitData[] unitCatalog = new UnitData[0];
 
+        [Header("Education")]
+        [Tooltip("Asked before the stage (pre-quiz) and again after its last level (post-quiz).")]
+        public QuizData quiz;
+        [Tooltip("Climate facts shown as pop-ups during the levels; they review the quiz topics.")]
+        public PopupData[] facts = new PopupData[0];
+
         public int LevelCount => levels != null ? levels.Length : 0;
 
         public LevelData GetLevel(int levelNumber)

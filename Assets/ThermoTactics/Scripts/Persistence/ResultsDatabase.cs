@@ -76,20 +76,37 @@ namespace ThermoTactics
         [Column("app_version")]  public string AppVersion  { get; set; }
     }
 
+    /// <summary>Row shape for the quiz_results table: one pre or post quiz of one player in one stage.</summary>
+    [UnityEngine.Scripting.Preserve]
+    public class QuizRecord
+    {
+        [Column("id")]          public int    Id         { get; set; }
+        [Column("player_name")] public string PlayerName { get; set; }
+        [Column("stage_id")]    public int    StageId    { get; set; }
+        [Column("quiz_type")]   public string QuizType   { get; set; }
+        [Column("answers")]     public string Answers    { get; set; }
+        [Column("score")]       public int    Score      { get; set; }
+        [Column("max_score")]   public int    MaxScore   { get; set; }
+        [Column("taken_at")]    public string TakenAt    { get; set; }
+        [Column("attempts")]    public int    Attempts   { get; set; }
+    }
+
     /// <summary>
     /// Local database: SQLite file at Application.persistentDataPath/thermo_tactics.db
     /// (package com.gilzoide.sqlite-net, native SQLite for Android and Windows).
     ///
-    /// Tables (schema version 3; version 3 added best_stars and peak_temperature):
+    /// Tables (schema version 4; version 3 added best_stars and peak_temperature, version 4 the two education tables):
     ///   game_results(id, player_name, result, created_at, final_temperature, waves_cleared) — one row per finished level
     ///   level_progress(player_name, stage_id, level_number, is_cleared, attempts, best_final_temp) — drives unlocking
     ///   saved_session(player_name, stage_id, level_number, wave_number, turn_number, …) — the Continue save, one per player
+    ///   quiz_results(player_name, stage_id, quiz_type, answers, score, …) — first pre / post quiz per player and stage
+    ///   facts_seen(player_name, fact_id, seen_at) — climate facts already shown to the player
     /// Results recorded earlier by the JSON version (results_db.json) are imported once.
     /// </summary>
     public class ResultsDatabase : MonoBehaviour
     {
         public const int MaxNameLength = 20;
-        public const int SchemaVersion = 3;
+        public const int SchemaVersion = 4;
         private const string FileName = "thermo_tactics.db";
         private const string LegacyJsonName = "results_db.json";
 
@@ -160,6 +177,36 @@ namespace ThermoTactics
             "INSERT OR REPLACE INTO saved_session (player_name, stage_id, level_number, wave_number, turn_number, " +
             "oxygen_left, oxygen_allowance, oxygen_penalty, temperature, boss_turn, peak_temperature, allies, enemies, saved_at, app_version) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        // Version 4: quizzes and climate facts. These are study data, so Reset my progress keeps them.
+        private const string CreateQuizSql =
+            "CREATE TABLE IF NOT EXISTS quiz_results (" +
+            "  id          INTEGER PRIMARY KEY AUTOINCREMENT," +
+            "  player_name TEXT    NOT NULL COLLATE NOCASE," +
+            "  stage_id    INTEGER NOT NULL CHECK (stage_id BETWEEN 1 AND 5)," +
+            "  quiz_type   TEXT    NOT NULL CHECK (quiz_type IN ('pre','post'))," +
+            "  answers     TEXT    NOT NULL," +
+            "  score       INTEGER NOT NULL CHECK (score BETWEEN 0 AND 5)," +
+            "  max_score   INTEGER NOT NULL DEFAULT 5," +
+            "  taken_at    TEXT    NOT NULL," +
+            "  attempts    INTEGER NOT NULL DEFAULT 1," +
+            "  UNIQUE (player_name, stage_id, quiz_type))";
+
+        private const string CreateFactsSql =
+            "CREATE TABLE IF NOT EXISTS facts_seen (" +
+            "  player_name TEXT NOT NULL COLLATE NOCASE," +
+            "  fact_id     TEXT NOT NULL," +
+            "  seen_at     TEXT NOT NULL," +
+            "  PRIMARY KEY (player_name, fact_id))";
+
+        // A retake never replaces the first answers and score; it only counts the attempt.
+        private const string SaveQuizSql =
+            "INSERT INTO quiz_results (player_name, stage_id, quiz_type, answers, score, max_score, taken_at, attempts) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, 1) " +
+            "ON CONFLICT (player_name, stage_id, quiz_type) DO UPDATE SET attempts = attempts + 1";
+
+        private const string SelectQuizSql =
+            "SELECT id, player_name, stage_id, quiz_type, answers, score, max_score, taken_at, attempts FROM quiz_results";
 
         private SQLiteConnection _db;
 
@@ -327,7 +374,94 @@ namespace ThermoTactics
             catch (Exception e) { Debug.LogError($"[ResultsDatabase] Delete saved game failed: {e.Message}"); }
         }
 
-        /// <summary>Settings ▸ Reset my progress: clears the saved game and unlocked levels. Results stay.</summary>
+        // ---------------------------------------------------------------- quiz_results
+
+        /// <summary>
+        /// Stores a quiz. The first record per player, stage and type is kept; a retake only adds 1 to attempts.
+        /// Returns the stored record (the first one on a retake), or null if the database could not be written.
+        /// </summary>
+        public QuizRecord SaveQuiz(string playerName, int stageId, string quizType, string answers, int score, int maxScore, out bool wasRetake)
+        {
+            wasRetake = false;
+            if (!EnsureOpen()) return null;
+            try
+            {
+                string name = Sanitize(playerName);
+                wasRetake = GetQuiz(name, stageId, quizType) != null;
+                _db.Execute(SaveQuizSql, name, stageId, quizType, answers, score, maxScore, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                return GetQuiz(name, stageId, quizType);
+            }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Save quiz failed: {e.Message}"); return null; }
+        }
+
+        /// <summary>The player's pre or post quiz for a stage, or null if not taken.</summary>
+        public QuizRecord GetQuiz(string playerName, int stageId, string quizType)
+        {
+            if (!EnsureOpen()) return null;
+            try
+            {
+                var rows = _db.Query<QuizRecord>(SelectQuizSql + " WHERE player_name = ? AND stage_id = ? AND quiz_type = ?",
+                    Sanitize(playerName), stageId, quizType);
+                return rows.Count > 0 ? rows[0] : null;
+            }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Quiz query failed: {e.Message}"); return null; }
+        }
+
+        /// <summary>Every quiz record of every player (for the CSV export), oldest first.</summary>
+        public List<QuizRecord> GetAllQuizzes()
+        {
+            var list = new List<QuizRecord>();
+            if (!EnsureOpen()) return list;
+            try { list.AddRange(_db.Query<QuizRecord>(SelectQuizSql + " ORDER BY id")); }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Quiz query failed: {e.Message}"); }
+            return list;
+        }
+
+        // ---------------------------------------------------------------- facts_seen
+
+        public void MarkFactSeen(string playerName, string factId)
+        {
+            if (string.IsNullOrEmpty(factId) || !EnsureOpen()) return;
+            try
+            {
+                _db.Execute("INSERT OR IGNORE INTO facts_seen (player_name, fact_id, seen_at) VALUES (?, ?, ?)",
+                    Sanitize(playerName), factId, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Mark fact failed: {e.Message}"); }
+        }
+
+        /// <summary>Ids of the climate facts this player has already seen.</summary>
+        public HashSet<string> GetSeenFacts(string playerName)
+        {
+            var set = new HashSet<string>();
+            if (!EnsureOpen()) return set;
+            try
+            {
+                foreach (FactSeenRow r in _db.Query<FactSeenRow>("SELECT fact_id FROM facts_seen WHERE player_name = ?", Sanitize(playerName)))
+                    set.Add(r.FactId);
+            }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Facts query failed: {e.Message}"); }
+            return set;
+        }
+
+#if UNITY_EDITOR
+        /// <summary>Editor play-tests only: forgets a test player's quizzes and seen facts so the screens appear again.</summary>
+        public void DevClearEducation(string playerName)
+        {
+            if (!EnsureOpen()) return;
+            string name = Sanitize(playerName);
+            _db.Execute("DELETE FROM quiz_results WHERE player_name = ?", name);
+            _db.Execute("DELETE FROM facts_seen WHERE player_name = ?", name);
+        }
+#endif
+
+        [UnityEngine.Scripting.Preserve]
+        private class FactSeenRow
+        {
+            [Column("fact_id")] public string FactId { get; set; }
+        }
+
+        /// <summary>Settings ▸ Reset my progress: clears the saved game and unlocked levels. Results, quizzes and seen facts stay.</summary>
         public void ResetProgress(string playerName)
         {
             if (!EnsureOpen()) return;
@@ -401,6 +535,15 @@ namespace ThermoTactics
                 {
                     _db.Execute("ALTER TABLE level_progress ADD COLUMN best_stars INTEGER NOT NULL DEFAULT 0 CHECK (best_stars BETWEEN 0 AND 3)");
                     _db.Execute("ALTER TABLE saved_session ADD COLUMN peak_temperature REAL NOT NULL DEFAULT 0");
+                });
+            }
+            if (from < 4)
+            {
+                // Version 4: the education tables (pre / post quiz results and the climate facts already shown).
+                _db.RunInTransaction(() =>
+                {
+                    _db.Execute(CreateQuizSql);
+                    _db.Execute(CreateFactsSql);
                 });
             }
             if (from > 0 && from < SchemaVersion) Debug.Log($"[ResultsDatabase] Upgraded database from version {from} to {SchemaVersion}.");

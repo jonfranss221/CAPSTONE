@@ -70,11 +70,27 @@ namespace ThermoTactics.Dev
             menu.ShowTitle(); FindFirstObjectByType<SettingsPanel>(FindObjectsInactive.Include).Open(); yield return Hold(0.8f); yield return Shot("04_settings_lane_camera");
             FindFirstObjectByType<SettingsPanel>(FindObjectsInactive.Include).Close();
 
+            // 1b. Pre-quiz on the first entry into Baguio (2 of 5 right), then the level path.
+            db.DevClearEducation(Player);
+            SettingsStore.PopupsEnabled = true;
+            menu.ShowStageSelect(); yield return Hold(0.5f);
+            menu.EnterStage(); yield return Hold(0.8f);
+            var quiz = FindFirstObjectByType<QuizPanel>(FindObjectsInactive.Include);
+            Check("Pre-quiz shown on first stage entry", quiz.IsOpen);
+            yield return Shot("05_pre_quiz");
+            quiz.DevSubmit(PartlyRight(stage.quiz.preQuestions, 2)); yield return Hold(0.6f); yield return Shot("06_pre_quiz_result");
+            quiz.DevContinue(); yield return Hold(0.6f);
+            Check("Level path after the pre-quiz", Active("LevelSelect"));
+            Check("Pre-quiz saved (2 / 5)", db.GetQuiz(Player, stage.stageId, QuizManager.Pre)?.Score == 2);
+            menu.ShowStageSelect(); menu.EnterStage(); yield return Hold(0.4f);
+            Check("No pre-quiz on the second entry", !quiz.IsOpen);
+
             // 2. Level 1 played with the lane camera, to Level Complete.
             GameSession.Play(Player, stage, 1);
             yield return Load(GameSession.BattleScene);
             bool won = false;
             yield return Play(1, true, w => won = w);
+            Check("Climate fact pop-up shown in Level 1", _factShots > 0);
             Check("Level 1 won", won);
             Check("Level Complete screen shown", Active("EndPanel"));
             yield return Hold(2.2f); yield return Shot("10_level_complete");
@@ -84,6 +100,8 @@ namespace ThermoTactics.Dev
             yield return Load(GameSession.BattleScene);
             var gm = GameManager.Instance;
             while (gm.Current != GameManager.State.Playing) yield return null;
+            yield return null;
+            while (PopupManager.IsOpen) yield return DismissFact();   // Level 2's climate fact
             var temp = FindFirstObjectByType<TemperatureSystem>();
             temp.Add(0.42f);
             FindFirstObjectByType<TurnManager>().EndTurn();
@@ -104,8 +122,23 @@ namespace ThermoTactics.Dev
             yield return Load(GameSession.BattleScene);
             yield return Play(10, true, w => won = w);
             Check("Boss defeated, Level 10 won", won);
+
+            // Post-quiz (Q6–Q10), all right: 2 / 5 → 5 / 5 = +150%. Pre had Q1 (climate) and Q2 (forests) right, so
+            // climate 1/3 → 1/1 and game 0/1 → 2/2 improve; forests 1/1 → 2/2 stays at 100%.
+            yield return Hold(0.8f);
+            quiz = FindFirstObjectByType<QuizPanel>(FindObjectsInactive.Include);
+            Check("Post-quiz shown before Stage Complete", quiz.IsOpen && !Active("StageCompletePanel"));
+            yield return Shot("20_post_quiz");
+            quiz.DevSubmit(); yield return Hold(0.8f); yield return Shot("21_post_quiz_compare");
+            QuizOutcome post = QuizManager.LoadPost(db, Player, stage);
+            Check("Post-quiz compared with the pre-quiz (gain +150%, 2 of 3 topics improved)",
+                post != null && post.Gain.HasValue && Mathf.Approximately(post.Gain.Value, 150f) && post.ImprovedCount == 2 && post.Topics.Length == 3);
+            if (post != null)
+                foreach (TopicResult t in post.Topics)
+                    Line($"  {t.TopicName}: pre {t.PreCorrect}/{t.PreTotal} → post {t.PostCorrect}/{t.PostTotal}{(t.Improved ? " · improved" : "")}");
+            quiz.DevContinue();
             Check("Stage Complete screen shown", Active("StageCompletePanel"));
-            yield return Hold(2.2f); yield return Shot("21_stage_complete");
+            yield return Hold(2.2f); yield return Shot("22_stage_complete");
 
             // 5. Menu afterwards.
             GameSession.OpenLevelSelect = GameSession.OpenStageSelect = false;
@@ -114,6 +147,11 @@ namespace ThermoTactics.Dev
             yield return Hold(1.5f); yield return Shot("30_title_after");
             menu.ShowStageSelect(); yield return Hold(0.8f); yield return Shot("31_stage_select_after");
             menu.ShowLevelSelect(10); yield return Hold(0.8f); yield return Shot("32_level_path_after");
+            menu.OpenFacts(); yield return Hold(0.8f); yield return Shot("33_climate_facts");
+            Check("Climate Facts lists the seen facts", Active("FactsPanel"));
+            var export = QuizResultExporter.Export(db, stage, "QC");
+            Check("Quiz CSV exported", export.Success);
+            Line("  " + export.Message);
 
             int total = db.GetProgress(Player, stage.stageId).Sum(p => StarRating.For(p));
             Line($"Stars in Baguio after the check: {total} / 30");
@@ -135,7 +173,11 @@ namespace ThermoTactics.Dev
             int turn = 0;
             while (gm.Current == GameManager.State.Playing && turn < 60)
             {
-                while (!gm.CanPlayerAct && gm.Current == GameManager.State.Playing) yield return null;
+                while (!gm.CanPlayerAct && gm.Current == GameManager.State.Playing)
+                {
+                    if (PopupManager.IsOpen) yield return DismissFact();
+                    yield return null;
+                }
                 if (gm.Current != GameManager.State.Playing) break;
                 turn++;
                 Deploy(gm.Level, grid, oxygen, deploy);
@@ -151,12 +193,38 @@ namespace ThermoTactics.Dev
                         if (turns.IsResolving) yield return Shot($"L{level}_lane_{i + 1}");
                     }
                 }
-                while (turns.IsResolving) { if (!shots || turn > 1) Time.timeScale = 6f; yield return null; }
+                while (turns.IsResolving)
+                {
+                    if (PopupManager.IsOpen) { yield return DismissFact(); continue; }   // a fact after a cleared wave
+                    if (!shots || turn > 1) Time.timeScale = 6f;
+                    yield return null;
+                }
             }
             Time.timeScale = 1f;
             bool won = gm.Current == GameManager.State.Ended && waves.IsCurrentWaveCleared && !waves.HasNextWave;
             Line($"Level {level}: {(won ? "WIN" : "LOSS")} in {turn} turns");
             done(won);
+        }
+
+        private int _factShots;
+
+        /// <summary>Photographs the fact card on screen (the first two), then closes it.</summary>
+        private IEnumerator DismissFact()
+        {
+            yield return Hold(0.5f);
+            if (_factShots < 2) yield return Shot($"fact_popup_{++_factShots}");
+            else _factShots++;
+            GameManager.Instance.Popups.DevDismiss();
+            yield return null;
+        }
+
+        /// <summary>Answers with the first <paramref name="right"/> questions correct and the rest wrong.</summary>
+        private static int[] PartlyRight(QuizQuestion[] questions, int right)
+        {
+            var a = new int[questions.Length];
+            for (int i = 0; i < a.Length; i++)
+                a[i] = i < right ? questions[i].correctIndex : (questions[i].correctIndex + 1) % QuizData.ChoiceCount;
+            return a;
         }
 
         private static void Deploy(LevelData level, GridManager grid, OxygenPointSystem oxygen, DeploySystem deploy)

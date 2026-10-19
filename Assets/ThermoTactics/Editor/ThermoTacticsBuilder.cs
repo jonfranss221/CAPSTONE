@@ -321,6 +321,160 @@ namespace ThermoTactics.EditorTools
                                 (11, new[] { "elite:DeforestationBeast", "elite:MiningRavager", "elite:PlasticGolem", "SmogWraith", "SmogWraith", "OilSlick" }), (8, new[] { "boss" }) } },
         };
 
+        // =====================================================================
+        // Education content for Stage 1 (question bank "Thermo-Tactics: Pre/Post Quiz Question Bank").
+        // Pre-quiz = Q1–Q5, post-quiz = Q6–Q10. Both are tagged with the same three topics, so learning is
+        // compared topic by topic. Every topic has climate facts (pop-ups) in Levels 1–9 that review the post-quiz.
+        // =====================================================================
+        private static readonly (string id, string name)[] BaguioTopics =
+        {
+            ("climate", "Climate basics"),
+            ("forests", "Forests & carbon"),
+            ("game", "Game & real world"),
+        };
+
+        private struct QuizDef
+        {
+            public string Id, TopicId, Question; public string[] Choices; public char Answer;
+        }
+
+        private static readonly QuizDef[] BaguioPre =
+        {
+            new QuizDef { Id = "S1_PRE_Q1", TopicId = "climate", Answer = 'B',
+                Question = "What does the \"1.5°C target\" in the Paris Agreement actually mean?",
+                Choices = new[] { "The maximum temperature a human body can survive",
+                                  "The limit for global warming above pre-industrial levels before climate impacts become severe",
+                                  "The average temperature of the Philippines during summer",
+                                  "The temperature at which forests stop growing" } },
+            new QuizDef { Id = "S1_PRE_Q2", TopicId = "forests", Answer = 'B',
+                Question = "Baguio is famous for its cool climate and pine forests. What role do forests like these play in fighting climate change?",
+                Choices = new[] { "They make the air colder by releasing ice particles",
+                                  "They absorb carbon dioxide (CO2) from the atmosphere and store it",
+                                  "They reflect sunlight back into space permanently",
+                                  "They increase rainfall only in mountainous areas" } },
+            new QuizDef { Id = "S1_PRE_Q3", TopicId = "game", Answer = 'C',
+                Question = "In Thermo-Tactics, the temperature bar starts at 1.0°C. What happens if it reaches 1.6°C?",
+                Choices = new[] { "The player earns bonus Oxygen Points", "The game pauses automatically",
+                                  "The player loses the game", "The enemies retreat" } },
+            new QuizDef { Id = "S1_PRE_Q4", TopicId = "climate", Answer = 'C',
+                Question = "Which of the following is a renewable energy source commonly used in the Philippines?",
+                Choices = new[] { "Coal", "Diesel", "Geothermal energy", "Gasoline" } },
+            new QuizDef { Id = "S1_PRE_Q5", TopicId = "climate", Answer = 'B',
+                Question = "Why is keeping global warming below 1.5°C important for countries like the Philippines?",
+                Choices = new[] { "It guarantees no typhoons will ever occur",
+                                  "The Philippines is highly vulnerable to climate impacts like stronger typhoons, floods, and heat waves",
+                                  "It only matters for cold countries",
+                                  "It has no effect on island nations" } },
+        };
+
+        private static readonly QuizDef[] BaguioPost =
+        {
+            new QuizDef { Id = "S1_POST_Q6", TopicId = "forests", Answer = 'A',
+                Question = "You just defended the Baguio Forest. Why are forests considered \"carbon sinks\"?",
+                Choices = new[] { "They store carbon in their trunks, roots, and soil, keeping it out of the atmosphere",
+                                  "They sink into the ground during earthquakes",
+                                  "They absorb all the water in the environment",
+                                  "They convert carbon into oxygen without any limits" } },
+            new QuizDef { Id = "S1_POST_Q7", TopicId = "game", Answer = 'B',
+                Question = "In the game, enemy attacks on undefended lanes raise the temperature by +0.1°C. What real-world action does this represent?",
+                Choices = new[] { "Planting trees",
+                                  "Fossil fuel emissions and environmental damage that worsen climate change",
+                                  "Recycling plastic bottles", "Building more forests" } },
+            new QuizDef { Id = "S1_POST_Q8", TopicId = "climate", Answer = 'C',
+                Question = "What is the main cause of the rising global temperature?",
+                Choices = new[] { "The Earth moving closer to the Sun", "Volcanic eruptions",
+                                  "Human activities that release greenhouse gases like CO2 and methane",
+                                  "The moon's gravitational pull" } },
+            new QuizDef { Id = "S1_POST_Q9", TopicId = "forests", Answer = 'B',
+                Question = "The Philippine Eagle is a species found in forests like those in Mindanao and Sierra Madre. How does protecting forests help wildlife AND the climate?",
+                Choices = new[] { "It only helps animals, not the climate", "Forests provide habitat while also absorbing CO2",
+                                  "Animals produce oxygen that cools the planet", "Forests have no connection to wildlife" } },
+            new QuizDef { Id = "S1_POST_Q10", TopicId = "game", Answer = 'B',
+                Question = "In Thermo-Tactics, you deploy units to defend lanes. If you leave a lane undefended, what happens in the game?",
+                Choices = new[] { "You gain bonus Oxygen Points", "The enemy attacks and increases the temperature",
+                                  "The lane becomes a forest", "Nothing happens" } },
+        };
+
+        private struct FactDef
+        {
+            public string Id, TopicId, Title, Body; public int Level; public PopupTrigger Trigger; public int Wave;
+        }
+
+        // The reviewer: facts placed through Levels 1–8, written from the answers of the post-quiz (and pre-quiz).
+        private static readonly FactDef[] BaguioFacts =
+        {
+            new FactDef { Id = "F01", TopicId = "game", Level = 1, Trigger = PopupTrigger.LevelStart,
+                Title = "Every open lane heats the planet",
+                Body = "When an enemy hits a lane you left undefended, the temperature rises by +0.10 °C. The enemies stand for fossil fuel emissions and environmental damage, like illegal logging, mining and smog, that make climate change worse." },
+            new FactDef { Id = "F02", TopicId = "climate", Level = 1, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "What is warming the planet?",
+                Body = "The main cause of rising global temperature is human activity. Burning coal, oil and gas and clearing forests release greenhouse gases such as carbon dioxide (CO2) and methane, which trap heat in the atmosphere." },
+            new FactDef { Id = "F03", TopicId = "forests", Level = 2, Trigger = PopupTrigger.LevelStart,
+                Title = "Forests are carbon sinks",
+                Body = "Trees take in CO2 as they grow and store the carbon in their trunks, branches, roots and the soil beneath them. Baguio's pine forests keep that carbon out of the atmosphere, as long as they are left standing." },
+            new FactDef { Id = "F04", TopicId = "climate", Level = 3, Trigger = PopupTrigger.LevelStart,
+                Title = "The 1.5 °C target",
+                Body = "Under the Paris Agreement, countries aim to limit global warming to 1.5 °C above pre-industrial levels. Beyond that, impacts such as stronger typhoons, floods and heat waves become far more severe. The temperature bar in this game tracks that limit." },
+            new FactDef { Id = "F05", TopicId = "game", Level = 4, Trigger = PopupTrigger.LevelStart,
+                Title = "Your units are climate action",
+                Body = "Each unit you deploy stands for protecting nature and cutting emissions. A defended lane stops the damage before it heats the planet; an open lane lets the enemy through and the temperature climbs." },
+            new FactDef { Id = "F06", TopicId = "forests", Level = 6, Trigger = PopupTrigger.LevelStart,
+                Title = "Homes for wildlife",
+                Body = "Forests shelter wildlife such as the Philippine Eagle, which lives in the forests of Mindanao and the Sierra Madre. Protecting a forest protects its animals and keeps its carbon stored: one action helps wildlife and the climate." },
+            new FactDef { Id = "F07", TopicId = "climate", Level = 7, Trigger = PopupTrigger.LevelStart,
+                Title = "Clean power from the ground",
+                Body = "The Philippines is one of the world's largest producers of geothermal energy, a renewable source that uses the Earth's natural heat. Unlike coal, diesel or gasoline, it releases very little CO2." },
+            new FactDef { Id = "F08", TopicId = "climate", Level = 8, Trigger = PopupTrigger.LevelStart,
+                Title = "Why it matters here",
+                Body = "The Philippines is one of the countries most at risk from climate change, facing stronger typhoons, floods, rising seas and heat waves. Keeping warming below 1.5 °C protects Filipino communities." },
+        };
+
+        private static QuizQuestion ToQuestion(QuizDef q) => new QuizQuestion
+        {
+            questionId = q.Id, topicId = q.TopicId, text = q.Question, choices = (string[])q.Choices.Clone(), correctIndex = q.Answer - 'A',
+        };
+
+        private static (QuizData quiz, PopupData[] facts) BuildEducation()
+        {
+            EnsureFolder(DataDir + "/Quizzes");
+            EnsureFolder(DataDir + "/Facts");
+            var quiz = LoadOrCreate<QuizData>(DataDir + "/Quizzes/Baguio_Quiz.asset");
+            quiz.quizId = "Q1"; quiz.stageId = 1;
+            quiz.topics = System.Array.ConvertAll(BaguioTopics, t => new QuizTopic { id = t.id, name = t.name });
+            quiz.preQuestions = System.Array.ConvertAll(BaguioPre, ToQuestion);
+            quiz.postQuestions = System.Array.ConvertAll(BaguioPost, ToQuestion);
+            EditorUtility.SetDirty(quiz);
+
+            var facts = new PopupData[BaguioFacts.Length];
+            for (int i = 0; i < BaguioFacts.Length; i++)
+            {
+                FactDef d = BaguioFacts[i];
+                var f = LoadOrCreate<PopupData>($"{DataDir}/Facts/Baguio_{d.Id}.asset");
+                f.factId = "S1_" + d.Id; f.stageId = 1; f.topicId = d.TopicId; f.title = d.Title; f.body = d.Body;
+                f.levelNumber = d.Level; f.trigger = d.Trigger; f.waveNumber = Mathf.Max(1, d.Wave);
+                EditorUtility.SetDirty(f);
+                facts[i] = f;
+            }
+
+            // Checks: 5 + 5 questions with 4 choices, known topics, and every topic reviewed by a fact before the boss level.
+            foreach (string type in new[] { QuizManager.Pre, QuizManager.Post })
+            {
+                if (quiz.Count(type) != QuizData.QuestionCount)
+                    Debug.LogError($"[Thermo-Tactics] The Baguio {type}-quiz has {quiz.Count(type)} questions; it needs {QuizData.QuestionCount}.");
+                foreach (QuizQuestion q in quiz.Questions(type))
+                {
+                    if (q.choices.Length != QuizData.ChoiceCount || q.correctIndex < 0 || q.correctIndex >= q.choices.Length)
+                        Debug.LogError($"[Thermo-Tactics] Quiz question {q.questionId} needs {QuizData.ChoiceCount} choices and a valid answer.");
+                    if (quiz.TopicIndex(q.topicId) == 99)
+                        Debug.LogError($"[Thermo-Tactics] Quiz question {q.questionId} has an unknown topic \"{q.topicId}\".");
+                }
+            }
+            foreach (QuizTopic t in quiz.topics)
+                if (!System.Array.Exists(facts, f => f.topicId == t.id && f.levelNumber < Levels.Length))
+                    Debug.LogError($"[Thermo-Tactics] Quiz topic \"{t.name}\" has no climate fact in Levels 1–{Levels.Length - 1}.");
+            return (quiz, facts);
+        }
+
         private static StageData BuildData(Dictionary<string, AnimatorController> controllers)
         {
             EnsureFolder(DataDir + "/Units");
@@ -432,6 +586,7 @@ namespace ThermoTactics.EditorTools
             stage.thumbnail = Ui("stage1_thumb");
             stage.levels = levels;
             stage.unitCatalog = catalog.ToArray();
+            (stage.quiz, stage.facts) = BuildEducation();
             EditorUtility.SetDirty(stage);
             AssetDatabase.SaveAssets();
             return AssetDatabase.LoadAssetAtPath<StageData>(StagePath);
@@ -516,18 +671,22 @@ namespace ThermoTactics.EditorTools
             var deploy = sys.AddComponent<DeploySystem>();
             var factory = sys.AddComponent<UnitFactory>();
             var db = sys.AddComponent<ResultsDatabase>();
+            var popups = sys.AddComponent<PopupManager>();
 
             // ---- UI ----
             var refs = new Dictionary<string, Object>();
             var cards = new List<DeployCard>();
             Canvas canvas = BuildBattleUI(refs, cards);
             var ui = canvas.gameObject.AddComponent<UIManager>();
+            EducationUiBuilder.BuildPopup(canvas.transform, popups);
+            Ref(popups, "_database", db);
 
             // ---- wiring ----
             stage = AssetDatabase.LoadAssetAtPath<StageData>(StagePath);   // reload: a stale instance would serialize as null
             Ref(gm, "_defaultStage", stage); Ref(gm, "_turns", turns); Ref(gm, "_waves", waves); Ref(gm, "_oxygen", oxygen);
             Ref(gm, "_temperature", temp); Ref(gm, "_grid", grid); Ref(gm, "_lanes", lanes); Ref(gm, "_deploy", deploy);
             Ref(gm, "_factory", factory); Ref(gm, "_database", db); Ref(gm, "_ui", ui); Ref(gm, "_fog", fog); Ref(gm, "_camera", battleCam);
+            Ref(gm, "_popups", popups);
             Ref(turns, "_grid", grid); Ref(turns, "_waves", waves); Ref(turns, "_oxygen", oxygen);
             Ref(turns, "_temperature", temp); Ref(turns, "_lanes", lanes); Ref(turns, "_ui", ui); Ref(turns, "_camera", battleCam);
             Ref(waves, "_grid", grid); Ref(waves, "_factory", factory);
@@ -798,6 +957,9 @@ namespace ThermoTactics.EditorTools
 
             refs["_iconNext"] = Ui("icon_next"); refs["_iconRetry"] = Ui("icon_restart"); refs["_iconLevels"] = Ui("icon_list");
             refs["_iconStages"] = Ui("icon_map"); refs["_iconResults"] = Ui("icon_list");
+
+            // ---------------- post-quiz (after Level 10, before Stage Complete) ----------------
+            refs["_quiz"] = EducationUiBuilder.BuildQuiz(c);
 
             // ---------------- results ----------------
             refs["_results"] = MenuSceneBuilder.BuildResults(c);
