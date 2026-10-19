@@ -45,7 +45,7 @@ MonoBehaviour:
   - questionId: S1_PRE_Q3
     topicId: game
     text: "In Thermo-Tactics, the temperature bar starts at 1.0\xB0C. What happens
-      if it reaches 1.6\xB0C?"
+      if it reaches 1.5\xB0C?"
     choices:
     - The player earns bonus Oxygen Points
     - The game pauses automatically
