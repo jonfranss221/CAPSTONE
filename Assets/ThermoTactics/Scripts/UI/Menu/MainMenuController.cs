@@ -45,6 +45,8 @@ namespace ThermoTactics
         [SerializeField] private StageSelectPanel _stageSelect;
         [SerializeField] private LevelSelectPanel _levelSelect;
         [SerializeField] private ResultsPanel _results;
+        [SerializeField] private QuizPanel _quiz;
+        [SerializeField] private FactsPanel _facts;
 
         [Header("Quit dialog")]
         [SerializeField] private GameObject _quitDialog;
@@ -103,6 +105,7 @@ namespace ThermoTactics
             _creditsDialog.SetActive(false);
             _settings.Close();
             _results.Hide();
+            if (_facts != null) _facts.Hide();
             RefreshProfile();
 
             if (GameSession.OpenLevelSelect && NameIsValid)
@@ -141,6 +144,31 @@ namespace ThermoTactics
             _titleScreen.SetActive(false);
             _stageSelect.Hide();
             _levelSelect.Show(this, selectLevel);
+        }
+
+        /// <summary>
+        /// The stage card: the pre-quiz first if this player has not taken it, then the level path. If the stage was
+        /// finished but the post-quiz was never submitted (the app closed during it), the post-quiz comes first instead.
+        /// </summary>
+        public void EnterStage()
+        {
+            string name = PlayerName;
+            if (_quiz != null && QuizManager.NeedsPre(_database, name, _stage))
+            {
+                _quiz.Show(_stage, QuizManager.Pre, name, _database, _ => ShowLevelSelect());
+                return;
+            }
+            if (_quiz != null && _database.CountCleared(name, _stage.stageId) >= _stage.LevelCount && QuizManager.NeedsPost(_database, name, _stage))
+            {
+                _quiz.Show(_stage, QuizManager.Post, name, _database, _ => ShowLevelSelect());
+                return;
+            }
+            ShowLevelSelect();
+        }
+
+        public void OpenFacts()
+        {
+            if (_facts != null) _facts.Show(_stage, PlayerName, _database);
         }
 
         public void OpenResults() => _results.Show(_database.GetAll(), _database.FilePath);

@@ -32,11 +32,27 @@ Rules
 Boss (Level 10, wave 5): Clearcut Behemoth, 300 HP, fills all 6 enemy slots.
   Cleave 8 to 3 lanes; Landslide Slam 7 to all lanes every 3rd turn; enrage at 40% HP (cleave 10, slam every 2nd turn).
 
-Database (SQLite, schema version 3)
+Education (pre-quiz, climate facts, post-quiz)
+  Pre-quiz: 5 questions, shown the first time a player opens the Baguio card in Stage Select.
+  Climate facts: pop-ups in Levels 1–9 (level start or after a wave), each tied to one quiz topic; shown once per player,
+    rereadable in CLIMATE FACTS on the level path. Settings ▸ "Climate fact pop-ups" turns them off.
+  Post-quiz: 5 different questions on the same topics (bank Q6–Q10; pre-quiz is Q1–Q5) after Level 10 is won, then a
+    topic-by-topic table (questions right before → after: Climate basics, Forests & carbon, Game & real world) and the
+    knowledge gain ((post − pre) / pre × 100, N/A when pre = 0 or missing). A retake keeps the first score (attempts + 1).
+  Content: ThermoTacticsBuilder.BaguioTopics / BaguioPre / BaguioPost / BaguioFacts → GameData/Quizzes, GameData/Facts
+    (Build Everything).
+  Export: Settings ▸ Data ▸ Export quiz results → Documents/ThermoTactics/quiz_results_<tester>_<date>.csv
+    (Android: /storage/emulated/0/Documents/ThermoTactics; falls back to persistentDataPath/Exports).
+
+Database (SQLite, schema version 4)
   Application.persistentDataPath/thermo_tactics.db
   game_results   (id, player_name, result, created_at, final_temperature, waves_cleared)
   level_progress (player_name, stage_id, level_number, is_cleared, attempts, best_final_temp, best_stars)
   saved_session  (one saved game per player for Continue: level, wave, turn, Oxygen, °C, peak °C, units with HP)
+  quiz_results   (player_name, stage_id, quiz_type pre/post, answers "1,1,2,2,1" (indexes into that quiz's questions),
+                  score, max_score, taken_at, attempts)
+  facts_seen     (player_name, fact_id, seen_at)
+  Reset my progress keeps game_results, quiz_results and facts_seen.
   Windows editor: %USERPROFILE%\AppData\LocalLow\DefaultCompany\Thermo-Tactics\thermo_tactics.db
   Package: com.gilzoide.sqlite-net 1.3.2 (Packages/manifest.json)
 Settings: PlayerPrefs keys "tt.*" (Scripts/Core/SettingsStore.cs)

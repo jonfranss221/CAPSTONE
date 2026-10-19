@@ -58,6 +58,8 @@ namespace ThermoTactics.EditorTools
             var levelSelect = BuildLevelSelect(c);
             var settings = BuildSettings(c, menu);
             var results = BuildResults(c);
+            var facts = EducationUiBuilder.BuildFacts(c);
+            var quiz = EducationUiBuilder.BuildQuiz(c);
             BuildQuit(c, menu);
             BuildConfirm(c, menu);
             BuildCredits(c, menu);
@@ -65,6 +67,8 @@ namespace ThermoTactics.EditorTools
             Ref(menu, "_stageSelect", stageSelect);
             Ref(menu, "_levelSelect", levelSelect);
             Ref(menu, "_results", results);
+            Ref(menu, "_facts", facts);
+            Ref(menu, "_quiz", quiz);
 
             ThermoTacticsBuilder.NewEventSystem();
             EditorSceneManager.MarkSceneDirty(scene);
@@ -262,7 +266,9 @@ namespace ThermoTactics.EditorTools
             Ref(panel, "_resetButton", reset);
             Ref(panel, "_creditsButton", Btn("CreditsButton", d.transform, "Credits", Clear, Cream, Slate, R + bw + 38, 402, bw - 15, 48, 15, 0f, BodyBold));
             Ref(panel, "_resultsButton", Btn("ResultsButton", d.transform, "Results", Clear, Cream, Slate, R + 2 * bw + 31, 402, bw - 15, 48, 15, 0f, BodyBold));
-            Ref(panel, "_dataNote", TxtAt("DataNote", d.transform, "", Body, 13, CreamDim, R, 458, W, 40));
+            Ref(panel, "_exportButton", Btn("ExportButton", d.transform, "Export quiz results (CSV for the study)", Clear, Cream, Slate, R, 458, W, 44, 15, 0f, BodyBold));
+            // Left of the Done button, under the display options: room for the export path.
+            Ref(panel, "_dataNote", TxtAt("DataNote", d.transform, "", Body, 13, CreamDim, L, 504, 540, 72));
 
             Ref(panel, "_doneButton", Btn("DoneButton", d.transform, "DONE", Gold, Ink, Ink, 592, 516, 200, 52, 22));
             root.gameObject.SetActive(false);
@@ -442,7 +448,11 @@ namespace ThermoTactics.EditorTools
             Icon("Icon", back.transform, "icon_back", Cream, 14, 14, 24);
             Ref(panel, "_backButton", back);
             Ref(panel, "_title", TxtAt("Title", f, "STAGE 1 · BAGUIO FOREST", Pixel, 34, Cream, 108, 36, 700, 36, TextAnchor.MiddleLeft));
-            Ref(panel, "_subtitle", TxtAt("Sub", f, "", Body, 15, CreamDim, 108, 72, 700, 20));
+            Ref(panel, "_subtitle", TxtAt("Sub", f, "", Body, 15, CreamDim, 108, 72, 480, 20));
+            var factsBtn = Btn("FactsButton", f, "", Forest, Cream, Gold, 596, 36, 212, 52, 16, 0f);
+            Icon("Icon", factsBtn.transform, "icon_list", Gold, 14, 14, 24);
+            TxtAt("Label", factsBtn.transform, "CLIMATE FACTS", Pixel, 18, Cream, 48, 0, 160, 52, TextAnchor.MiddleLeft);
+            Ref(panel, "_factsButton", factsBtn);
 
             var nodes = new LevelNode[NodePos.Length];
             for (int i = 0; i < NodePos.Length; i++) nodes[i] = Node(f, i + 1, NodePos[i], i == 4, i == 9);

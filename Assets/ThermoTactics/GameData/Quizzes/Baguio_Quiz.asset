@@ -1,0 +1,125 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98395f251812ec84d8bbc703ba333038, type: 3}
+  m_Name: Baguio_Quiz
+  m_EditorClassIdentifier: 
+  quizId: Q1
+  stageId: 1
+  topics:
+  - id: climate
+    name: Climate basics
+  - id: forests
+    name: Forests & carbon
+  - id: game
+    name: Game & real world
+  preQuestions:
+  - questionId: S1_PRE_Q1
+    topicId: climate
+    text: "What does the \"1.5\xB0C target\" in the Paris Agreement actually mean?"
+    choices:
+    - The maximum temperature a human body can survive
+    - The limit for global warming above pre-industrial levels before climate impacts
+      become severe
+    - The average temperature of the Philippines during summer
+    - The temperature at which forests stop growing
+    correctIndex: 1
+  - questionId: S1_PRE_Q2
+    topicId: forests
+    text: Baguio is famous for its cool climate and pine forests. What role do forests
+      like these play in fighting climate change?
+    choices:
+    - They make the air colder by releasing ice particles
+    - They absorb carbon dioxide (CO2) from the atmosphere and store it
+    - They reflect sunlight back into space permanently
+    - They increase rainfall only in mountainous areas
+    correctIndex: 1
+  - questionId: S1_PRE_Q3
+    topicId: game
+    text: "In Thermo-Tactics, the temperature bar starts at 1.0\xB0C. What happens
+      if it reaches 1.5\xB0C?"
+    choices:
+    - The player earns bonus Oxygen Points
+    - The game pauses automatically
+    - The player loses the game
+    - The enemies retreat
+    correctIndex: 2
+  - questionId: S1_PRE_Q4
+    topicId: climate
+    text: Which of the following is a renewable energy source commonly used in the
+      Philippines?
+    choices:
+    - Coal
+    - Diesel
+    - Geothermal energy
+    - Gasoline
+    correctIndex: 2
+  - questionId: S1_PRE_Q5
+    topicId: climate
+    text: "Why is keeping global warming below 1.5\xB0C important for countries like
+      the Philippines?"
+    choices:
+    - It guarantees no typhoons will ever occur
+    - The Philippines is highly vulnerable to climate impacts like stronger typhoons,
+      floods, and heat waves
+    - It only matters for cold countries
+    - It has no effect on island nations
+    correctIndex: 1
+  postQuestions:
+  - questionId: S1_POST_Q6
+    topicId: forests
+    text: You just defended the Baguio Forest. Why are forests considered "carbon
+      sinks"?
+    choices:
+    - They store carbon in their trunks, roots, and soil, keeping it out of the atmosphere
+    - They sink into the ground during earthquakes
+    - They absorb all the water in the environment
+    - They convert carbon into oxygen without any limits
+    correctIndex: 0
+  - questionId: S1_POST_Q7
+    topicId: game
+    text: "In the game, enemy attacks on undefended lanes raise the temperature by
+      +0.1\xB0C. What real-world action does this represent?"
+    choices:
+    - Planting trees
+    - Fossil fuel emissions and environmental damage that worsen climate change
+    - Recycling plastic bottles
+    - Building more forests
+    correctIndex: 1
+  - questionId: S1_POST_Q8
+    topicId: climate
+    text: What is the main cause of the rising global temperature?
+    choices:
+    - The Earth moving closer to the Sun
+    - Volcanic eruptions
+    - Human activities that release greenhouse gases like CO2 and methane
+    - The moon's gravitational pull
+    correctIndex: 2
+  - questionId: S1_POST_Q9
+    topicId: forests
+    text: The Philippine Eagle is a species found in forests like those in Mindanao
+      and Sierra Madre. How does protecting forests help wildlife AND the climate?
+    choices:
+    - It only helps animals, not the climate
+    - Forests provide habitat while also absorbing CO2
+    - Animals produce oxygen that cools the planet
+    - Forests have no connection to wildlife
+    correctIndex: 1
+  - questionId: S1_POST_Q10
+    topicId: game
+    text: In Thermo-Tactics, you deploy units to defend lanes. If you leave a lane
+      undefended, what happens in the game?
+    choices:
+    - You gain bonus Oxygen Points
+    - The enemy attacks and increases the temperature
+    - The lane becomes a forest
+    - Nothing happens
+    correctIndex: 1

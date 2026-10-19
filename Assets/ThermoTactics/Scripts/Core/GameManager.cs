@@ -29,13 +29,15 @@ namespace ThermoTactics
         [SerializeField] private UIManager _ui;
         [SerializeField] private FogScroller _fog;
         [SerializeField] private BattleCamera _camera;
+        [SerializeField] private PopupManager _popups;
 
         public State Current { get; private set; } = State.Loading;
         public StageData Stage { get; private set; }
         public LevelData Level { get; private set; }
         public int LevelNumber { get; private set; } = 1;
         public string PlayerName { get; private set; } = "";
-        public bool CanPlayerAct => Current == State.Playing && !_turns.IsResolving;
+        public bool CanPlayerAct => Current == State.Playing && !_turns.IsResolving && !PopupManager.IsOpen;
+        public PopupManager Popups => _popups;
         public bool HasNextLevel => Stage != null && LevelNumber < Stage.LevelCount;
 
         /// <summary>True when the last autosave reached the database.</summary>
@@ -86,6 +88,20 @@ namespace ThermoTactics
             _ui.ShowHud();
             _turns.BeginPlayerTurn(Level);   // also autosaves
             _ui.Announce($"Level {LevelNumber} · {Level.locationName}. Wave 1 of {_waves.TotalWaves}: keep it below {Level.lossThreshold:0.0}°C, {PlayerName}!", UIManager.Info);
+            ShowLevelStartFacts();
+        }
+
+        /// <summary>The climate facts of this level's start (only those the player has not seen yet).</summary>
+        private void ShowLevelStartFacts()
+        {
+            if (_popups != null) StartCoroutine(_popups.ShowFor(Stage, LevelNumber, PopupTrigger.LevelStart, 1));
+        }
+
+        /// <summary>After Continue: facts of this level that were on screen when the app closed (start, or a cleared wave).</summary>
+        private System.Collections.IEnumerator ShowMissedFacts(int wave)
+        {
+            yield return _popups.ShowFor(Stage, LevelNumber, PopupTrigger.LevelStart, 1);
+            for (int w = 1; w < wave; w++) yield return _popups.ShowFor(Stage, LevelNumber, PopupTrigger.AfterWave, w);
         }
 
         /// <summary>Rebuilds the board from a saved game. Returns false if the save does not fit this stage.</summary>
@@ -136,6 +152,7 @@ namespace ThermoTactics
             _ui.ShowHud();
             _turns.ResumePlayerTurn();
             _ui.Announce($"Welcome back, {PlayerName}! Level {LevelNumber}, Wave {s.waveNumber} of {_waves.TotalWaves}, Turn {s.turnNumber}.", UIManager.Good);
+            if (_popups != null) StartCoroutine(ShowMissedFacts(s.waveNumber));
             return true;
         }
 
@@ -252,7 +269,7 @@ namespace ThermoTactics
 
         public void Pause()
         {
-            if (Current != State.Playing) return;
+            if (Current != State.Playing || PopupManager.IsOpen) return;
             Current = State.Paused;
             Time.timeScale = 0f;
             Autosave();

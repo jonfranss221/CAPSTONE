@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Baguio_F04
+  m_EditorClassIdentifier: 
+  factId: S1_F04
+  stageId: 1
+  topicId: climate
+  title: "The 1.5 \xB0C target"
+  body: "Under the Paris Agreement, countries aim to limit global warming to 1.5
+    \xB0C above pre-industrial levels. Beyond that, impacts such as stronger typhoons,
+    floods and heat waves become far more severe. The temperature bar in this game
+    tracks that limit."
+  icon: {fileID: 0}
+  levelNumber: 3
+  trigger: 0
+  waveNumber: 1

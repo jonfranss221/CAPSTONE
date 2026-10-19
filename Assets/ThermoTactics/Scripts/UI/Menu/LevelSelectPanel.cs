@@ -13,6 +13,7 @@ namespace ThermoTactics
     {
         [SerializeField] private GameObject _root;
         [SerializeField] private Button _backButton;
+        [SerializeField] private Button _factsButton;
         [SerializeField] private Text _title;
         [SerializeField] private Text _subtitle;
         [SerializeField] private LevelNode[] _nodes = new LevelNode[0];
@@ -55,6 +56,7 @@ namespace ThermoTactics
         private void Awake()
         {
             _backButton.onClick.AddListener(() => _menu.ShowStageSelect());
+            if (_factsButton != null) _factsButton.onClick.AddListener(() => _menu.OpenFacts());
             foreach (LevelNode node in _nodes)
             {
                 LevelNode n = node;

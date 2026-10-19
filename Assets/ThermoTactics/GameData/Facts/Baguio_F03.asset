@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Baguio_F03
+  m_EditorClassIdentifier: 
+  factId: S1_F03
+  stageId: 1
+  topicId: forests
+  title: Forests are carbon sinks
+  body: Trees take in CO2 as they grow and store the carbon in their trunks, branches,
+    roots and the soil beneath them. Baguio's pine forests keep that carbon out of
+    the atmosphere, as long as they are left standing.
+  icon: {fileID: 0}
+  levelNumber: 2
+  trigger: 0
+  waveNumber: 1

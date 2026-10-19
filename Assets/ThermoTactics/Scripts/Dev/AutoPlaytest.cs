@@ -58,6 +58,8 @@ namespace ThermoTactics.Dev
             _stage = menu.Stage;
             menu.Database.ResetProgress(Player);
             menu.Database.DeleteSession(Player);
+            menu.Database.DevClearEducation(Player);
+            PopupManager.DevAutoDismiss = true;   // facts are marked seen without waiting for a tap
             SettingsStore.LaneCamera = true;
             SettingsStore.BattleSpeedIndex = 0;
             Line($"Stage: {_stage.stageName}, {_stage.LevelCount} levels");
@@ -79,6 +81,8 @@ namespace ThermoTactics.Dev
             }
 
             SettingsStore.LaneCamera = true;
+            PopupManager.DevAutoDismiss = false;
+            Line($"Climate facts marked seen: {FindFirstObjectByType<ResultsDatabase>().GetSeenFacts(Player).Count} of {_stage.facts.Length}");
             // Menu screens with the finished progress.
             GameSession.PlayerName = Player;
             SettingsStore.LastPlayer = Player;
@@ -161,6 +165,18 @@ namespace ThermoTactics.Dev
             Time.timeScale = 1f;
 
             bool won = gm.Current == GameManager.State.Ended && waves.IsCurrentWaveCleared && !waves.HasNextWave && !temp.HasReachedThreshold;
+            var quiz = FindFirstObjectByType<QuizPanel>(FindObjectsInactive.Include);
+            if (quiz != null && quiz.IsOpen)
+            {
+                // The post-quiz after Level 10: answered correctly, then on to Stage Complete.
+                yield return Hold(0.6f);
+                yield return Shot("29_post_quiz");
+                quiz.DevSubmit();
+                yield return Hold(0.6f);
+                yield return Shot("29_post_quiz_compare");
+                quiz.DevContinue();
+                Line($"  Post-quiz submitted: {FindFirstObjectByType<ResultsDatabase>().GetQuiz(Player, _stage.stageId, QuizManager.Post)?.Score} / {_stage.quiz.Count(QuizManager.Post)} (no pre-quiz in this run, so gain is N/A)");
+            }
             yield return Hold(1.6f);   // let the stars pop in
             yield return Shot($"{(level == 10 ? "30" : "1" + (level - 1))}_L{level}_end_try{attempt}_{(won ? "win" : "loss")}");
             int stars = won ? StarRating.For(temp.Peak) : 0;

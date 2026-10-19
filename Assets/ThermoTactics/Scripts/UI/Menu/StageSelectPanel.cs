@@ -29,7 +29,7 @@ namespace ThermoTactics
         private void Awake()
         {
             _backButton.onClick.AddListener(() => _menu.ShowTitle());
-            _stage1Button.onClick.AddListener(() => _menu.ShowLevelSelect());
+            _stage1Button.onClick.AddListener(() => _menu.EnterStage());
         }
 
         public void Show(MainMenuController menu)
