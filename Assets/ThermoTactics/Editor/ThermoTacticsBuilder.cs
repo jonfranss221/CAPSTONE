@@ -353,7 +353,7 @@ namespace ThermoTactics.EditorTools
                                   "They reflect sunlight back into space permanently",
                                   "They increase rainfall only in mountainous areas" } },
             new QuizDef { Id = "S1_PRE_Q3", TopicId = "game", Answer = 'C',
-                Question = "In Thermo-Tactics, the temperature bar starts at 1.0°C. What happens if it reaches 1.6°C?",
+                Question = "In Thermo-Tactics, the temperature bar starts at 1.0°C. What happens if it reaches 1.5°C?",
                 Choices = new[] { "The player earns bonus Oxygen Points", "The game pauses automatically",
                                   "The player loses the game", "The enemies retreat" } },
             new QuizDef { Id = "S1_PRE_Q4", TopicId = "climate", Answer = 'C',
