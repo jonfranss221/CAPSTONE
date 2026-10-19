@@ -214,6 +214,7 @@ namespace ThermoTactics
             }
             _ui.Announce($"Wave {_waves.WaveNumber} cleared!", UIManager.Good);
             yield return new WaitForSeconds(1.2f);
+            if (gm.Popups != null) yield return gm.Popups.ShowFor(gm.Stage, gm.LevelNumber, PopupTrigger.AfterWave, _waves.WaveNumber);
             _waves.SpawnNextWave();
             IsResolving = false;
             BeginPlayerTurn(gm.Level);

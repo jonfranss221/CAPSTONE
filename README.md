@@ -89,8 +89,11 @@ The boss panel always shows its next move.
   Stage Complete screen after Level 10
 - Local **SQLite** database: results, level progress (unlocks, best stars) and the saved game behind Continue
 
-Planned: pre-/post-quizzes, climate-fact pop-ups and Codex, quiz CSV export, audio, enemy movement (EnemyAI),
-stages 2–5 with their own bosses.
+- Education: pre-quiz before Baguio, climate-fact pop-ups during Levels 1–9 (one per quiz topic) with a Climate Facts
+  review list, post-quiz after Level 10 with a topic-by-topic comparison and knowledge gain, and a quiz CSV export for
+  the study (database schema version 4: `quiz_results`, `facts_seen`)
+
+Planned: audio, enemy movement (EnemyAI), stages 2–5 with their own bosses.
 
 ## Project structure
 

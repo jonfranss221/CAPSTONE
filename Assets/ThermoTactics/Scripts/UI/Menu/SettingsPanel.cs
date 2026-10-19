@@ -22,6 +22,7 @@ namespace ThermoTactics
         [SerializeField] private Button _resetButton;
         [SerializeField] private Button _creditsButton;
         [SerializeField] private Button _resultsButton;
+        [SerializeField] private Button _exportButton;
         [SerializeField] private Text _dataNote;
         [SerializeField] private Button _closeButton;
         [SerializeField] private Button _doneButton;
@@ -48,6 +49,7 @@ namespace ThermoTactics
             _resetButton.onClick.AddListener(OnReset);
             _creditsButton.onClick.AddListener(() => _menu.OpenCredits());
             _resultsButton.onClick.AddListener(() => _menu.OpenResults());
+            if (_exportButton != null) _exportButton.onClick.AddListener(OnExport);
             _closeButton.onClick.AddListener(Close);
             _doneButton.onClick.AddListener(Close);
         }
@@ -67,7 +69,7 @@ namespace ThermoTactics
             bool named = _menu.NameIsValid;
             _resetButton.interactable = named;
             _dataNote.text = named
-                ? $"Reset clears {_menu.PlayerName}'s saved game and unlocked levels. Saved game results stay in the Results list."
+                ? $"Reset clears {_menu.PlayerName}'s saved game and unlocked levels. Results, quiz answers and found facts stay."
                 : "Type your player name on the main menu to reset that player's progress.";
             _root.SetActive(true);
             _root.transform.SetAsLastSibling();
@@ -92,11 +94,18 @@ namespace ThermoTactics
             }
         }
 
+        /// <summary>Writes the quiz-results CSV for the study (Documents/ThermoTactics) and shows where it went.</summary>
+        private void OnExport()
+        {
+            QuizResultExporter.ExportResult r = QuizResultExporter.Export(_menu.Database, _menu.Stage, SettingsStore.TesterCode);
+            _dataNote.text = r.Success ? $"<color=#9BD3B0>{r.Message}</color>" : $"<color=#FF9A86>{r.Message}</color>";
+        }
+
         private void OnReset()
         {
             string name = _menu.PlayerName;
             _menu.Confirm("RESET PROGRESS?",
-                $"This deletes {name}'s saved game and locks Baguio Levels 2–10 again. Results stay in the Results list.",
+                $"This deletes {name}'s saved game and locks Baguio Levels 2–10 again. Results and quiz answers stay.",
                 "RESET",
                 () =>
                 {

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Baguio_F01
+  m_EditorClassIdentifier: 
+  factId: S1_F01
+  stageId: 1
+  topicId: game
+  title: Every open lane heats the planet
+  body: "When an enemy hits a lane you left undefended, the temperature rises by
+    +0.10 \xB0C. The enemies stand for fossil fuel emissions and environmental damage,
+    like illegal logging, mining and smog, that make climate change worse."
+  icon: {fileID: 0}
+  levelNumber: 1
+  trigger: 0
+  waveNumber: 1
