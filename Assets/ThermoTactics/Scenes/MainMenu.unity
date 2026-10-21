@@ -6965,7 +6965,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &278993308
 RectTransform:
   m_ObjectHideFlags: 0
@@ -17738,7 +17738,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Tester code <color=#CFC6B2>(optional, from your teacher)</color>
+  m_Text: Tester code <color=#CFC6B2>(optional, from your researcher)</color>
 --- !u!222 &696287648
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -28485,7 +28485,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1103409151
 RectTransform:
   m_ObjectHideFlags: 0

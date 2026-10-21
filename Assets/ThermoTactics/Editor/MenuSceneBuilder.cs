@@ -162,7 +162,7 @@ namespace ThermoTactics.EditorTools
             TxtAt("NameLabel", form.transform, "Player name <color=#CFC6B2>(2–20 characters)</color>", BodyBold, 15, Cream, 28, 86, 384, 20, TextAnchor.MiddleLeft);
             Ref(menu, "_nameMessage", TxtAt("NameMessage", form.transform, "", BodyBold, 13, Hex("#FF9A86"), 28, 160, 384, 18, TextAnchor.MiddleLeft));
             Ref(menu, "_nameInput", NewInput("NameInput", form.transform, "Type your name", 19, 28, 110, 384, 48, ResultsDatabase.MaxNameLength));
-            TxtAt("TesterLabel", form.transform, "Tester code <color=#CFC6B2>(optional, from your teacher)</color>", BodyBold, 15, Cream, 28, 184, 384, 20, TextAnchor.MiddleLeft);
+            TxtAt("TesterLabel", form.transform, "Tester code <color=#CFC6B2>(optional, from your researcher)</color>", BodyBold, 15, Cream, 28, 184, 384, 20, TextAnchor.MiddleLeft);
             Ref(menu, "_testerInput", NewInput("TesterInput", form.transform, "e.g. TT-007", 19, 28, 208, 384, 48, 8));
 
             var infoSaved = At(Img("InfoSaved", form.transform, new Color(0.886f, 0.682f, 0.173f, 0.12f)), 28, 272, 384, 78);
@@ -195,8 +195,6 @@ namespace ThermoTactics.EditorTools
 
             Ref(menu, "_versionText", TxtAt("Version", f, "v0.2 · Stage 1 prototype", Body, 13, CreamDim, 64, 664, 400, 18));
             AddPanelFx(screen.gameObject, f);
-            Icon("OfflineIcon", f, "icon_offline", CreamDim, 976, 665, 16);
-            TxtAt("Offline", f, "Works offline · saved on this phone", Body, 13, CreamDim, 1000, 664, 216, 18);
         }
 
         private static void WeaveEdge(Transform parent, bool top)
