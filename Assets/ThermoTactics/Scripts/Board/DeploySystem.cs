@@ -30,6 +30,7 @@ namespace ThermoTactics
         {
             var gm = GameManager.Instance;
             if (gm == null || !gm.CanPlayerAct) return;
+            if (!TutorialController.AllowDeploy) { _ui.Announce("Follow the guide first: tap NEXT in the box.", UIManager.Warning); return; }
 
             if (Selected == null) { _ui.Announce("Pick a unit card first.", UIManager.Warning); return; }
             if (!_grid.IsAllySlotFree(lane)) { _ui.Announce("That slot is already taken.", UIManager.Warning); return; }

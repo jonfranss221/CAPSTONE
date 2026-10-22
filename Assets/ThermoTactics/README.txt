@@ -20,6 +20,9 @@ Folders
   Editor/                        ThermoTacticsBuilder.cs, MenuSceneBuilder.cs, UiKit.cs, PlaytestMenu.cs
 
 Rules
+  Each level opens with an intro (fade in, camera glide, title card; tap to skip).
+  Level 1 tutorial: shown the first time a player starts Level 1 (PlayerPrefs "tt.tutorial_done.<player>"),
+  skippable, replayed from Pause ▸ HOW TO PLAY. Settings ▸ Reset my progress shows it again.
   Start 1.00°C. Lose when the temperature reaches 1.50°C.
   End Turn goes lane by lane (1 to 6): the ally attacks, then the enemy hits back; the camera zooms in on each lane.
   Enemy attacks an undefended lane: +0.10°C.  Ally attacks an empty enemy slot: −0.05°C (once per turn).

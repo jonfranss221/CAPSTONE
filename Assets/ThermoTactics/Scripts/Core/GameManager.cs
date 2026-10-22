@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -30,15 +31,19 @@ namespace ThermoTactics
         [SerializeField] private FogScroller _fog;
         [SerializeField] private BattleCamera _camera;
         [SerializeField] private PopupManager _popups;
+        [SerializeField] private LevelIntro _intro;
+        [SerializeField] private TutorialController _tutorial;
 
         public State Current { get; private set; } = State.Loading;
         public StageData Stage { get; private set; }
         public LevelData Level { get; private set; }
         public int LevelNumber { get; private set; } = 1;
         public string PlayerName { get; private set; } = "";
-        public bool CanPlayerAct => Current == State.Playing && !_turns.IsResolving && !PopupManager.IsOpen;
+        public bool CanPlayerAct => Current == State.Playing && !_turns.IsResolving && !PopupManager.IsOpen && !LevelIntro.IsPlaying;
         public PopupManager Popups => _popups;
         public bool HasNextLevel => Stage != null && LevelNumber < Stage.LevelCount;
+
+        private Coroutine _opening;
 
         /// <summary>True when the last autosave reached the database.</summary>
         public bool LastSaveOk { get; private set; } = true;
@@ -87,18 +92,55 @@ namespace ThermoTactics
             ApplySpeed();
             _ui.ShowHud();
             _turns.BeginPlayerTurn(Level);   // also autosaves
-            _ui.Announce($"Level {LevelNumber} · {Level.locationName}. Wave 1 of {_waves.TotalWaves}: keep it below {Level.lossThreshold:0.0}°C, {PlayerName}!", UIManager.Info);
-            ShowLevelStartFacts();
+            BeginOpening(false, $"Level {LevelNumber} · {Level.locationName}. Wave 1 of {_waves.TotalWaves}: keep it below {Level.lossThreshold:0.0}°C, {PlayerName}!", UIManager.Info);
         }
 
-        /// <summary>The climate facts of this level's start (only those the player has not seen yet).</summary>
-        private void ShowLevelStartFacts()
+        // ---------------------------------------------------------------- level opening
+
+        /// <summary>Starts the opening sequence (intro card, greeting, climate facts, Level 1 tutorial), replacing a running one.</summary>
+        private void BeginOpening(bool resumed, string greeting, Color tone)
         {
-            if (_popups != null) StartCoroutine(_popups.ShowFor(Stage, LevelNumber, PopupTrigger.LevelStart, 1));
+            if (_opening != null) StopCoroutine(_opening);
+            if (_tutorial != null) _tutorial.Stop();
+            if (_intro != null) _intro.Stop();
+            _opening = StartCoroutine(LevelOpening(resumed, greeting, tone));
+            _ui.RefreshHud();   // the intro has started: End Turn and the cards show as unavailable
+        }
+
+        /// <summary>
+        /// 1. the intro (fade from black, camera glide, title card), 2. the greeting line, 3. the climate facts of this
+        /// moment, 4. the tutorial the first time a player starts Level 1. The player cannot act during 1 and 3.
+        /// </summary>
+        private IEnumerator LevelOpening(bool resumed, string greeting, Color tone)
+        {
+            int wave = _waves.WaveNumber;
+            if (_intro != null)
+            {
+                string resumeTag = resumed ? $"WELCOME BACK · WAVE {wave} · TURN {_waves.TurnInWave}" : null;
+                yield return _intro.Play(Stage, Level, LevelNumber, resumeTag, _camera);
+            }
+            _ui.RefreshHud();
+            _ui.Announce(greeting, tone);
+            if (_popups != null)
+            {
+                if (resumed) yield return ShowMissedFacts(wave);
+                else yield return _popups.ShowFor(Stage, LevelNumber, PopupTrigger.LevelStart, 1);
+            }
+            if (!resumed && LevelNumber == 1 && _tutorial != null && Current == State.Playing && TutorialController.IsDue(PlayerName))
+                yield return _tutorial.Run(false);
+            _opening = null;
+        }
+
+        /// <summary>Pause ▸ HOW TO PLAY: back to the game, then the tutorial from the start.</summary>
+        public void ReplayTutorial()
+        {
+            if (_tutorial == null) return;
+            Resume();
+            if (!TutorialController.IsRunning) _tutorial.Begin(true);
         }
 
         /// <summary>After Continue: facts of this level that were on screen when the app closed (start, or a cleared wave).</summary>
-        private System.Collections.IEnumerator ShowMissedFacts(int wave)
+        private IEnumerator ShowMissedFacts(int wave)
         {
             yield return _popups.ShowFor(Stage, LevelNumber, PopupTrigger.LevelStart, 1);
             for (int w = 1; w < wave; w++) yield return _popups.ShowFor(Stage, LevelNumber, PopupTrigger.AfterWave, w);
@@ -151,8 +193,7 @@ namespace ThermoTactics
             ApplySpeed();
             _ui.ShowHud();
             _turns.ResumePlayerTurn();
-            _ui.Announce($"Welcome back, {PlayerName}! Level {LevelNumber}, Wave {s.waveNumber} of {_waves.TotalWaves}, Turn {s.turnNumber}.", UIManager.Good);
-            if (_popups != null) StartCoroutine(ShowMissedFacts(s.waveNumber));
+            BeginOpening(true, $"Welcome back, {PlayerName}! Level {LevelNumber}, Wave {s.waveNumber} of {_waves.TotalWaves}, Turn {s.turnNumber}.", UIManager.Good);
             return true;
         }
 
@@ -206,6 +247,7 @@ namespace ThermoTactics
             if (Current != State.Playing) return;
             Current = State.Ended;
             Time.timeScale = 1f;
+            if (_tutorial != null) _tutorial.Stop();
             _grid.SetDeployHighlights(false);
             if (_camera != null) _camera.SnapHome();
             int waves = won ? _waves.TotalWaves : _waves.WavesCleared;
@@ -269,7 +311,7 @@ namespace ThermoTactics
 
         public void Pause()
         {
-            if (Current != State.Playing || PopupManager.IsOpen) return;
+            if (Current != State.Playing || PopupManager.IsOpen || LevelIntro.IsPlaying) return;
             Current = State.Paused;
             Time.timeScale = 0f;
             Autosave();

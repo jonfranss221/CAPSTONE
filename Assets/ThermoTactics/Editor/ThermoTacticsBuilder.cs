@@ -672,6 +672,8 @@ namespace ThermoTactics.EditorTools
             var factory = sys.AddComponent<UnitFactory>();
             var db = sys.AddComponent<ResultsDatabase>();
             var popups = sys.AddComponent<PopupManager>();
+            var intro = sys.AddComponent<LevelIntro>();
+            var tutorial = sys.AddComponent<TutorialController>();
 
             // ---- UI ----
             var refs = new Dictionary<string, Object>();
@@ -680,13 +682,21 @@ namespace ThermoTactics.EditorTools
             var ui = canvas.gameObject.AddComponent<UIManager>();
             EducationUiBuilder.BuildPopup(canvas.transform, popups);
             Ref(popups, "_database", db);
+            // Onboarding: the tutorial sits just above the HUD (under pause, end and quiz screens); the intro covers everything.
+            OnboardingUiBuilder.BuildTutorial(canvas.transform, tutorial, _tutorialTargets.temperature, _tutorialTargets.oxygen,
+                                              _tutorialTargets.cards, _tutorialTargets.endTurn);
+            canvas.transform.Find("Tutorial").SetSiblingIndex(canvas.transform.Find("HUD").GetSiblingIndex() + 1);
+            OnboardingUiBuilder.BuildLevelIntro(canvas.transform, intro);
+            canvas.transform.Find("LevelIntro").SetAsLastSibling();
 
             // ---- wiring ----
             stage = AssetDatabase.LoadAssetAtPath<StageData>(StagePath);   // reload: a stale instance would serialize as null
             Ref(gm, "_defaultStage", stage); Ref(gm, "_turns", turns); Ref(gm, "_waves", waves); Ref(gm, "_oxygen", oxygen);
             Ref(gm, "_temperature", temp); Ref(gm, "_grid", grid); Ref(gm, "_lanes", lanes); Ref(gm, "_deploy", deploy);
             Ref(gm, "_factory", factory); Ref(gm, "_database", db); Ref(gm, "_ui", ui); Ref(gm, "_fog", fog); Ref(gm, "_camera", battleCam);
-            Ref(gm, "_popups", popups);
+            Ref(gm, "_popups", popups); Ref(gm, "_intro", intro); Ref(gm, "_tutorial", tutorial);
+            Ref(tutorial, "_grid", grid); Ref(tutorial, "_deploy", deploy); Ref(tutorial, "_turns", turns);
+            Ref(tutorial, "_oxygen", oxygen); Ref(tutorial, "_ui", ui);
             Ref(turns, "_grid", grid); Ref(turns, "_waves", waves); Ref(turns, "_oxygen", oxygen);
             Ref(turns, "_temperature", temp); Ref(turns, "_lanes", lanes); Ref(turns, "_ui", ui); Ref(turns, "_camera", battleCam);
             Ref(waves, "_grid", grid); Ref(waves, "_factory", factory);
@@ -817,6 +827,7 @@ namespace ThermoTactics.EditorTools
             var fline = Img("GreenLine", footer.transform, Moss);
             fline.rectTransform.anchorMin = new Vector2(0, 1); fline.rectTransform.anchorMax = new Vector2(1, 1); fline.rectTransform.pivot = new Vector2(0.5f, 1);
             fline.rectTransform.sizeDelta = new Vector2(0, 3); fline.rectTransform.anchoredPosition = Vector2.zero;
+            var cardsArea = At(NewRect("CardsArea", footer.transform), 20, 9, LevelData.MaxRosterTypes * 82 - 12, 70);   // tutorial target
             for (int i = 0; i < LevelData.MaxRosterTypes; i++) cards.Add(Card(footer.transform, i));
 
             var hint = Txt("Hint", footer.transform, "", Body, 14, CreamDim, TextAnchor.MiddleLeft);
@@ -828,6 +839,7 @@ namespace ThermoTactics.EditorTools
             var endTurn = Btn("EndTurnButton", footer.transform, "END TURN", Red, Hex("#FFF6E6"), Ink, 0, 0, 210, 60, 22, 0f);
             AtRight(endTurn, 20, 17, 210, 60);
             refs["_endTurnButton"] = endTurn;
+            _tutorialTargets = (tGroup, ox.rectTransform, cardsArea, (RectTransform)endTurn.transform);
 
             var floating = NewRect("FloatingLayer", hud); Stretch(floating);
             refs["_floatingLayer"] = floating;
@@ -874,7 +886,8 @@ namespace ThermoTactics.EditorTools
             TxtAt("Title", pd.transform, "PAUSED", Pixel, 32, Cream, 28, 40, 460, 40, TextAnchor.MiddleLeft);
             refs["_pauseInfo"] = TxtAt("Info", pd.transform, "", Body, 15, CreamDim, 28, 86, 464, 60, TextAnchor.UpperLeft);
             refs["_resumeButton"] = Btn("ResumeButton", pd.transform, "RESUME", Gold, Ink, Ink, 28, 156, 464, 54, 22);
-            refs["_restartButton"] = Btn("RestartButton", pd.transform, "RESTART LEVEL", Clear, Cream, Slate, 28, 224, 464, 50, 19, 0f);
+            refs["_restartButton"] = Btn("RestartButton", pd.transform, "RESTART LEVEL", Clear, Cream, Slate, 28, 224, 226, 50, 19, 0f);
+            refs["_pauseTutorialButton"] = Btn("HowToPlayButton", pd.transform, "HOW TO PLAY", Clear, Cream, Slate, 266, 224, 226, 50, 19, 0f);
             refs["_pauseLevelSelectButton"] = Btn("LevelSelectButton", pd.transform, "LEVEL SELECT", Clear, Cream, Slate, 28, 286, 226, 50, 19, 0f);
             refs["_pauseMenuButton"] = Btn("MainMenuButton", pd.transform, "MAIN MENU", Clear, Cream, Slate, 266, 286, 226, 50, 19, 0f);
             TxtAt("Saved", pd.transform, "Leaving keeps your saved game. Continue on the Main Menu returns to this turn.", Body, 13, CreamDim, 28, 350, 464, 40);
@@ -970,6 +983,7 @@ namespace ThermoTactics.EditorTools
         // Arrays made inside BuildBattleUI, wired to UIManager after it is added.
         private static (Image[] stars, Button[] secondary, Text[] labels, Image[] icons) _endArrays;
         private static Image[] _stageStars;
+        private static (RectTransform temperature, RectTransform oxygen, RectTransform cards, RectTransform endTurn) _tutorialTargets;
 
         private static Button StageBtn(Transform parent, string label, string icon, Color fill, Color text, float x, float y, float w, float h, int size, float shadow)
         {

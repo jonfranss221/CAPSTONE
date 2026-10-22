@@ -71,6 +71,26 @@ namespace ThermoTactics
             IsHome = true;
         }
 
+        /// <summary>
+        /// Level start: begins slightly zoomed in and up-left of the board, then eases out to the full board.
+        /// Unscaled time, so it does not depend on the Battle speed. With the lane camera turned off it does nothing.
+        /// </summary>
+        public IEnumerator IntroGlide(float seconds)
+        {
+            if (!Enabled || seconds <= 0f) { SnapHome(); yield break; }
+            IsHome = false;
+            Vector3 fromPos = _homePos + new Vector3(-1.2f, 0.6f, 0f);
+            float fromSize = _homeSize * 0.82f;
+            for (float t = 0f; t < seconds; t += Time.unscaledDeltaTime)
+            {
+                float k = Mathf.SmoothStep(0f, 1f, t / seconds);
+                transform.position = Vector3.Lerp(fromPos, _homePos, k);
+                _cam.orthographicSize = Mathf.Lerp(fromSize, _homeSize, k);
+                yield return null;
+            }
+            SnapHome();
+        }
+
         /// <summary>Jumps straight back to the full board (level end, pause menu, scene changes).</summary>
         public void SnapHome()
         {

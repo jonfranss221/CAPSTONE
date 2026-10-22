@@ -43,6 +43,7 @@ namespace ThermoTactics
         [SerializeField] private Button _restartButton;
         [SerializeField] private Button _pauseLevelSelectButton;
         [SerializeField] private Button _pauseMenuButton;
+        [SerializeField] private Button _pauseTutorialButton;
 
         [Header("Lane caption (shown while End Turn resolves)")]
         [SerializeField] private GameObject _laneCaption;
@@ -116,6 +117,7 @@ namespace ThermoTactics
             _restartButton.onClick.AddListener(() => { ShowPause(false); GameManager.Instance.Restart(); });
             _pauseLevelSelectButton.onClick.AddListener(() => GameManager.Instance.ToLevelSelect());
             _pauseMenuButton.onClick.AddListener(() => GameManager.Instance.ToMainMenu());
+            if (_pauseTutorialButton != null) _pauseTutorialButton.onClick.AddListener(() => GameManager.Instance.ReplayTutorial());
             _endPrimary.onClick.AddListener(() => _primaryAction?.Invoke());
             for (int i = 0; i < _endSecondary.Length; i++)
             {
@@ -363,7 +365,7 @@ namespace ThermoTactics
 
             GameManager gm = GameManager.Instance;
             bool canAct = gm.CanPlayerAct;
-            _endTurnButton.interactable = canAct;
+            _endTurnButton.interactable = canAct && TutorialController.AllowEndTurn;
             _pauseButton.interactable = gm.Current == GameManager.State.Playing && !_turns.IsResolving;
             foreach (DeployCard card in _cards)
             {

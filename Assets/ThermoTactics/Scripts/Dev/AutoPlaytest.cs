@@ -60,6 +60,7 @@ namespace ThermoTactics.Dev
             menu.Database.DeleteSession(Player);
             menu.Database.DevClearEducation(Player);
             PopupManager.DevAutoDismiss = true;   // facts are marked seen without waiting for a tap
+            LevelIntro.DevSkip = TutorialController.DevSkip = true;   // no title card or tutorial to wait for
             SettingsStore.LaneCamera = true;
             SettingsStore.BattleSpeedIndex = 0;
             Line($"Stage: {_stage.stageName}, {_stage.LevelCount} levels");
@@ -82,6 +83,7 @@ namespace ThermoTactics.Dev
 
             SettingsStore.LaneCamera = true;
             PopupManager.DevAutoDismiss = false;
+            LevelIntro.DevSkip = TutorialController.DevSkip = false;
             Line($"Climate facts marked seen: {FindFirstObjectByType<ResultsDatabase>().GetSeenFacts(Player).Count} of {_stage.facts.Length}");
             // Menu screens with the finished progress.
             GameSession.PlayerName = Player;

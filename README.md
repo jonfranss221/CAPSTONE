@@ -36,6 +36,10 @@ All names, text and dialogue are in English. The Filipino theme is in the enviro
 
 1. On the title screen, type a **player name** (2–20 characters). A tester code is optional.
 2. Press **Start**, pick **Baguio Forest**, then a level on the path. Level 1 is open; clearing a level opens the next.
+   Every level opens with a short intro: the screen fades in, the camera glides onto the road and a title card shows
+   the stage, level and place (tap to skip). The first time a player starts Level 1, a **tutorial** walks through the
+   screen step by step: you really pick a card, deploy and end a turn. It can be skipped and replayed from
+   **Pause ▸ How to Play**.
 3. Tap a unit card in the deploy bar, then a glowing ally slot on the road. Each level offers up to 5 unit types.
 4. Tap **End Turn**. The camera zooms in on lanes 1 to 6 in turn: in each lane your unit attacks, then the enemy
    (if still standing) hits back. A banner shows what happened in each lane. Settings can turn the zoom off.
@@ -85,6 +89,8 @@ The boss panel always shows its next move.
 - Clearcut Behemoth boss with cleave, Landslide Slam and enrage; HUD boss panel and danger rings on target lanes
 - Oxygen system with turn penalty, minimum of 2 and no penalty in the boss wave
 - Lane-by-lane End Turn with a zooming camera and a lane banner
+- Level intro (fade in, camera glide, title card with stage, level, place and waves) and a hands-on Level 1 tutorial
+  with a coach box and highlight, shown once per player, skippable, replayable from Pause ▸ How to Play
 - Pause menu; Level Complete (stars) / Level Failed screens with Next Level, Retry, Level Select and Stage Select;
   Stage Complete screen after Level 10
 - Local **SQLite** database: results, level progress (unlocks, best stars) and the saved game behind Continue

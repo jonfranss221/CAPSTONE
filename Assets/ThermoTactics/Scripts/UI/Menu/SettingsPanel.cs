@@ -105,11 +105,12 @@ namespace ThermoTactics
         {
             string name = _menu.PlayerName;
             _menu.Confirm("RESET PROGRESS?",
-                $"This deletes {name}'s saved game and locks Baguio Levels 2–10 again. Results and quiz answers stay.",
+                $"This deletes {name}'s saved game and locks Baguio Levels 2–10 again. The Level 1 tutorial shows again. Results and quiz answers stay.",
                 "RESET",
                 () =>
                 {
                     _menu.Database.ResetProgress(name);
+                    SettingsStore.SetTutorialDone(name, false);
                     _menu.RefreshProfile();
                     _dataNote.text = $"{name}'s progress was reset.";
                 });

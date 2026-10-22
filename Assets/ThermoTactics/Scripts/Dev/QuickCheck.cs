@@ -49,6 +49,7 @@ namespace ThermoTactics.Dev
             Line($"Thermo-Tactics quick check · {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             SettingsStore.LaneCamera = true;
             SettingsStore.BattleSpeedIndex = 0;
+            LevelIntro.DevSkip = TutorialController.DevSkip = true;   // shown and checked once, in Level 1 below
 
             // 1. Main Menu with some progress (Levels 1–4 cleared with 3, 2, 1, 3 stars).
             yield return Load(GameSession.MenuScene);
@@ -86,8 +87,28 @@ namespace ThermoTactics.Dev
             Check("No pre-quiz on the second entry", !quiz.IsOpen);
 
             // 2. Level 1 played with the lane camera, to Level Complete.
+            // First the level intro and the Level 1 tutorial (this player has not seen it), then SKIP.
+            SettingsStore.SetTutorialDone(Player, false);
+            LevelIntro.DevSkip = TutorialController.DevSkip = false;
             GameSession.Play(Player, stage, 1);
             yield return Load(GameSession.BattleScene);
+            float w0 = Time.realtimeSinceStartup;
+            while (!LevelIntro.IsPlaying && Time.realtimeSinceStartup - w0 < 3f) yield return null;
+            Check("Level intro shown", LevelIntro.IsPlaying);
+            yield return Hold(1.2f); yield return Shot("07_level_intro");
+            while (LevelIntro.IsPlaying) yield return null;
+            w0 = Time.realtimeSinceStartup;
+            while (!TutorialController.IsRunning && Time.realtimeSinceStartup - w0 < 15f)
+            {
+                if (PopupManager.IsOpen) yield return DismissFact();
+                yield return null;
+            }
+            Check("Tutorial shown on first Level 1", TutorialController.IsRunning && !TutorialController.AllowEndTurn);
+            yield return Hold(0.5f); yield return Shot("08_tutorial_step1");
+            FindFirstObjectByType<TutorialController>().DevSkipNow();
+            yield return null; yield return null;
+            Check("Tutorial skipped: deploying and End Turn allowed", !TutorialController.IsRunning && TutorialController.AllowEndTurn && TutorialController.AllowDeploy);
+            LevelIntro.DevSkip = TutorialController.DevSkip = true;
             bool won = false;
             yield return Play(1, true, w => won = w);
             Check("Climate fact pop-up shown in Level 1", _factShots > 0);
@@ -158,6 +179,7 @@ namespace ThermoTactics.Dev
             Line(_errors.Count == 0 ? "Console errors: none" : $"Console errors: {_errors.Count}");
             foreach (string e in _errors.Distinct().Take(15)) Line("  " + e.Replace("\n", "\n    "));
             Line("DONE");
+            LevelIntro.DevSkip = TutorialController.DevSkip = false;
             UnityEditor.EditorApplication.isPlaying = false;
         }
 

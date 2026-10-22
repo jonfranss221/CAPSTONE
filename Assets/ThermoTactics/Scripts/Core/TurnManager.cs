@@ -22,7 +22,7 @@ namespace ThermoTactics
         public void EndTurn()
         {
             var gm = GameManager.Instance;
-            if (gm == null || !gm.CanPlayerAct) return;
+            if (gm == null || !gm.CanPlayerAct || !TutorialController.AllowEndTurn) return;
             StartCoroutine(ResolveTurn());
         }
 

@@ -35,6 +35,17 @@ namespace ThermoTactics
         public static string LastPlayer { get => PlayerPrefs.GetString("tt.last_player", ""); set { PlayerPrefs.SetString("tt.last_player", value ?? ""); PlayerPrefs.Save(); } }
         public static string TesterCode { get => PlayerPrefs.GetString("tt.tester_code", ""); set { PlayerPrefs.SetString("tt.tester_code", value ?? ""); PlayerPrefs.Save(); } }
 
+        /// <summary>True once this player finished or skipped the Level 1 tutorial (names match without case, like the database).</summary>
+        public static bool TutorialDone(string player) => PlayerPrefs.GetInt(TutorialKey(player), 0) == 1;
+
+        public static void SetTutorialDone(string player, bool done)
+        {
+            if (done) PlayerPrefs.SetInt(TutorialKey(player), 1); else PlayerPrefs.DeleteKey(TutorialKey(player));
+            PlayerPrefs.Save();
+        }
+
+        private static string TutorialKey(string player) => "tt.tutorial_done." + (player ?? "").Trim().ToLowerInvariant();
+
         /// <summary>Applies settings that act on the whole app (volume until the AudioManager exists).</summary>
         public static void Apply()
         {
