@@ -1,0 +1,422 @@
+{
+ "A01_mangrove_guardian": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.382,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": false
+ },
+ "A02_coral_defender": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.361,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": false
+ },
+ "A03_rice_terrace_warden": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.288,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "sting",
+  "flipX_in_game": false
+ },
+ "A04_forest_spirit": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.354,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "slash",
+  "flipX_in_game": false
+ },
+ "A05_solar_sentinel": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.385,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "sting",
+  "flipX_in_game": false
+ },
+ "A06_wind_caller": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.375,
+   0.042
+  ],
+  "hover": true,
+  "boss": false,
+  "effect": "sting",
+  "flipX_in_game": false
+ },
+ "A07_hydro_guardian": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.382,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": false
+ },
+ "A08_geothermal_sentinel": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.344,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": false
+ },
+ "A09_bamboo_warden": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.33,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": false
+ },
+ "A10_seagrass_healer": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.312,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "sting",
+  "flipX_in_game": false
+ },
+ "A11_tarsier_scout": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.337,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "slash",
+  "flipX_in_game": false
+ },
+ "A12_sea_turtle_guardian": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.392,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": false
+ },
+ "A13_eagle_striker": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.385,
+   0.042
+  ],
+  "hover": true,
+  "boss": false,
+  "effect": "slash",
+  "flipX_in_game": false
+ },
+ "A14_reef_sentinel": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.368,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "sting",
+  "flipX_in_game": false
+ },
+ "A15_rainforest_ancient": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.417,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "slash",
+  "flipX_in_game": false
+ },
+ "E01_coal_brute": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.351,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": true
+ },
+ "E02_diesel_drone": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.372,
+   0.042
+  ],
+  "hover": true,
+  "boss": false,
+  "effect": "sting",
+  "flipX_in_game": true
+ },
+ "E03_smog_wraith": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.368,
+   0.042
+  ],
+  "hover": true,
+  "boss": false,
+  "effect": "sting",
+  "flipX_in_game": true
+ },
+ "E04_deforestation_beast": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.385,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "slash",
+  "flipX_in_game": true
+ },
+ "E05_plastic_golem": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.347,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": true
+ },
+ "E06_factory_titan": {
+  "cell": [
+   220,
+   150
+  ],
+  "pivot": [
+   0.355,
+   0.04
+  ],
+  "hover": false,
+  "boss": true,
+  "effect": "impact",
+  "flipX_in_game": true
+ },
+ "E07_oil_slick": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.399,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": true
+ },
+ "E08_mining_ravager": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.389,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": true
+ },
+ "E09_illegal_logger": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.323,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "slash",
+  "flipX_in_game": true
+ },
+ "E10_quarry_colossus": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.378,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": true
+ },
+ "E11_toxic_runoff": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.385,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "sting",
+  "flipX_in_game": true
+ },
+ "E12_methane_cloud": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.382,
+   0.042
+  ],
+  "hover": true,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": true
+ },
+ "E13_incinerator_fiend": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.358,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "sting",
+  "flipX_in_game": true
+ },
+ "E14_landfill_leviathan": {
+  "cell": [
+   144,
+   96
+  ],
+  "pivot": [
+   0.434,
+   0.042
+  ],
+  "hover": false,
+  "boss": false,
+  "effect": "impact",
+  "flipX_in_game": true
+ },
+ "E15_typhoon_tyrant": {
+  "cell": [
+   220,
+   150
+  ],
+  "pivot": [
+   0.334,
+   0.04
+  ],
+  "hover": true,
+  "boss": true,
+  "effect": "impact",
+  "flipX_in_game": true
+ }
+}
