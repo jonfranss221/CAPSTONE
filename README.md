@@ -135,6 +135,8 @@ Assets/ThermoTactics/
 │   ├── Data/          StageData, LevelData, WaveData, UnitData, BossData (ScriptableObjects), UnitTraits (enums)
 │   ├── UI/            UIManager, DeployCard, ResultsPanel, TextScaler, ButtonFx, PanelFx
 │   │   └── Menu/      MainMenuController, MenuAmbience, SettingsPanel, StageSelectPanel, LevelSelectPanel, LevelNode
+│   ├── Models/        LevelResult, SavedLevelResult, StageSummary (data passed from the game logic to the services)
+│   ├── Services/      ProgressService (saves a finished level and reads stage progress; GameManager.EndLevel goes through it)
 │   ├── Persistence/   ResultsDatabase, SessionSnapshot
 │   ├── Presentation/  FogScroller, BattleCamera
 │   └── Dev/           AutoPlaytest, QuickCheck (editor only)
@@ -181,7 +183,7 @@ Landfill Leviathan (Stage 3+). Bosses: Clearcut Behemoth (Stage 1), Factory Tita
 Player data is stored offline in **`thermo_tactics.db`** in `Application.persistentDataPath`
 (Windows editor: `%USERPROFILE%\AppData\LocalLow\DefaultCompany\Thermo-Tactics\`; Android: the app's private storage).
 It is accessed with [SQLite-net for Unity](https://github.com/gilzoide/unity-sqlite-net) (`com.gilzoide.sqlite-net` 1.3.2, MIT)
-by one script, `Scripts/Persistence/ResultsDatabase.cs`. The schema version is kept in `PRAGMA user_version` (now **5**).
+by one script, `Scripts/Persistence/ResultsDatabase.cs`. The schema version is kept in `PRAGMA user_version` (now **6**).
 
 | Table | One row per | Used for |
 | --- | --- | --- |

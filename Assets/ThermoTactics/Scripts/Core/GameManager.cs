@@ -48,9 +48,13 @@ namespace ThermoTactics
         /// <summary>True when the last autosave reached the database.</summary>
         public bool LastSaveOk { get; private set; } = true;
 
+        /// <summary>Saves level results and reads stage progress (the only way EndLevel reaches the database).</summary>
+        private ProgressService _progress;
+
         private void Awake()
         {
             Instance = this;
+            _progress = new ProgressService(_database);
             Application.targetFrameRate = 60;
             SettingsStore.Apply();
         }
@@ -271,60 +275,48 @@ namespace ThermoTactics
             if (_tutorial != null) _tutorial.Stop();
             _grid.SetDeployHighlights(false);
             if (_camera != null) _camera.SnapHome();
-            int waves = won ? _waves.TotalWaves : _waves.WavesCleared;
-            float final = _temperature.Current;
 
-            LevelProgress before = FindProgress(LevelNumber);
-            _database.DeleteSession(PlayerName);
-            int stars = won ? StarRating.For(_temperature.Peak) : 0;
-            _database.RecordAttempt(PlayerName, Stage.stageId, LevelNumber, won, final, stars);
-            GameResult record = _database.Insert(PlayerName, won, final, waves);
+            // Game logic decides the result; ProgressService stores it; UIManager shows it.
+            var result = new LevelResult
+            {
+                PlayerName = PlayerName,
+                Stage = Stage,
+                LevelNumber = LevelNumber,
+                Won = won,
+                FinalTemperature = _temperature.Current,
+                PeakTemperature = _temperature.Peak,
+                WavesCleared = won ? _waves.TotalWaves : _waves.WavesCleared,
+                Stars = won ? StarRating.For(_temperature.Peak) : 0,
+            };
+            SavedLevelResult saved = _progress.SaveLevelResult(result);
 
             // Carbon Credits: first clear, boss bonus, new stars, or the smaller replay share. A loss pays nothing.
             CreditReward reward = default;
-            int wallet = _database.GetCredits(PlayerName);
             if (won)
             {
-                bool clearedBefore = before != null && before.IsCleared == 1;
-                reward = CreditRules.ForWin(LevelNumber, Level.isBossLevel, clearedBefore, StarRating.For(before), stars);
-                int balance = _database.AddCredits(PlayerName, reward.Total);
-                if (balance >= 0) wallet = balance;
+                bool clearedBefore = saved.Before != null && saved.Before.IsCleared == 1;
+                reward = CreditRules.ForWin(LevelNumber, Level.isBossLevel, clearedBefore, StarRating.For(saved.Before), result.Stars);
             }
+            int wallet = _progress.AwardCredits(PlayerName, reward.Total);
 
-            // Stars and stage totals, read back from level_progress after this attempt.
-            int cleared = 0, stageStars = 0;
-            LevelProgress after = null;
-            foreach (LevelProgress p in _database.GetProgress(PlayerName, Stage.stageId))
-            {
-                if (p.IsCleared == 1) cleared++;
-                stageStars += StarRating.For(p);
-                if (p.LevelNumber == LevelNumber) after = p;
-            }
             var summary = new UIManager.EndSummary
             {
                 Won = won,
-                Record = record,
+                Record = saved.Record,
                 Threshold = Level.lossThreshold,
                 CanGoNext = won && HasNextLevel,
-                Stars = stars,
-                Peak = _temperature.Peak,
-                BestStars = StarRating.For(after),
-                NewBest = won && before != null && before.IsCleared == 1 && stars > StarRating.For(before),
-                StageComplete = won && !HasNextLevel && cleared >= Stage.LevelCount,
-                StageCleared = cleared,
-                StageLevels = Stage.LevelCount,
-                StageStars = stageStars,
+                Stars = result.Stars,
+                Peak = result.PeakTemperature,
+                BestStars = StarRating.For(saved.After),
+                NewBest = StarRating.IsNewBest(won, result.Stars, saved.Before),
+                StageComplete = won && !HasNextLevel && saved.Stage.IsComplete,
+                StageCleared = saved.Stage.Cleared,
+                StageLevels = saved.Stage.Levels,
+                StageStars = saved.Stage.Stars,
                 Reward = reward,
                 Wallet = wallet,
             };
             _ui.ShowEnd(summary);
-        }
-
-        private LevelProgress FindProgress(int level)
-        {
-            foreach (LevelProgress p in _database.GetProgress(PlayerName, Stage.stageId))
-                if (p.LevelNumber == level) return p;
-            return null;
         }
 
         public void Restart()

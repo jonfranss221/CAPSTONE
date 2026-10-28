@@ -20,6 +20,10 @@ namespace ThermoTactics
         public static int For(LevelProgress p)
             => p == null || p.IsCleared != 1 ? 0 : System.Math.Max(1, System.Math.Min(MaxStars, p.BestStars));
 
+        /// <summary>True when a win beats the stars of an earlier win on the same level.</summary>
+        public static bool IsNewBest(bool won, int stars, LevelProgress before)
+            => won && before != null && before.IsCleared == 1 && stars > For(before);
+
         /// <summary>What the next star needs, for the end screen and level card.</summary>
         public static string NextStarHint(int stars)
             => stars >= 3 ? "All 3 stars earned!"
