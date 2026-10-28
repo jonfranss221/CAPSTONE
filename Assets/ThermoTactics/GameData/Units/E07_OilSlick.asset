@@ -19,6 +19,16 @@ MonoBehaviour:
   opCost: 0
   maxHp: 14
   damage: 3
+  speed: 3
+  category: 4
+  isHover: 0
+  trait: 17
+  traitValue: 2
+  traitText: "Slick: the ally it hits gets \u22122 Speed next turn."
+  isStarter: 0
+  tier: 0
+  priceCredits: 0
+  unlockStage: 1
   card: {fileID: 21300000, guid: fc7c6bf86dcfe1140bb609af982041f3, type: 3}
   idlePose: {fileID: 21300000, guid: b11866b2a765695469b041c1b608d7bd, type: 3}
   animator: {fileID: 9100000, guid: 43c62eb30bf41d64090dfdfd8403c491, type: 2}

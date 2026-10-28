@@ -19,12 +19,26 @@ MonoBehaviour:
   opCost: 0
   maxHp: 300
   damage: 8
+  speed: 3
+  category: 3
+  isHover: 0
+  trait: 0
+  traitValue: 0
+  traitText: Cleave hits the strongest ally's lane and the lanes beside it; Landslide
+    Slam hits all 6 lanes every 3rd turn; enrages at 40% HP.
+  isStarter: 0
+  tier: 0
+  priceCredits: 0
+  unlockStage: 1
   card: {fileID: 21300000, guid: 1cfd64e23a42a2d4881d94277024e235, type: 3}
   idlePose: {fileID: 21300000, guid: 11a82730796cf6e4c82009643ab5a73c, type: 3}
   animator: {fileID: 9100000, guid: 3cde91d72fb076d4cab0824b20aacd68, type: 2}
   tint: {r: 1, g: 1, b: 1, a: 1}
   hitDelay: 0.42857143
   attackDuration: 0.85714287
+  pattern: 0
+  specialLanes: 6
+  halfDamageTo: []
   enragedCleaveDamage: 10
   slamDamage: 7
   slamEvery: 3

@@ -19,6 +19,17 @@ MonoBehaviour:
   opCost: 0
   maxHp: 12
   damage: 3
+  speed: 6
+  category: 5
+  isHover: 1
+  trait: 18
+  traitValue: 0.15
+  traitText: "Greenhouse: hitting an undefended lane adds +0.15 \xB0C (methane traps
+    far more heat than CO2)."
+  isStarter: 0
+  tier: 0
+  priceCredits: 0
+  unlockStage: 1
   card: {fileID: 21300000, guid: d9c1c6d7094295c469f988626104e79f, type: 3}
   idlePose: {fileID: 21300000, guid: d9dfda9512a19c746961679516d9fbc5, type: 3}
   animator: {fileID: 9100000, guid: 8816f62c34de9ad41823214478663ca0, type: 2}

@@ -31,30 +31,94 @@ namespace ThermoTactics.EditorTools
         private struct UnitDef
         {
             public string Folder, Id, Display; public Faction Side; public int Cost, Damage, Hp; public float PivotX;
-            public UnitDef(string folder, string id, string display, Faction side, int cost, int damage, int hp, float pivotX)
-            { Folder = folder; Id = id; Display = display; Side = side; Cost = cost; Damage = damage; Hp = hp; PivotX = pivotX; }
+            public int Speed; public UnitCategory Category; public bool Hover;
+            public UnitTrait Trait; public float TraitValue; public string TraitText;
+            public bool Starter; public UnitTier Tier; public int Price, Stage;
         }
 
-        // Stats from the capstone overview (Section 10) and the Stage 1 level plan. Pivots keep the feet on the same pixel in every frame.
+        private static UnitDef Ally(string folder, string id, string display, UnitCategory cat, int cost, int hp, int damage, int speed,
+                                    UnitTrait trait, float value, string text, float pivotX, bool hover = false,
+                                    bool starter = false, UnitTier tier = UnitTier.Common, int price = 0, int stage = 1)
+            => new UnitDef { Folder = folder, Id = id, Display = display, Side = Faction.Ally, Category = cat, Cost = cost, Hp = hp, Damage = damage,
+                             Speed = speed, Trait = trait, TraitValue = value, TraitText = text, PivotX = pivotX, Hover = hover,
+                             Starter = starter, Tier = tier, Price = starter ? 0 : price, Stage = stage };
+
+        private static UnitDef Foe(string folder, string id, string display, UnitCategory cat, int hp, int damage, int speed,
+                                   UnitTrait trait, float value, string text, float pivotX, bool hover = false, int stage = 1)
+            => new UnitDef { Folder = folder, Id = id, Display = display, Side = Faction.Enemy, Category = cat, Cost = 0, Hp = hp, Damage = damage,
+                             Speed = speed, Trait = trait, TraitValue = value, TraitText = text, PivotX = pivotX, Hover = hover, Stage = stage };
+
+        // The roster (Docs/Thermo-Tactics_Roster.md, art: Docs/NewCharacters/thermo_tactics_roster_v3, imported with
+        // Tools/import_roster_v3.py). The 5 starters and the 8 Stage 1 enemies keep the cost, HP and damage they had,
+        // so Baguio plays as before. Speed, category, traits and store data are stored now and used in combat from Phase 2.
+        // Pivots keep the feet on the same pixel in every frame.
         private static readonly UnitDef[] Units =
         {
-            new UnitDef("MangroveGuardian",   "A01", "Mangrove Guardian",   Faction.Ally, 3, 4, 20, 0.382f),
-            new UnitDef("CoralDefender",      "A02", "Coral Defender",      Faction.Ally, 3, 4, 18, 0.361f),
-            new UnitDef("WindCaller",         "A06", "Wind Caller",         Faction.Ally, 2, 4, 10, 0.375f),
-            new UnitDef("GeothermalSentinel", "A08", "Geothermal Sentinel", Faction.Ally, 4, 6, 22, 0.344f),
-            new UnitDef("ReefSentinel",       "A14", "Reef Sentinel",       Faction.Ally, 3, 5, 14, 0.368f),
-            new UnitDef("IllegalLogger",      "E09", "Illegal Logger",      Faction.Enemy, 0, 5, 12, 0.323f),
-            new UnitDef("MethaneCloud",       "E12", "Methane Cloud",       Faction.Enemy, 0, 3, 12, 0.382f),
-            new UnitDef("QuarryColossus",     "E10", "Quarry Colossus",     Faction.Enemy, 0, 7, 22, 0.378f),
-            new UnitDef("OilSlick",           "E07", "Oil Slick",           Faction.Enemy, 0, 3, 14, 0.399f),
-            new UnitDef("PlasticGolem",       "E05", "Plastic Golem",       Faction.Enemy, 0, 4, 24, 0.347f),
-            new UnitDef("MiningRavager",      "E08", "Mining Ravager",      Faction.Enemy, 0, 6, 18, 0.389f),
-            new UnitDef("SmogWraith",         "E03", "Smog Wraith",         Faction.Enemy, 0, 5, 12, 0.368f),
-            new UnitDef("DeforestationBeast", "E04", "Deforestation Beast", Faction.Enemy, 0, 7, 20, 0.385f),
+            // ---- Allies: the 5 starters ----
+            Ally("MangroveGuardian",   "A01", "Mangrove Guardian",   UnitCategory.Ocean,     3, 20, 4, 3, UnitTrait.BlueCarbon, 0.08f,
+                 "Blue Carbon: hitting an empty enemy slot cools −0.08 °C (instead of −0.05).", 0.382f, starter: true),
+            Ally("CoralDefender",      "A02", "Coral Defender",      UnitCategory.Ocean,     3, 18, 4, 4, UnitTrait.ReefShield, 1f,
+                 "Reef Shield: takes 1 less damage from every hit.", 0.361f, starter: true),
+            Ally("WindCaller",         "A06", "Wind Caller",         UnitCategory.Renewable, 2, 10, 4, 8, UnitTrait.Gust, 2f,
+                 "Gust: +2 damage vs hovering enemies.", 0.375f, hover: true, starter: true),
+            Ally("GeothermalSentinel", "A08", "Geothermal Sentinel", UnitCategory.Renewable, 4, 22, 6, 3, UnitTrait.EarthCore, 2f,
+                 "Earth Core: +2 damage vs Extraction enemies.", 0.344f, starter: true),
+            Ally("ReefSentinel",       "A14", "Reef Sentinel",       UnitCategory.Ocean,     3, 14, 5, 6, UnitTrait.Pierce, 0f,
+                 "Pierce: ignores enemy armour.", 0.368f, starter: true),
+            // ---- Allies: unlockable in the store ----
+            Ally("BambooWarden",       "A09", "Bamboo Warden",       UnitCategory.Forest,    2, 16, 3, 4, UnitTrait.BambooWall, 1f,
+                 "Bamboo Wall: takes 1 less damage from every hit.", 0.33f, tier: UnitTier.Common, price: 300, stage: 1),
+            Ally("TarsierScout",       "A11", "Tarsier Scout",       UnitCategory.Forest,    2, 8, 4, 10, UnitTrait.NightEyes, 1f,
+                 "Night Eyes: always attacks first; dodges the first hit of each wave.", 0.337f, tier: UnitTier.Common, price: 300, stage: 1),
+            Ally("RiceTerraceWarden",  "A03", "Rice Terrace Warden", UnitCategory.Forest,    3, 16, 4, 5, UnitTrait.Harvest, 1f,
+                 "Harvest: +1 Oxygen at the start of every turn while alive (max +2 from all Wardens).", 0.288f, tier: UnitTier.Common, price: 350, stage: 1),
+            Ally("ForestSpirit",       "A04", "Forest Spirit",       UnitCategory.Forest,    3, 18, 6, 6, UnitTrait.Regrowth, 2f,
+                 "Regrowth: heals itself 2 HP every turn.", 0.354f, tier: UnitTier.Rare, price: 600, stage: 1),
+            Ally("HydroGuardian",      "A07", "Hydro Guardian",      UnitCategory.Renewable, 4, 24, 5, 3, UnitTrait.Floodgate, 1f,
+                 "Floodgate: takes 1 less damage from every hit; immune to Speed debuffs.", 0.382f, tier: UnitTier.Rare, price: 600, stage: 2),
+            Ally("SeagrassHealer",     "A10", "Seagrass Healer",     UnitCategory.Ocean,     3, 12, 3, 5, UnitTrait.MeadowMend, 2f,
+                 "Meadow Mend: heals allies in adjacent lanes 2 HP every turn and cures Poison.", 0.312f, tier: UnitTier.Rare, price: 650, stage: 2),
+            Ally("SeaTurtleGuardian",  "A12", "Sea Turtle Guardian", UnitCategory.Ocean,     4, 32, 4, 1, UnitTrait.Shell, 2f,
+                 "Shell: takes 2 less damage from every hit.", 0.392f, tier: UnitTier.Rare, price: 650, stage: 2),
+            Ally("EagleStriker",       "A13", "Eagle Striker",       UnitCategory.Forest,    4, 14, 8, 9, UnitTrait.Dive, 3f,
+                 "Dive: +3 damage vs hovering enemies; its first attack in each wave deals +2.", 0.385f, hover: true, tier: UnitTier.Epic, price: 1000, stage: 2),
+            Ally("SolarSentinel",      "A05", "Solar Sentinel",      UnitCategory.Renewable, 4, 16, 7, 5, UnitTrait.Overcharge, 3f,
+                 "Overcharge: +1 damage for each turn it survives (max +3).", 0.385f, tier: UnitTier.Rare, price: 700, stage: 3),
+            Ally("RainforestAncient",  "A15", "Rainforest Ancient",  UnitCategory.Forest,    6, 40, 9, 2, UnitTrait.Canopy, 0.02f,
+                 "Canopy: allies in adjacent lanes take 1 less damage; cools −0.02 °C every turn while alive.", 0.417f, tier: UnitTier.Legendary, price: 1600, stage: 3),
+
+            // ---- Enemies: Stage 1 (Baguio) ----
+            Foe("IllegalLogger",      "E09", "Illegal Logger",      UnitCategory.Extraction, 12, 5, 6, UnitTrait.Chainsaw, 2f,
+                "Chainsaw: +2 damage vs Forest allies.", 0.323f),
+            Foe("OilSlick",           "E07", "Oil Slick",           UnitCategory.Waste,      14, 3, 3, UnitTrait.Slick, 2f,
+                "Slick: the ally it hits gets −2 Speed next turn.", 0.399f),
+            Foe("MethaneCloud",       "E12", "Methane Cloud",       UnitCategory.Emissions,  12, 3, 6, UnitTrait.Greenhouse, 0.15f,
+                "Greenhouse: hitting an undefended lane adds +0.15 °C (methane traps far more heat than CO2).", 0.382f, hover: true),
+            Foe("PlasticGolem",       "E05", "Plastic Golem",       UnitCategory.Waste,      24, 4, 2, UnitTrait.Indestructible, 1f,
+                "Indestructible: takes 1 less damage from every hit.", 0.347f),
+            Foe("QuarryColossus",     "E10", "Quarry Colossus",     UnitCategory.Extraction, 22, 7, 2, UnitTrait.Landslide, 2f,
+                "Landslide: its hit also deals 2 damage to allies in adjacent lanes.", 0.378f),
+            Foe("SmogWraith",         "E03", "Smog Wraith",         UnitCategory.Emissions,  12, 5, 7, UnitTrait.Haze, 1f,
+                "Haze: the ally it hits deals 1 less damage next turn.", 0.368f, hover: true),
+            Foe("MiningRavager",      "E08", "Mining Ravager",      UnitCategory.Extraction, 18, 6, 4, UnitTrait.Drill, 0f,
+                "Drill: ignores ally armour.", 0.389f),
+            Foe("DeforestationBeast", "E04", "Deforestation Beast", UnitCategory.Extraction, 20, 7, 5, UnitTrait.ClearCut, 3f,
+                "Clear-cut: +3 damage vs Forest allies.", 0.385f),
+            // ---- Enemies: later stages ----
+            Foe("CoalBrute",          "E01", "Coal Brute",          UnitCategory.Emissions,  26, 6, 3, UnitTrait.Soot, 1f,
+                "Soot: the ally it hits deals 1 less damage next turn; +0.05 °C on every hit.", 0.351f, stage: 2),
+            Foe("DieselDrone",        "E02", "Diesel Drone",        UnitCategory.Emissions,  10, 4, 9, UnitTrait.Swarm, 1f,
+                "Swarm: +1 damage for each other Diesel Drone in an adjacent lane.", 0.372f, hover: true, stage: 2),
+            Foe("ToxicRunoff",        "E11", "Toxic Runoff",        UnitCategory.Waste,      16, 3, 4, UnitTrait.Poison, 2f,
+                "Poison: 2 damage per turn for 2 turns; +2 damage vs Ocean allies.", 0.385f, stage: 2),
+            Foe("IncineratorFiend",   "E13", "Incinerator Fiend",   UnitCategory.Emissions,  16, 6, 5, UnitTrait.Burn, 1f,
+                "Burn: 1 damage per turn for 2 turns; +3 damage vs Forest allies.", 0.358f, stage: 3),
+            Foe("LandfillLeviathan",  "E14", "Landfill Leviathan",  UnitCategory.Waste,      34, 7, 1, UnitTrait.MethaneLeak, 0.05f,
+                "Methane Leak: +0.05 °C every 2 turns while alive; takes 1 less damage from every hit.", 0.434f, stage: 3),
         };
         private const float PivotY = 0.042f;
 
-        // Elite variants (Level 5 on): base art with a red tint, ×1.5 HP and +1 damage.
+        // Elite variants (Level 5 on): base art with a red tint, ×1.5 HP and +1 damage; same category and trait, Speed +1.
         private static readonly (string id, string display, string baseFolder, int hp, int dmg)[] Elites =
         {
             ("EL09", "Chainsaw Logger",       "IllegalLogger",      18, 6),
@@ -70,9 +134,17 @@ namespace ThermoTactics.EditorTools
         private const string BossFolder = "ClearcutBehemoth";
         private static readonly Vector2 BossPivot = new Vector2(0.52f, 0.031f);
 
+        // Bosses for later stages (roster v3 art, 220 × 150 frames: idle, attack, hurt). Built now, used when their stage is made.
+        private static readonly (string folder, string id, string display, Vector2 pivot)[] LaterBosses =
+        {
+            ("FactoryTitan",  "E06", "Factory Titan",  new Vector2(0.355f, 0.04f)),
+            ("TyphoonTyrant", "E15", "Typhoon Tyrant", new Vector2(0.334f, 0.04f)),
+        };
+
         [MenuItem("Thermo-Tactics/Build Everything")]
         public static void BuildAll()
         {
+            ThermoTactics.EditorTools.RosterArtImporter.Import(false);
             ImportArt();
             var controllers = BuildAnimations();
             StageData stage = BuildData(controllers);
@@ -82,7 +154,7 @@ namespace ThermoTactics.EditorTools
             if (string.IsNullOrEmpty(PlayerSettings.bundleVersion) || PlayerSettings.bundleVersion == "0.1" || PlayerSettings.bundleVersion == "1.0")
                 PlayerSettings.bundleVersion = "0.2.0";
             AssetDatabase.SaveAssets();
-            Debug.Log("[Thermo-Tactics] Built: Main Menu, Baguio battle scene, Levels 1–10 and the boss.");
+            Debug.Log("[Thermo-Tactics] Built: Main Menu, Baguio battle scene, Levels 1–10, the boss and the 30-unit roster.");
         }
 
         // =====================================================================
@@ -133,7 +205,12 @@ namespace ThermoTactics.EditorTools
         private static Vector2 PivotFor(string path, string file)
         {
             if (file == "pixel") return new Vector2(0f, 0.5f);
-            if (path.StartsWith(ArtBosses) && file != "card") return BossPivot;
+            if (path.StartsWith(ArtBosses) && file != "card")
+            {
+                foreach (var b in LaterBosses)
+                    if (path.Contains("/" + b.folder + "/")) return b.pivot;
+                return BossPivot;
+            }
             if (path.StartsWith(ArtUnits) && file != "card")
                 foreach (var u in Units)
                     if (path.Contains("/" + u.Folder + "/")) return new Vector2(u.PivotX, PivotY);
@@ -176,6 +253,7 @@ namespace ThermoTactics.EditorTools
                 result[u.Folder] = ctrl;
             }
             result[BossFolder] = BuildBossAnimations();
+            foreach (var b in LaterBosses) result[b.folder] = BuildLaterBossAnimations(b.folder);
             AssetDatabase.SaveAssets();
             return result;
         }
@@ -217,6 +295,43 @@ namespace ThermoTactics.EditorTools
                 var rage = s.AddTransition(sRage);
                 rage.AddCondition(AnimatorConditionMode.If, 0f, "Enraged");
                 rage.hasExitTime = true; rage.exitTime = 1f; rage.duration = 0f;
+            }
+            EditorUtility.SetDirty(ctrl);
+            return ctrl;
+        }
+
+        /// <summary>
+        /// A later-stage boss with roster v3 art (idle, attack, hurt only). It has the same parameters as the
+        /// Clearcut Behemoth (Attack, Slam, Hurt, Enraged), so BossUnit can drive it: the special attack and
+        /// the enraged idle reuse the attack and idle clips.
+        /// </summary>
+        private static AnimatorController BuildLaterBossAnimations(string folder)
+        {
+            string dir = $"{AnimDir}/{folder}";
+            EnsureFolder(dir);
+            AnimationClip idle = MakeClip($"{dir}/{folder}_Idle.anim", LoadFrames(ArtBosses, folder, "idle", 12), 12f, true);
+            AnimationClip attack = MakeClip($"{dir}/{folder}_Attack.anim", LoadFrames(ArtBosses, folder, "attack", 12), 14f, false);
+            AnimationClip special = MakeClip($"{dir}/{folder}_Special.anim", LoadFrames(ArtBosses, folder, "attack", 12), 18f, false);
+            AnimationClip hurt = MakeClip($"{dir}/{folder}_Hurt.anim", LoadFrames(ArtBosses, folder, "hurt", 8), 16f, false);
+
+            var ctrl = ResetController($"{dir}/{folder}.controller");
+            ctrl.AddParameter("Attack", AnimatorControllerParameterType.Trigger);
+            ctrl.AddParameter("Slam", AnimatorControllerParameterType.Trigger);
+            ctrl.AddParameter("Hurt", AnimatorControllerParameterType.Trigger);
+            ctrl.AddParameter("Enraged", AnimatorControllerParameterType.Bool);
+            var sm = ctrl.layers[0].stateMachine;
+            var sIdle = sm.AddState("Idle"); sIdle.motion = idle;
+            var sAtk = sm.AddState("Attack"); sAtk.motion = attack;
+            var sSpecial = sm.AddState("Special"); sSpecial.motion = special;
+            var sHurt = sm.AddState("Hurt"); sHurt.motion = hurt;
+            sm.defaultState = sIdle;
+            AddTrigger(sm.AddAnyStateTransition(sAtk), "Attack");
+            AddTrigger(sm.AddAnyStateTransition(sSpecial), "Slam");
+            AddTrigger(sm.AddAnyStateTransition(sHurt), "Hurt");
+            foreach (var st in new[] { sAtk, sSpecial, sHurt })
+            {
+                var back = st.AddTransition(sIdle);
+                back.hasExitTime = true; back.exitTime = 1f; back.duration = 0f;
             }
             EditorUtility.SetDirty(ctrl);
             return ctrl;
@@ -475,6 +590,35 @@ namespace ThermoTactics.EditorTools
             return (quiz, facts);
         }
 
+        private static void ApplyRoster(UnitData data, UnitDef u)
+        {
+            data.speed = u.Speed; data.category = u.Category; data.isHover = u.Hover;
+            data.trait = u.Trait; data.traitValue = u.TraitValue; data.traitText = u.TraitText;
+            data.isStarter = u.Starter; data.tier = u.Tier; data.priceCredits = u.Price; data.unlockStage = u.Stage;
+        }
+
+        private static BossData BuildLaterBoss(string folder, string id, string display, Dictionary<string, AnimatorController> controllers,
+            UnitCategory category, int hp, int damage, int speed, bool hover, int stage, BossPattern pattern, int specialLanes,
+            int specialDamage, int specialEvery, UnitTrait trait, float traitValue, string traitText, string description)
+        {
+            var b = LoadOrCreate<BossData>($"{DataDir}/Units/{id}_{folder}.asset");
+            b.unitId = id; b.displayName = display; b.faction = Faction.Enemy; b.isElite = false;
+            b.opCost = 0; b.maxHp = hp; b.damage = damage; b.speed = speed; b.category = category; b.isHover = hover;
+            b.trait = trait; b.traitValue = traitValue; b.traitText = traitText;
+            b.isStarter = false; b.tier = UnitTier.Common; b.priceCredits = 0; b.unlockStage = stage;
+            b.pattern = pattern; b.specialLanes = specialLanes;
+            b.slamDamage = specialDamage; b.slamEvery = specialEvery; b.enragedSlamEvery = Mathf.Max(1, specialEvery - 1);
+            b.enragedCleaveDamage = damage + 2; b.enrageAtFraction = 0.4f; b.cleaveRadius = 0;
+            b.boardAnchor = new Vector2(4.5f, 3.0f); b.worldScale = 2.1f; b.tint = Color.white;
+            b.card = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtBosses}/{folder}/card.png");
+            b.idlePose = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtBosses}/{folder}/idle_00.png");
+            b.animator = controllers[folder];
+            b.hitDelay = 6f / 14f; b.attackDuration = 12f / 14f;
+            b.description = description;
+            EditorUtility.SetDirty(b);
+            return b;
+        }
+
         private static StageData BuildData(Dictionary<string, AnimatorController> controllers)
         {
             EnsureFolder(DataDir + "/Units");
@@ -492,6 +636,7 @@ namespace ThermoTactics.EditorTools
                 data.opCost = u.Cost;
                 data.damage = u.Damage;
                 data.maxHp = u.Hp;
+                ApplyRoster(data, u);
                 data.tint = Color.white;
                 data.card = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtUnits}/{u.Folder}/card.png");
                 data.idlePose = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtUnits}/{u.Folder}/idle_00.png");
@@ -510,6 +655,9 @@ namespace ThermoTactics.EditorTools
                 var data = LoadOrCreate<UnitData>($"{DataDir}/Units/{e.id}_{e.display.Replace(" ", "")}.asset");
                 data.unitId = e.id; data.displayName = e.display; data.faction = Faction.Enemy; data.isElite = true;
                 data.opCost = 0; data.maxHp = e.hp; data.damage = e.dmg; data.tint = EliteTint;
+                data.speed = Mathf.Min(10, src.speed + 1); data.category = src.category; data.isHover = src.isHover;
+                data.trait = src.trait; data.traitValue = src.traitValue; data.traitText = src.traitText;
+                data.isStarter = false; data.tier = UnitTier.Common; data.priceCredits = 0; data.unlockStage = src.unlockStage;
                 data.card = src.card; data.idlePose = src.idlePose; data.animator = src.animator;
                 data.hitDelay = src.hitDelay; data.attackDuration = src.attackDuration;
                 EditorUtility.SetDirty(data);
@@ -528,8 +676,32 @@ namespace ThermoTactics.EditorTools
             boss.animator = controllers[BossFolder];
             boss.hitDelay = 6f / 14f; boss.attackDuration = 12f / 14f;
             boss.description = "Stage 1 boss: felled pine logs, landslide mud and stone, with a chainsaw arm (Cleave) and a boulder fist (Landslide Slam).";
+            boss.pattern = BossPattern.CleaveAndSlam; boss.specialLanes = 6; boss.halfDamageTo = new UnitData[0];
+            boss.speed = 3; boss.category = UnitCategory.Extraction; boss.isHover = false;
+            boss.trait = UnitTrait.None; boss.traitValue = 0f;
+            boss.traitText = "Cleave hits the strongest ally's lane and the lanes beside it; Landslide Slam hits all 6 lanes every 3rd turn; enrages at 40% HP.";
+            boss.isStarter = false; boss.tier = UnitTier.Common; boss.priceCredits = 0; boss.unlockStage = 1;
             EditorUtility.SetDirty(boss);
             catalog.Add(boss);
+
+            // Later-stage bosses: built now so their art, stats and moves are ready; no Stage 1 wave uses them.
+            BossData titan = BuildLaterBoss("FactoryTitan", "E06", "Factory Titan", controllers, UnitCategory.Emissions,
+                hp: 380, damage: 9, speed: 2, hover: false, stage: 4,
+                pattern: BossPattern.Overdrive, specialLanes: 3, specialDamage: 9, specialEvery: 3,
+                trait: UnitTrait.Smokestacks, traitValue: 0.05f,
+                traitText: "Smokestacks: +0.05 °C every turn while alive; every 3rd turn Overdrive hits 3 lanes.",
+                description: "Later-stage boss: a coal-fired factory on legs with two smokestacks. Overdrive vents a blast across 3 lanes.");
+            titan.halfDamageTo = new UnitData[0];
+            catalog.Add(titan);
+            BossData typhoon = BuildLaterBoss("TyphoonTyrant", "E15", "Typhoon Tyrant", controllers, UnitCategory.ClimateDisaster,
+                hp: 450, damage: 10, speed: 8, hover: true, stage: 5,
+                pattern: BossPattern.StormSurge, specialLanes: 2, specialDamage: 10, specialEvery: 3,
+                trait: UnitTrait.StormSurge, traitValue: 2f,
+                traitText: "Storm Surge: hits 2 random lanes each turn and every lane every 3rd turn; Mangrove Guardian and Sea Turtle Guardian take half damage.",
+                description: "Final boss: a super typhoon made stronger by warmer seas. Mangroves and sea turtles stand up to its storm surge.");
+            typhoon.halfDamageTo = new[] { byFolder["MangroveGuardian"], byFolder["SeaTurtleGuardian"] };
+            EditorUtility.SetDirty(typhoon);
+            catalog.Add(typhoon);
 
             UnitData Enemy(string key)
             {
@@ -913,6 +1085,13 @@ namespace ThermoTactics.EditorTools
             Border(badge.transform, Ink, "ui_frame2");
             var bt = Txt("Text", badge.transform, "NEW BEST!", BodyBold, 15, Hex("#FFF6E6"), TextAnchor.MiddleCenter); Stretch(bt.rectTransform);
             refs["_endNewBest"] = badge.gameObject;
+            // Carbon Credits earned (left of the stars, opposite the NEW BEST badge) and the wallet balance under it.
+            var credits = At(Img("Credits", ed.transform, new Color(0.31f, 0.62f, 0.35f, 0.22f)), 70, 116, 170, 36);
+            Border(credits.transform, Hex("#4E9A5A"), "ui_frame2");
+            Icon("Icon", credits.transform, "icon_credit", Hex("#8FE09B"), 8, 6, 24);
+            refs["_endCreditsText"] = TxtAt("Amount", credits.transform, "+0 CC", BodyBold, 18, Hex("#C9F5CF"), 38, 0, 128, 36, TextAnchor.MiddleLeft);
+            refs["_endWalletText"] = TxtAt("Wallet", ed.transform, "", Body, 13, CreamDim, 70, 154, 220, 18, TextAnchor.MiddleLeft);
+            refs["_endCredits"] = credits.gameObject;
             refs["_endBody"] = TxtAt("Body", ed.transform, "", Body, 17, Cream, 50, 186, 680, 110, TextAnchor.UpperCenter);
             refs["_endStarHint"] = TxtAt("StarHint", ed.transform, "", BodyBold, 14, GoldLight, 50, 300, 680, 22, TextAnchor.MiddleCenter);
 

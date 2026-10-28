@@ -40,8 +40,19 @@ namespace ThermoTactics
             fill.transform.localPosition = new Vector3(0.02f, 0f, 0f);
             back.transform.localPosition = Vector3.zero;
 
+            // Status pips just above the health bar (Poison, Burn, Weaken, Slow, Dodge, Synergy); hidden until active.
+            var pipRow = new GameObject("StatusPips");
+            pipRow.transform.SetParent(root.transform, false);
+            pipRow.transform.localPosition = new Vector3(-0.45f, 1.66f, 0f);
+            var pips = new SpriteRenderer[6];
+            for (int i = 0; i < pips.Length; i++)
+            {
+                pips[i] = NewBar(pipRow.transform, $"Pip{i}", Color.white, order + 4, 0.12f, 0.12f);
+                pips[i].enabled = false;
+            }
+
             UnitBase unit = enemy ? root.AddComponent<EnemyUnit>() : (UnitBase)root.AddComponent<AllyUnit>();
-            unit.Init(data, lane, maxHp, body, animator, fill.transform);
+            unit.Init(data, lane, maxHp, body, animator, fill.transform, pips);
             return unit;
         }
 

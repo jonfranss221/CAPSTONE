@@ -19,6 +19,16 @@ MonoBehaviour:
   opCost: 3
   maxHp: 14
   damage: 5
+  speed: 6
+  category: 1
+  isHover: 0
+  trait: 5
+  traitValue: 0
+  traitText: 'Pierce: ignores enemy armour.'
+  isStarter: 1
+  tier: 0
+  priceCredits: 0
+  unlockStage: 1
   card: {fileID: 21300000, guid: 384b97fc6f7e52e4d8b29ecd0872b459, type: 3}
   idlePose: {fileID: 21300000, guid: 9e47e1aeaf9577b4d8d4ba9c38da2e12, type: 3}
   animator: {fileID: 9100000, guid: 8eeb5de88e0d3514baab1180165c5f6b, type: 2}

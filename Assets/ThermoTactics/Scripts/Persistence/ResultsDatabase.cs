@@ -74,6 +74,7 @@ namespace ThermoTactics
         [Column("enemies")]      public string Enemies     { get; set; }
         [Column("saved_at")]     public string SavedAt     { get; set; }
         [Column("app_version")]  public string AppVersion  { get; set; }
+        [Column("squad")]        public string Squad       { get; set; }
     }
 
     /// <summary>Row shape for the quiz_results table: one pre or post quiz of one player in one stage.</summary>
@@ -95,18 +96,21 @@ namespace ThermoTactics
     /// Local database: SQLite file at Application.persistentDataPath/thermo_tactics.db
     /// (package com.gilzoide.sqlite-net, native SQLite for Android and Windows).
     ///
-    /// Tables (schema version 4; version 3 added best_stars and peak_temperature, version 4 the two education tables):
+    /// Tables (schema version 6; version 3 added best_stars and peak_temperature, version 4 the two education tables,
+    /// version 5 the wallet and owned units, version 6 the squad of the saved game):
     ///   game_results(id, player_name, result, created_at, final_temperature, waves_cleared) — one row per finished level
     ///   level_progress(player_name, stage_id, level_number, is_cleared, attempts, best_final_temp) — drives unlocking
     ///   saved_session(player_name, stage_id, level_number, wave_number, turn_number, …) — the Continue save, one per player
     ///   quiz_results(player_name, stage_id, quiz_type, answers, score, …) — first pre / post quiz per player and stage
     ///   facts_seen(player_name, fact_id, seen_at) — climate facts already shown to the player
+    ///   wallet(player_name, credits, total_earned) — the player's Carbon Credits
+    ///   owned_units(player_name, unit_id, bought_at) — allies bought in the store (starters are owned by everyone, not stored)
     /// Results recorded earlier by the JSON version (results_db.json) are imported once.
     /// </summary>
     public class ResultsDatabase : MonoBehaviour
     {
         public const int MaxNameLength = 20;
-        public const int SchemaVersion = 4;
+        public const int SchemaVersion = 6;
         private const string FileName = "thermo_tactics.db";
         private const string LegacyJsonName = "results_db.json";
 
@@ -175,8 +179,8 @@ namespace ThermoTactics
 
         private const string SaveSessionSql =
             "INSERT OR REPLACE INTO saved_session (player_name, stage_id, level_number, wave_number, turn_number, " +
-            "oxygen_left, oxygen_allowance, oxygen_penalty, temperature, boss_turn, peak_temperature, allies, enemies, saved_at, app_version) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "oxygen_left, oxygen_allowance, oxygen_penalty, temperature, boss_turn, peak_temperature, allies, enemies, saved_at, app_version, squad) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         // Version 4: quizzes and climate facts. These are study data, so Reset my progress keeps them.
         private const string CreateQuizSql =
@@ -207,6 +211,20 @@ namespace ThermoTactics
 
         private const string SelectQuizSql =
             "SELECT id, player_name, stage_id, quiz_type, answers, score, max_score, taken_at, attempts FROM quiz_results";
+
+        // Version 5: Carbon Credits and the allies bought with them. Reset my progress clears both.
+        private const string CreateWalletSql =
+            "CREATE TABLE IF NOT EXISTS wallet (" +
+            "  player_name  TEXT    NOT NULL PRIMARY KEY COLLATE NOCASE," +
+            "  credits      INTEGER NOT NULL DEFAULT 0 CHECK (credits >= 0)," +
+            "  total_earned INTEGER NOT NULL DEFAULT 0 CHECK (total_earned >= 0))";
+
+        private const string CreateOwnedSql =
+            "CREATE TABLE IF NOT EXISTS owned_units (" +
+            "  player_name TEXT NOT NULL COLLATE NOCASE," +
+            "  unit_id     TEXT NOT NULL," +
+            "  bought_at   TEXT NOT NULL," +
+            "  PRIMARY KEY (player_name, unit_id))";
 
         private SQLiteConnection _db;
 
@@ -319,6 +337,95 @@ namespace ThermoTactics
             catch (Exception e) { Debug.LogError($"[ResultsDatabase] Progress count failed: {e.Message}"); return 0; }
         }
 
+        // ---------------------------------------------------------------- wallet and owned_units
+
+        /// <summary>The player's Carbon Credits (0 if they have none yet).</summary>
+        public int GetCredits(string playerName)
+        {
+            if (!EnsureOpen()) return 0;
+            try { return _db.ExecuteScalar<int>("SELECT COALESCE((SELECT credits FROM wallet WHERE player_name = ?), 0)", Sanitize(playerName)); }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Wallet read failed: {e.Message}"); return 0; }
+        }
+
+        /// <summary>All Carbon Credits ever earned by the player.</summary>
+        public int GetTotalEarned(string playerName)
+        {
+            if (!EnsureOpen()) return 0;
+            try { return _db.ExecuteScalar<int>("SELECT COALESCE((SELECT total_earned FROM wallet WHERE player_name = ?), 0)", Sanitize(playerName)); }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Wallet read failed: {e.Message}"); return 0; }
+        }
+
+        /// <summary>Adds earned credits. Returns the new balance (or -1 if the database could not be written).</summary>
+        public int AddCredits(string playerName, int amount)
+        {
+            if (amount <= 0) return GetCredits(playerName);
+            if (!EnsureOpen()) return -1;
+            try
+            {
+                string name = Sanitize(playerName);
+                _db.Execute("INSERT INTO wallet (player_name, credits, total_earned) VALUES (?, ?, ?) " +
+                            "ON CONFLICT (player_name) DO UPDATE SET credits = credits + excluded.credits, total_earned = total_earned + excluded.total_earned",
+                            name, amount, amount);
+                return GetCredits(name);
+            }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Wallet write failed: {e.Message}"); return -1; }
+        }
+
+        /// <summary>Takes credits if the player has enough. Returns false (and changes nothing) otherwise.</summary>
+        public bool TrySpend(string playerName, int amount)
+        {
+            if (amount < 0 || !EnsureOpen()) return false;
+            try
+            {
+                int changed = _db.Execute("UPDATE wallet SET credits = credits - ? WHERE player_name = ? AND credits >= ?",
+                                          amount, Sanitize(playerName), amount);
+                return changed == 1 || amount == 0;
+            }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Wallet spend failed: {e.Message}"); return false; }
+        }
+
+        [UnityEngine.Scripting.Preserve]
+        private class OwnedRow
+        {
+            [Column("unit_id")] public string UnitId { get; set; }
+        }
+
+        /// <summary>Unit ids of the allies this player bought (starters are not listed: everyone owns them).</summary>
+        public HashSet<string> GetOwned(string playerName)
+        {
+            var set = new HashSet<string>();
+            if (!EnsureOpen()) return set;
+            try
+            {
+                foreach (OwnedRow r in _db.Query<OwnedRow>("SELECT unit_id FROM owned_units WHERE player_name = ?", Sanitize(playerName)))
+                    set.Add(r.UnitId);
+            }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Owned units read failed: {e.Message}"); }
+            return set;
+        }
+
+        /// <summary>Buys an ally: spends the price and records the unit in one transaction. False if it is owned or too expensive.</summary>
+        public bool Buy(string playerName, string unitId, int price)
+        {
+            if (!EnsureOpen() || string.IsNullOrEmpty(unitId)) return false;
+            string name = Sanitize(playerName);
+            if (GetOwned(name).Contains(unitId)) return false;
+            bool ok = false;
+            try
+            {
+                _db.RunInTransaction(() =>
+                {
+                    int changed = price <= 0 ? 1 : _db.Execute("UPDATE wallet SET credits = credits - ? WHERE player_name = ? AND credits >= ?", price, name, price);
+                    if (changed != 1) return;
+                    _db.Execute("INSERT INTO owned_units (player_name, unit_id, bought_at) VALUES (?, ?, ?)",
+                                name, unitId, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    ok = true;
+                });
+            }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Buy failed: {e.Message}"); ok = false; }
+            return ok;
+        }
+
         // ---------------------------------------------------------------- saved_session
 
         /// <summary>Writes (or replaces) the player's single saved game. Returns false if it could not be stored.</summary>
@@ -332,7 +439,7 @@ namespace ThermoTactics
                 s.appVersion = Application.version;
                 _db.Execute(SaveSessionSql, s.playerName, s.stageId, s.levelNumber, Mathf.Max(1, s.waveNumber), Mathf.Max(1, s.turnNumber),
                     Mathf.Max(0, s.oxygenLeft), s.oxygenAllowance, s.oxygenPenalty, (double)s.temperature, s.bossTurn, (double)s.peakTemperature,
-                    SessionSnapshot.ToJson(s.allies), SessionSnapshot.ToJson(s.enemies), s.savedAt, s.appVersion);
+                    SessionSnapshot.ToJson(s.allies), SessionSnapshot.ToJson(s.enemies), s.savedAt, s.appVersion, s.squad ?? "");
                 return true;
             }
             catch (Exception e) { Debug.LogError($"[ResultsDatabase] Save game failed: {e.Message}"); return false; }
@@ -361,7 +468,7 @@ namespace ThermoTactics
                     oxygenLeft = r.OxygenLeft, oxygenAllowance = r.OxygenAllowance, oxygenPenalty = r.OxygenPenalty,
                     temperature = (float)r.Temperature, bossTurn = r.BossTurn, peakTemperature = (float)r.PeakTemperature,
                     allies = SessionSnapshot.FromJson(r.Allies), enemies = SessionSnapshot.FromJson(r.Enemies),
-                    savedAt = r.SavedAt, appVersion = r.AppVersion,
+                    savedAt = r.SavedAt, appVersion = r.AppVersion, squad = r.Squad ?? "",
                 };
             }
             catch (Exception e) { Debug.LogError($"[ResultsDatabase] Load game failed: {e.Message}"); return null; }
@@ -461,7 +568,10 @@ namespace ThermoTactics
             [Column("fact_id")] public string FactId { get; set; }
         }
 
-        /// <summary>Settings ▸ Reset my progress: clears the saved game and unlocked levels. Results, quizzes and seen facts stay.</summary>
+        /// <summary>
+        /// Settings ▸ Reset my progress: clears the saved game, unlocked levels, Carbon Credits and bought allies.
+        /// Results, quizzes and seen facts stay (they are study data).
+        /// </summary>
         public void ResetProgress(string playerName)
         {
             if (!EnsureOpen()) return;
@@ -472,6 +582,8 @@ namespace ThermoTactics
                 {
                     _db.Execute("DELETE FROM level_progress WHERE player_name = ?", name);
                     _db.Execute("DELETE FROM saved_session WHERE player_name = ?", name);
+                    _db.Execute("DELETE FROM wallet WHERE player_name = ?", name);
+                    _db.Execute("DELETE FROM owned_units WHERE player_name = ?", name);
                 });
             }
             catch (Exception e) { Debug.LogError($"[ResultsDatabase] Reset progress failed: {e.Message}"); }
@@ -545,6 +657,21 @@ namespace ThermoTactics
                     _db.Execute(CreateQuizSql);
                     _db.Execute(CreateFactsSql);
                 });
+            }
+            if (from < 5)
+            {
+                // Version 5: the wallet (Carbon Credits) and the allies bought in the store.
+                _db.RunInTransaction(() =>
+                {
+                    _db.Execute(CreateWalletSql);
+                    _db.Execute(CreateOwnedSql);
+                });
+            }
+            if (from < 6)
+            {
+                // Version 6: the saved game remembers the squad picked before the level.
+                try { _db.Execute("ALTER TABLE saved_session ADD COLUMN squad TEXT NOT NULL DEFAULT ''"); }
+                catch (Exception e) when (e.Message.Contains("duplicate column")) { /* already there */ }
             }
             if (from > 0 && from < SchemaVersion) Debug.Log($"[ResultsDatabase] Upgraded database from version {from} to {SchemaVersion}.");
             _db.Execute($"PRAGMA user_version = {SchemaVersion}");

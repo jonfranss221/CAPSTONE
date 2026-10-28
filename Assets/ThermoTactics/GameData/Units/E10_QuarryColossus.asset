@@ -19,6 +19,16 @@ MonoBehaviour:
   opCost: 0
   maxHp: 22
   damage: 7
+  speed: 2
+  category: 3
+  isHover: 0
+  trait: 20
+  traitValue: 2
+  traitText: 'Landslide: its hit also deals 2 damage to allies in adjacent lanes.'
+  isStarter: 0
+  tier: 0
+  priceCredits: 0
+  unlockStage: 1
   card: {fileID: 21300000, guid: fe5a32bc1fdc2df4ebf10543362b2a64, type: 3}
   idlePose: {fileID: 21300000, guid: 0db50ad4582635145889d08e2858d306, type: 3}
   animator: {fileID: 9100000, guid: c6f89018400311748b2f822eb2477d52, type: 2}

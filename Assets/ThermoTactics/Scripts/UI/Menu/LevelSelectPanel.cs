@@ -14,6 +14,10 @@ namespace ThermoTactics
         [SerializeField] private GameObject _root;
         [SerializeField] private Button _backButton;
         [SerializeField] private Button _factsButton;
+        [SerializeField] private Button _storeButton;
+        [SerializeField] private GameObject _storeOn;
+        [SerializeField] private GameObject _storeOff;
+        [SerializeField] private Text _storeBalance;
         [SerializeField] private Text _title;
         [SerializeField] private Text _subtitle;
         [SerializeField] private LevelNode[] _nodes = new LevelNode[0];
@@ -57,6 +61,7 @@ namespace ThermoTactics
         {
             _backButton.onClick.AddListener(() => _menu.ShowStageSelect());
             if (_factsButton != null) _factsButton.onClick.AddListener(() => _menu.OpenFacts());
+            if (_storeButton != null) _storeButton.onClick.AddListener(() => _menu.OpenStore());
             foreach (LevelNode node in _nodes)
             {
                 LevelNode n = node;
@@ -77,6 +82,7 @@ namespace ThermoTactics
             }
             _title.text = $"STAGE {menu.Stage.stageId} · {menu.Stage.stageName.ToUpperInvariant()}";
             _subtitle.text = $"Beat a level to open the next one · {_cleared.Count} of {menu.Stage.LevelCount} cleared";
+            RefreshStore();
             for (int i = 0; i < _segments.Length; i++)
                 _segments[i].color = _cleared.Contains(i + 1) ? Hex("#E2AE2C") : new Color(0, 0, 0, 0);
 
@@ -157,7 +163,15 @@ namespace ThermoTactics
                 _enemyNames[i].text = e.displayName;
             }
             _note.text = l.note;
-            _squad.text = $"Squad for this level: {l.allyRoster.Length} unit types in the deploy bar";
+            if (l.levelNumber == 1 && TutorialController.IsDue(_menu.PlayerName))
+                _squad.text = "Squad: the 5 starters (the Level 1 guide uses them)";
+            else
+            {
+                UnitData[] last = PlayerSquad.Load(_menu.PlayerName, _menu.Stage, _menu.Database.GetOwned(_menu.PlayerName), l);
+                var names = new List<string>();
+                foreach (UnitData u in last) names.Add(u.displayName);
+                _squad.text = $"Last squad: {string.Join(", ", names)}. You can change it after you press Play.";
+            }
 
             SessionSnapshot save = _menu.SavedGame;
             bool savedHere = save != null && save.levelNumber == l.levelNumber;
@@ -189,6 +203,17 @@ namespace ThermoTactics
             if (unique.Count > keep) unique.RemoveRange(keep, unique.Count - keep);
             if (boss != null) unique.Add(boss);
             return unique;
+        }
+
+        /// <summary>STORE under Climate Facts: green with the balance once Level 1 is cleared, grey and locked before.</summary>
+        public void RefreshStore()
+        {
+            if (_storeButton == null || _menu == null) return;
+            bool open = _menu.StoreUnlocked;
+            _storeButton.interactable = open;
+            if (_storeOn != null) _storeOn.SetActive(open);
+            if (_storeOff != null) _storeOff.SetActive(!open);
+            if (open && _storeBalance != null) _storeBalance.text = CreditRules.Format(_menu.Database.GetCredits(_menu.PlayerName));
         }
 
         private void OnPlay()

@@ -13,6 +13,9 @@ namespace ThermoTactics
         public static StageData Stage;
         public static int LevelNumber = 1;
 
+        /// <summary>The allies the player picked for this level (up to 5). Null or empty = the level's own roster.</summary>
+        public static UnitData[] Squad;
+
         /// <summary>Set when the player pressed Continue: the battle scene rebuilds this state.</summary>
         public static SessionSnapshot Resume;
 
@@ -22,9 +25,10 @@ namespace ThermoTactics
         /// <summary>The menu opens on the stage cards (after "Stage Select" in battle).</summary>
         public static bool OpenStageSelect;
 
-        public static void Play(string player, StageData stage, int level, SessionSnapshot resume = null)
+        public static void Play(string player, StageData stage, int level, SessionSnapshot resume = null, UnitData[] squad = null)
         {
             PlayerName = player;
+            Squad = squad;
             Stage = stage;
             LevelNumber = level;
             Resume = resume;

@@ -16,7 +16,38 @@ namespace ThermoTactics
         public int MaxHp { get; private set; }
         public bool IsDead => Hp <= 0;
         public Faction Faction => Data != null ? Data.faction : Faction.Ally;
-        public int Damage => Data != null ? Data.damage : 0;
+        /// <summary>Temporary effects (Poison, Burn, Weaken, Slow, Dodge) and trait counters.</summary>
+        public StatusEffects Status { get; private set; } = new StatusEffects();
+        /// <summary>Bonuses from neighbouring units (pair synergies, Canopy). Set by GridManager.</summary>
+        public SynergyBonus Synergy { get; private set; } = new SynergyBonus();
+
+        /// <summary>Attack damage: base + synergy + Overcharge (+1 per turn survived, up to the trait value).</summary>
+        public int Damage
+        {
+            get
+            {
+                if (Data == null) return 0;
+                int overcharge = Data.trait == UnitTrait.Overcharge ? Mathf.Min(Status.turnsAlive, Mathf.RoundToInt(Data.traitValue)) : 0;
+                return Data.damage + Synergy.Damage + overcharge;
+            }
+        }
+
+        /// <summary>Who attacks first in a lane (1–10): base + synergy − Slow (Floodgate is immune to Speed debuffs).</summary>
+        public int Speed
+        {
+            get
+            {
+                if (Data == null) return 1;
+                int slow = Data.trait == UnitTrait.Floodgate ? 0 : Status.ActiveSlow;
+                return Mathf.Clamp(Data.speed + Synergy.Speed - slow, 1, 10);
+            }
+        }
+
+        /// <summary>Damage removed from this unit's attacks while Weakened.</summary>
+        public int WeakenAmount => Status.ActiveWeaken;
+
+        /// <summary>Extra "damage taken −N" from neighbours (Baseload Power, Garbage Patch, Understory, Canopy).</summary>
+        public int ExtraArmour => Synergy.Armour;
 
         /// <summary>Raised after this unit takes damage (the boss panel listens to it).</summary>
         public event Action<UnitBase> Damaged;
@@ -28,8 +59,16 @@ namespace ThermoTactics
         private Animator _animator;
         private Transform _hpFill;
         private float _hpFillWidth;
+        private SpriteRenderer[] _statusPips;
 
-        public void Init(UnitData data, int lane, int maxHp, SpriteRenderer body, Animator animator, Transform hpFill)
+        // Pip colours, in order: Poison, Burn, Weaken, Slow, Dodge, Synergy.
+        private static readonly Color[] PipColors =
+        {
+            new Color(0.45f, 0.9f, 0.3f), new Color(1f, 0.55f, 0.15f), new Color(0.7f, 0.45f, 1f),
+            new Color(0.4f, 0.7f, 1f), new Color(0.95f, 0.95f, 0.95f), new Color(1f, 0.82f, 0.25f),
+        };
+
+        public void Init(UnitData data, int lane, int maxHp, SpriteRenderer body, Animator animator, Transform hpFill, SpriteRenderer[] statusPips = null)
         {
             Data = data;
             Lane = lane;
@@ -39,7 +78,59 @@ namespace ThermoTactics
             _animator = animator;
             _hpFill = hpFill;
             _hpFillWidth = hpFill != null ? hpFill.localScale.x : 1f;
+            _statusPips = statusPips;
+            Status = new StatusEffects { dodge = data != null && data.trait == UnitTrait.NightEyes };
             UpdateHealthBar();
+            RefreshStatusIcons();
+        }
+
+        /// <summary>Puts back the effects of a saved game.</summary>
+        public void RestoreStatus(StatusEffects saved)
+        {
+            if (saved != null) Status = saved.Copy();
+            RefreshStatusIcons();
+        }
+
+        public void SetSynergy(SynergyBonus bonus)
+        {
+            Synergy = bonus ?? new SynergyBonus();
+            RefreshStatusIcons();
+        }
+
+        /// <summary>A new wave: Dive's first-attack bonus resets and Night Eyes can dodge again.</summary>
+        public void OnWaveStart()
+        {
+            Status.attackedThisWave = false;
+            if (Data != null && Data.trait == UnitTrait.NightEyes) Status.dodge = true;
+            RefreshStatusIcons();
+        }
+
+        /// <summary>Heals up to max HP. Returns the HP actually restored.</summary>
+        public int Heal(int amount)
+        {
+            if (IsDead || amount <= 0) return 0;
+            int before = Hp;
+            Hp = Mathf.Min(MaxHp, Hp + amount);
+            UpdateHealthBar();
+            OnHpChanged();
+            return Hp - before;
+        }
+
+        /// <summary>Shows a small coloured pip above the health bar for each effect on the unit.</summary>
+        public void RefreshStatusIcons()
+        {
+            if (_statusPips == null) return;
+            bool[] on = { Status.Poisoned, Status.Burning, Status.Weakened, Status.Slowed, Status.dodge, Synergy.Any };
+            int shown = 0;
+            for (int i = 0; i < _statusPips.Length && i < on.Length; i++)
+            {
+                if (_statusPips[i] == null) continue;
+                _statusPips[i].enabled = on[i];
+                if (!on[i]) continue;
+                _statusPips[i].color = PipColors[i];
+                _statusPips[i].transform.localPosition = new Vector3(shown * 0.16f, 0f, 0f);
+                shown++;
+            }
         }
 
         /// <summary>Restores HP from a saved game (never above max, at least 1).</summary>

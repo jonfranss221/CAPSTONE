@@ -36,6 +36,15 @@ namespace ThermoTactics
             Changed?.Invoke();
         }
 
+        /// <summary>Extra Oxygen this turn (Harvest from Rice Terrace Wardens). Raises the allowance too, so the HUD reads e.g. 7 / 7.</summary>
+        public void AddBonus(int amount)
+        {
+            if (amount <= 0) return;
+            Allowance += amount;
+            Current += amount;
+            Changed?.Invoke();
+        }
+
         public bool CanAfford(int cost) => Current >= cost;
 
         public bool TrySpend(int cost)

@@ -19,6 +19,16 @@ MonoBehaviour:
   opCost: 0
   maxHp: 20
   damage: 7
+  speed: 5
+  category: 3
+  isHover: 0
+  trait: 23
+  traitValue: 3
+  traitText: 'Clear-cut: +3 damage vs Forest allies.'
+  isStarter: 0
+  tier: 0
+  priceCredits: 0
+  unlockStage: 1
   card: {fileID: 21300000, guid: 44a614c24760a784887526798919ded1, type: 3}
   idlePose: {fileID: 21300000, guid: dae4abebd4893b24aa3983df433b7f26, type: 3}
   animator: {fileID: 9100000, guid: abfe2159f1a06ea4380a52b427a2dfed, type: 2}

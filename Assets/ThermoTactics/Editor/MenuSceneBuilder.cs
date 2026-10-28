@@ -60,6 +60,8 @@ namespace ThermoTactics.EditorTools
             var results = BuildResults(c);
             var facts = EducationUiBuilder.BuildFacts(c);
             var quiz = EducationUiBuilder.BuildQuiz(c);
+            var store = StoreUiBuilder.BuildStore(c);
+            var squad = StoreUiBuilder.BuildSquad(c);
             BuildQuit(c, menu);
             BuildConfirm(c, menu);
             BuildCredits(c, menu);
@@ -69,6 +71,8 @@ namespace ThermoTactics.EditorTools
             Ref(menu, "_results", results);
             Ref(menu, "_facts", facts);
             Ref(menu, "_quiz", quiz);
+            Ref(menu, "_store", store);
+            Ref(menu, "_squad", squad);
 
             ThermoTacticsBuilder.NewEventSystem();
             EditorSceneManager.MarkSceneDirty(scene);
@@ -143,16 +147,40 @@ namespace ThermoTactics.EditorTools
             TxtAt("Detail", start.transform, "Choose a stage and level", Body, 14, Hex("#FFF6E6"), 64, 42, 320, 20, TextAnchor.MiddleLeft);
             Ref(menu, "_startButton", start);
 
-            var set = Btn("SettingsButton", f, "", new Color(0.078f, 0.11f, 0.09f, 0.92f), Cream, Slate, 64, 482, 194, 64, 19, 0f);
+            // STORE (under Start): green once Baguio Level 1 is cleared, grey and locked before that.
+            var storeGreen = Hex("#2F7A43"); var storeText = Hex("#F2FFF3");
+            var store = Btn("StoreButton", f, "", storeGreen, storeText, Ink, 64, 482, 400, 76, 26, 4f);
+            var sOn = NewRect("On", store.transform); Stretch(sOn);
+            Icon("Icon", sOn, "icon_credit", storeText, 18, 23, 30);
+            TxtAt("Label", sOn, "STORE", Pixel, 26, storeText, 64, 12, 320, 28, TextAnchor.MiddleLeft);
+            TxtAt("Detail", sOn, "Spend Carbon Credits on new defenders", Body, 14, storeText, 64, 42, 320, 20, TextAnchor.MiddleLeft);
+            Ref(menu, "_storeOn", sOn.gameObject);
+            var sOff = Img("Off", store.transform, Hex("#2A2F2B")); Stretch(sOff.rectTransform);
+            Border(sOff.transform, Hex("#4A4F4B"));
+            Icon("Icon", sOff.transform, "icon_lock", Muted, 18, 23, 30);
+            TxtAt("Label", sOff.transform, "STORE", Pixel, 26, Muted, 64, 12, 320, 28, TextAnchor.MiddleLeft);
+            TxtAt("Detail", sOff.transform, "Locked · clear Baguio Level 1 to unlock", Body, 14, Muted, 64, 42, 330, 20, TextAnchor.MiddleLeft);
+            Ref(menu, "_storeOff", sOff.gameObject);
+            Ref(menu, "_storeButton", store);
+
+            var set = Btn("SettingsButton", f, "", new Color(0.078f, 0.11f, 0.09f, 0.92f), Cream, Slate, 64, 570, 194, 64, 19, 0f);
             Icon("Icon", set.transform, "icon_settings", Cream, 16, 20, 24);
             TxtAt("Label", set.transform, "SETTINGS", Pixel, 19, Cream, 52, 12, 140, 22, TextAnchor.MiddleLeft);
             TxtAt("Detail", set.transform, "Sound, display", Body, 13, CreamDim, 52, 34, 140, 18, TextAnchor.MiddleLeft);
             Ref(menu, "_settingsButton", set);
-            var quit = Btn("QuitButton", f, "", new Color(0.078f, 0.11f, 0.09f, 0.92f), Cream, Slate, 270, 482, 194, 64, 19, 0f);
+            var quit = Btn("QuitButton", f, "", new Color(0.078f, 0.11f, 0.09f, 0.92f), Cream, Slate, 270, 570, 194, 64, 19, 0f);
             Icon("Icon", quit.transform, "icon_quit", Cream, 16, 20, 24);
             TxtAt("Label", quit.transform, "QUIT", Pixel, 19, Cream, 52, 12, 140, 22, TextAnchor.MiddleLeft);
             TxtAt("Detail", quit.transform, "Exit the game", Body, 13, CreamDim, 52, 34, 140, 18, TextAnchor.MiddleLeft);
             Ref(menu, "_quitButton", quit);
+
+            // ---- Carbon Credits wallet (top right, above the profile; shown once a valid name is typed) ----
+            // Carbon Credits count, top right above the profile (display only: the STORE button is under Start).
+            var wallet = Box("Wallet", f, new Color(0.067f, 0.094f, 0.078f, 0.95f), Hex("#4E9A5A"), 1006, 58, 210, 50, 4f, "ui_frame2");
+            Icon("Icon", wallet.transform, "icon_credit", Hex("#8FE09B"), 12, 12, 26);
+            TxtAt("Label", wallet.transform, "CARBON CREDITS", BodyBold, 11, Hex("#8FE09B"), 48, 7, 156, 14, TextAnchor.MiddleLeft);
+            Ref(menu, "_walletText", TxtAt("Amount", wallet.transform, "0 CC", BodyBold, 19, Hex("#C9F5CF"), 48, 21, 156, 24, TextAnchor.MiddleLeft));
+            Ref(menu, "_walletRoot", wallet.gameObject);
 
             // ---- player profile form ----
             var form = Box("PlayerProfile", f, new Color(0.067f, 0.094f, 0.078f, 0.95f), Moss, 776, 120, 440, 436, 6f);
@@ -179,18 +207,18 @@ namespace ThermoTactics.EditorTools
                 Body, 13, CreamDim, 28, 364, 384, 54);
 
             // ---- Baguio progress on the title (levels cleared and stars) ----
-            var prog = Box("StageProgress", f, new Color(0.067f, 0.094f, 0.078f, 0.92f), Moss, 64, 560, 400, 86, 0f, "ui_frame2");
+            var prog = Box("StageProgress", f, new Color(0.067f, 0.094f, 0.078f, 0.92f), Moss, 776, 572, 440, 86, 0f, "ui_frame2");
             TxtAt("Stage", prog.transform, "STAGE 1 · BAGUIO FOREST", BodyBold, 14, GoldLight, 16, 10, 260, 20, TextAnchor.MiddleLeft);
-            Icon("StarIcon", prog.transform, "icon_star", Gold, 300, 9, 20);
-            Ref(menu, "_progressStars", TxtAt("Stars", prog.transform, "0 / 30", BodyBold, 15, Cream, 324, 9, 64, 22, TextAnchor.MiddleLeft));
+            Icon("StarIcon", prog.transform, "icon_star", Gold, 340, 9, 20);
+            Ref(menu, "_progressStars", TxtAt("Stars", prog.transform, "0 / 30", BodyBold, 15, Cream, 364, 9, 64, 22, TextAnchor.MiddleLeft));
             var segs = new Image[10];
-            float segW = (368f - 9 * 4f) / 10f;
+            float segW = (408f - 9 * 4f) / 10f;
             for (int i = 0; i < 10; i++)
             {
                 segs[i] = At(Img($"Level_{i + 1}", prog.transform, Line), 16 + i * (segW + 4), 38, segW, 14);
             }
             RefArray(menu, "_progressSegments", segs);
-            Ref(menu, "_progressInfo", TxtAt("Info", prog.transform, "", Body, 13, CreamDim, 16, 58, 370, 20, TextAnchor.MiddleLeft));
+            Ref(menu, "_progressInfo", TxtAt("Info", prog.transform, "", Body, 13, CreamDim, 16, 58, 410, 20, TextAnchor.MiddleLeft));
             Ref(menu, "_progressRoot", prog.gameObject);
 
             Ref(menu, "_versionText", TxtAt("Version", f, "v0.2 · Stage 1 prototype", Body, 13, CreamDim, 64, 664, 400, 18));
@@ -451,6 +479,20 @@ namespace ThermoTactics.EditorTools
             Icon("Icon", factsBtn.transform, "icon_list", Gold, 14, 14, 24);
             TxtAt("Label", factsBtn.transform, "CLIMATE FACTS", Pixel, 18, Cream, 48, 0, 160, 52, TextAnchor.MiddleLeft);
             Ref(panel, "_factsButton", factsBtn);
+            // STORE (under Climate Facts): the same lock rule as the Main Menu (open once Level 1 is cleared).
+            var storeBtn = Btn("StoreButton", f, "", Forest, Cream, Hex("#4E9A5A"), 596, 100, 212, 52, 16, 0f);
+            var lsOn = NewRect("On", storeBtn.transform); Stretch(lsOn);
+            Icon("Icon", lsOn, "icon_credit", Hex("#8FE09B"), 14, 14, 24);
+            TxtAt("Label", lsOn, "STORE", Pixel, 18, Cream, 48, 0, 80, 52, TextAnchor.MiddleLeft);
+            Ref(panel, "_storeBalance", TxtAt("Balance", lsOn, "0 CC", BodyBold, 14, Hex("#C9F5CF"), 110, 0, 92, 52, TextAnchor.MiddleRight));
+            Ref(panel, "_storeOn", lsOn.gameObject);
+            var lsOff = Img("Off", storeBtn.transform, Hex("#2A2F2B")); Stretch(lsOff.rectTransform);
+            Border(lsOff.transform, Hex("#4A4F4B"));
+            Icon("Icon", lsOff.transform, "icon_lock", Muted, 14, 14, 24);
+            TxtAt("Label", lsOff.transform, "STORE", Pixel, 18, Muted, 48, 0, 70, 52, TextAnchor.MiddleLeft);
+            TxtAt("Hint", lsOff.transform, "Clear Level 1", Body, 12, Muted, 112, 0, 92, 52, TextAnchor.MiddleRight);
+            Ref(panel, "_storeOff", lsOff.gameObject);
+            Ref(panel, "_storeButton", storeBtn);
 
             var nodes = new LevelNode[NodePos.Length];
             for (int i = 0; i < NodePos.Length; i++) nodes[i] = Node(f, i + 1, NodePos[i], i == 4, i == 9);

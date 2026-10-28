@@ -19,6 +19,16 @@ MonoBehaviour:
   opCost: 3
   maxHp: 18
   damage: 4
+  speed: 4
+  category: 1
+  isHover: 0
+  trait: 2
+  traitValue: 1
+  traitText: 'Reef Shield: takes 1 less damage from every hit.'
+  isStarter: 1
+  tier: 0
+  priceCredits: 0
+  unlockStage: 1
   card: {fileID: 21300000, guid: 6c927301737c74d409edb1d7ebd2e3b2, type: 3}
   idlePose: {fileID: 21300000, guid: 258f37fc267a71a41985df3790068d97, type: 3}
   animator: {fileID: 9100000, guid: 7cd94534b6d071441a221c69e5c88fd0, type: 2}
