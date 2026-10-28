@@ -259,7 +259,7 @@ namespace ThermoTactics.Dev
             {
                 if (!grid.IsAllySlotFree(lane)) continue;
                 UnitData best = null;
-                foreach (UnitData u in level.allyRoster)
+                foreach (UnitData u in GameManager.Instance.Squad)
                     if (u != null && oxygen.CanAfford(u.opCost) && (best == null || u.damage * u.maxHp / (float)u.opCost > best.damage * best.maxHp / (float)best.opCost)) best = u;
                 if (best == null) break;
                 deploy.Select(best);
