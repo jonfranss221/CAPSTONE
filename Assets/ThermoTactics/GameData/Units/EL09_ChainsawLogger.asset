@@ -19,6 +19,16 @@ MonoBehaviour:
   opCost: 0
   maxHp: 18
   damage: 6
+  speed: 7
+  category: 3
+  isHover: 0
+  trait: 16
+  traitValue: 2
+  traitText: 'Chainsaw: +2 damage vs Forest allies.'
+  isStarter: 0
+  tier: 0
+  priceCredits: 0
+  unlockStage: 1
   card: {fileID: 21300000, guid: 933c0b4864b54c944855f7575df5b4ab, type: 3}
   idlePose: {fileID: 21300000, guid: 7b2f7b6d8e2d07d40bade056391944ef, type: 3}
   animator: {fileID: 9100000, guid: e9224370e07c04143986b936ae74028d, type: 2}

@@ -14,6 +14,10 @@ namespace ThermoTactics
 
         public int LaneCount => IsoBoardLayout.LaneCount;
 
+        /// <summary>A pair synergy formed for the first time in this level (name, effect text, side).</summary>
+        public event System.Action<string, string, Faction> SynergyFormed;
+        private readonly HashSet<string> _announced = new HashSet<string>();
+
         /// <summary>The boss on the board, if any. It occupies every enemy slot.</summary>
         public BossUnit Boss { get; private set; }
 
@@ -44,6 +48,42 @@ namespace ThermoTactics
         {
             if (!Valid(lane) || unit == null) return;
             if (unit.Faction == Faction.Ally) _allies[lane] = unit; else _enemies[lane] = unit;
+            RefreshSynergies();
+        }
+
+        /// <summary>
+        /// Recomputes every unit's pair synergies and the Canopy aura (lane ± 1). Called after every deploy,
+        /// defeat and wave spawn. Raises SynergyFormed the first time a pair appears in this level.
+        /// </summary>
+        public void RefreshSynergies()
+        {
+            RefreshSide(_allies, Faction.Ally);
+            if (Boss == null) RefreshSide(_enemies, Faction.Enemy);
+        }
+
+        private void RefreshSide(UnitBase[] units, Faction side)
+        {
+            var data = new UnitData[units.Length];
+            for (int i = 0; i < units.Length; i++)
+                data[i] = units[i] != null && !units[i].IsDead ? units[i].Data : null;
+            SynergyBonus[] bonus = SynergyRules.Compute(data, side);
+            for (int i = 0; i < units.Length; i++)
+            {
+                if (units[i] == null) continue;
+                units[i].SetSynergy(bonus[i]);
+                foreach (string name in bonus[i].Names)
+                    if (name != "Canopy" && _announced.Add(name)) SynergyFormed?.Invoke(name, SynergyRules.Describe(name), side);
+            }
+        }
+
+        /// <summary>Allies in the lanes next to this lane (lane ± 1).</summary>
+        public IEnumerable<UnitBase> NeighbourAllies(int lane)
+        {
+            for (int d = -1; d <= 1; d += 2)
+            {
+                UnitBase a = GetAlly(lane + d);
+                if (a != null && !a.IsDead) yield return a;
+            }
         }
 
         /// <summary>Puts the boss in all 6 enemy slots.</summary>
@@ -51,6 +91,7 @@ namespace ThermoTactics
         {
             Boss = boss;
             for (int i = 0; i < LaneCount; i++) _enemies[i] = boss;
+            RefreshSynergies();
         }
 
         /// <summary>Frees the slot immediately (the unit may still be playing its death fade).</summary>
@@ -63,6 +104,7 @@ namespace ThermoTactics
                 if (_enemies[i] == unit) _enemies[i] = null;
             }
             if (unit == Boss) Boss = null;
+            RefreshSynergies();
         }
 
         public int EnemyCount
@@ -103,6 +145,7 @@ namespace ThermoTactics
                 _enemies[i] = null;
             }
             Boss = null;
+            _announced.Clear();
             foreach (var leftover in FindObjectsByType<UnitBase>(FindObjectsSortMode.None))
                 Destroy(leftover.gameObject);
         }

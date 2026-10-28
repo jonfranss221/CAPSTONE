@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2879c062ec7e5148b1c2c9a23b3fbe9, type: 3}
+  m_Name: A11_TarsierScout
+  m_EditorClassIdentifier: 
+  unitId: A11
+  displayName: Tarsier Scout
+  faction: 0
+  isElite: 0
+  opCost: 2
+  maxHp: 8
+  damage: 4
+  speed: 10
+  category: 0
+  isHover: 0
+  trait: 7
+  traitValue: 1
+  traitText: 'Night Eyes: always attacks first; dodges the first hit of each wave.'
+  isStarter: 0
+  tier: 0
+  priceCredits: 300
+  unlockStage: 1
+  card: {fileID: 21300000, guid: 7321d05e1b8e509499d7c793aad84fb3, type: 3}
+  idlePose: {fileID: 21300000, guid: 5ab7e751d598fc84cad6ab57efc172ce, type: 3}
+  animator: {fileID: 9100000, guid: 0c9cdacc34e17cb4da2c5aa00897ef35, type: 2}
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  hitDelay: 0.42857143
+  attackDuration: 0.85714287
