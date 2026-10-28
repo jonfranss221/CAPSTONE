@@ -40,6 +40,15 @@ namespace ThermoTactics
         [SerializeField] private Text _progressInfo;
         [SerializeField] private Image[] _progressSegments = new Image[10];
 
+        [Header("Carbon Credits, store and squad")]
+        [SerializeField] private GameObject _walletRoot;
+        [SerializeField] private Text _walletText;
+        [SerializeField] private Button _storeButton;
+        [SerializeField] private GameObject _storeOn;
+        [SerializeField] private GameObject _storeOff;
+        [SerializeField] private StorePanel _store;
+        [SerializeField] private SquadPanel _squad;
+
         [Header("Panels")]
         [SerializeField] private SettingsPanel _settings;
         [SerializeField] private StageSelectPanel _stageSelect;
@@ -86,6 +95,7 @@ namespace ThermoTactics
             _continueButton.onClick.AddListener(OnContinue);
             _startButton.onClick.AddListener(OnStart);
             _settingsButton.onClick.AddListener(() => _settings.Open());
+            if (_storeButton != null) _storeButton.onClick.AddListener(OpenStore);
             _quitButton.onClick.AddListener(OpenQuit);
             _quitStay.onClick.AddListener(() => _quitDialog.SetActive(false));
             _quitConfirm.onClick.AddListener(QuitGame);
@@ -226,7 +236,34 @@ namespace ThermoTactics
                 _infoNewText.text = "New player. Press <b>Start</b> to begin in Baguio Forest. Your progress saves automatically on this phone.";
             _nameMessage.text = "";
             RefreshProgress(name);
+            RefreshWallet(name);
         }
+
+        /// <summary>
+        /// The Carbon Credits count (top right, hidden until a valid name is typed) and the STORE button under Start,
+        /// which stays grey and locked until the player has cleared Baguio Level 1.
+        /// </summary>
+        public void RefreshWallet(string name)
+        {
+            if (_walletRoot != null)
+            {
+                _walletRoot.SetActive(NameIsValid);
+                if (NameIsValid && _walletText != null) _walletText.text = CreditRules.Format(_database.GetCredits(name));
+            }
+            if (_levelSelect != null) _levelSelect.RefreshStore();
+            bool open = StoreUnlocked;
+            if (_storeOn != null) _storeOn.SetActive(open);
+            if (_storeOff != null) _storeOff.SetActive(!open);
+            if (_storeButton != null)
+            {
+                _storeButton.interactable = open;
+                var shadow = _storeButton.GetComponent<Shadow>();
+                if (shadow != null) shadow.enabled = open;
+            }
+        }
+
+        /// <summary>The Store opens once the player has cleared Baguio Level 1.</summary>
+        public bool StoreUnlocked => NameIsValid && _database != null && _stage != null && _database.CountCleared(PlayerName, _stage.stageId) >= 1;
 
         /// <summary>The Baguio strip on the title: one block per level (gold = cleared, red = next) and the star total.</summary>
         private void RefreshProgress(string name)
@@ -285,19 +322,50 @@ namespace ThermoTactics
             PlayLevel(_save.levelNumber, _save);
         }
 
-        /// <summary>Loads the battle scene. With a snapshot, the board is rebuilt exactly as saved.</summary>
-        public void PlayLevel(int levelNumber, SessionSnapshot resume)
+        /// <summary>Loads the battle scene. With a snapshot, the board is rebuilt exactly as saved (with its squad).</summary>
+        public void PlayLevel(int levelNumber, SessionSnapshot resume, UnitData[] squad = null)
         {
-            GameSession.Play(PlayerName, _stage, levelNumber, resume);
+            GameSession.Play(PlayerName, _stage, levelNumber, resume, squad);
             SceneManager.LoadScene(GameSession.BattleScene);
         }
 
-        /// <summary>Starts a level fresh. If another saved game exists, asks before replacing it.</summary>
+        /// <summary>The Store (Carbon Credits → new allies). Needs a valid player name.</summary>
+        public void OpenStore()
+        {
+            if (!NameIsValid)
+            {
+                _nameMessage.text = "Type your name first: Carbon Credits and bought allies are saved per player.";
+                return;
+            }
+            if (!StoreUnlocked) return;
+            if (_store != null) _store.Show(this);
+        }
+
+        /// <summary>
+        /// Squad pick, then the level. The first time a player starts Level 1 the tutorial uses the starters,
+        /// so the squad screen is skipped.
+        /// </summary>
+        private void ChooseSquadThenPlay(int levelNumber)
+        {
+            if (_squad == null || (levelNumber == 1 && TutorialController.IsDue(PlayerName)))
+            {
+                PlayLevel(levelNumber, null);
+                return;
+            }
+            string player = PlayerName;
+            _squad.Show(this, levelNumber, squad =>
+            {
+                PlayerSquad.Save(player, squad);
+                PlayLevel(levelNumber, null, squad);
+            });
+        }
+
+        /// <summary>Starts a level fresh (after the squad pick). If another saved game exists, asks before replacing it.</summary>
         public void StartFresh(int levelNumber)
         {
             if (_save == null)
             {
-                PlayLevel(levelNumber, null);
+                ChooseSquadThenPlay(levelNumber);
                 return;
             }
             Confirm("REPLACE SAVED GAME?",
@@ -307,7 +375,7 @@ namespace ThermoTactics
                 {
                     _database.DeleteSession(PlayerName);
                     _save = null;
-                    PlayLevel(levelNumber, null);
+                    ChooseSquadThenPlay(levelNumber);
                 });
         }
 

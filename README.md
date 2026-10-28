@@ -85,7 +85,24 @@ The boss panel always shows its next move.
 - Stage Select (Baguio open; four more stages locked) and the 10-node Baguio level path with stars and best temperatures
 - Settings: music and effects volume (used once audio is added), battle speed (1× / 1.5× / 2×), large text, high contrast, climate pop-ups,
   damage numbers, boss warning, lane camera zoom, and resetting a player's progress
-- 13 unit types (5 allies, 8 enemies) and 6 elite variants, each with **idle**, **attack** and **hurt** animations
+- 13 unit types in play in Baguio (5 allies, 8 enemies) and 6 elite variants, each with **idle**, **attack** and **hurt** animations
+- Full roster data (roster v3, Phase 1): all 30 characters (15 allies, 15 enemies) plus the Factory Titan and Typhoon Tyrant
+  bosses exist as unit assets with art and animations; Baguio still uses the 5 starters and its 8 enemies (see *Roster* below)
+- **Speed and counters** (Phase 2): in each lane the faster unit attacks first (a tie goes to the ally; Tarsier Scout's Night Eyes
+  always goes first). Allies deal ×1.5 to the enemy category they counter (Forest > Extraction, Ocean > Waste, Renewable > Emissions);
+  "+N vs X" traits, armour and Pierce apply. All damage comes from `Core/DamageRules.cs`. The lane banner says who strikes first and why;
+  counters show a gold "×1.5!", armour a grey "−N"; the deploy hint shows Speed, category and trait
+- **Traits, status effects and pair synergies** (Phase 3): Poison, Burn, Weaken, Slow and Dodge (coloured pips above the health bar,
+  kept in the saved game); an end-of-turn step for damage over time, heals and °C traits (Canopy, Methane Leak, Smokestacks);
+  Harvest Oxygen; Landslide splash; Greenhouse and Blue Carbon change the lane heat and cooling. 12 pairs in neighbouring lanes
+  (`Core/SynergyRules.cs`), announced the first time they form in a level
+- **Carbon Credits** (Phase 4): earned on every level win (first clear 50 + 10 × level, +100 on the boss level, +20 per new star;
+  a replay pays 25%). The Level Complete screen counts up the reward and shows the wallet; the Main Menu shows the balance.
+  1 CC = 1 tonne of CO2 kept out of the air
+- **Store and squad selection** (Phase 5): the STORE button (Main Menu, under Start, and on the level path) stays grey and locked
+  until Baguio Level 1 is cleared. The store lists the 10 non-starter allies by tier (Common, Rare, Epic, Legendary) with their stats,
+  trait and price; Stage 2 allies appear once all 10 Baguio levels are cleared. Before each level the player picks a squad of up to
+  5 owned allies (Level 1 uses the 5 starters while the guide is due); the last squad is remembered and saved with Continue
 - Clearcut Behemoth boss with cleave, Landslide Slam and enrage; HUD boss panel and danger rings on target lanes
 - Oxygen system with turn penalty, minimum of 2 and no penalty in the boss wave
 - Lane-by-lane End Turn with a zooming camera and a lane banner
@@ -105,22 +122,23 @@ Planned: audio, enemy movement (EnemyAI), stages 2–5 with their own bosses.
 
 ```
 Assets/ThermoTactics/
-├── Art/            Units/<Unit>/ · Bosses/ClearcutBehemoth/ · Environment/ (Baguio) · UI/ (icons, thumbnails, level path)
+├── Art/            Units/<Unit>/ (28) · Bosses/ClearcutBehemoth, FactoryTitan, TyphoonTyrant · Environment/ (Baguio) · UI/ (icons, thumbnails, level path)
 ├── Animations/     Idle / Attack / Hurt clips + Animator controller per unit and for the boss
 ├── Fonts/          Pixelify Sans, Atkinson Hyperlegible (SIL Open Font Licence)
-├── GameData/       Stage1_Baguio · Levels/ (Baguio_Level1–10) · Waves/ (35) · Units/ (20 incl. elites and boss)
+├── GameData/       Stage1_Baguio · Levels/ (Baguio_Level1–10) · Waves/ (35) · Units/ (37: 28 units, 6 elites, 3 bosses)
 ├── Scenes/         MainMenu.unity · Baguio_Battle.unity
 ├── Scripts/
-│   ├── Core/          GameManager, GameSession, SettingsStore, StarRating, TurnManager, WaveManager, OxygenPointSystem, TemperatureSystem
+│   ├── Core/          GameManager, GameSession, SettingsStore, StarRating, TurnManager, WaveManager, OxygenPointSystem, TemperatureSystem,
+│   │                  DamageRules, SynergyRules, CreditRules
 │   ├── Board/         GridManager, BoardSlot, IsoBoardLayout, LaneController, DeploySystem, UnitFactory
-│   ├── Units/         UnitBase, AllyUnit, EnemyUnit, BossUnit
-│   ├── Data/          StageData, LevelData, WaveData, UnitData, BossData (ScriptableObjects)
+│   ├── Units/         UnitBase, AllyUnit, EnemyUnit, BossUnit, StatusEffects
+│   ├── Data/          StageData, LevelData, WaveData, UnitData, BossData (ScriptableObjects), UnitTraits (enums)
 │   ├── UI/            UIManager, DeployCard, ResultsPanel, TextScaler, ButtonFx, PanelFx
 │   │   └── Menu/      MainMenuController, MenuAmbience, SettingsPanel, StageSelectPanel, LevelSelectPanel, LevelNode
 │   ├── Persistence/   ResultsDatabase, SessionSnapshot
 │   ├── Presentation/  FogScroller, BattleCamera
 │   └── Dev/           AutoPlaytest, QuickCheck (editor only)
-└── Editor/         ThermoTacticsBuilder, MenuSceneBuilder, UiKit, PlaytestMenu
+└── Editor/         ThermoTacticsBuilder, MenuSceneBuilder, RosterArtImporter, UiKit, PlaytestMenu
 ```
 
 **Thermo-Tactics ▸ Build Everything** imports the art, builds the animations, the 10 levels and both scenes.
@@ -129,19 +147,53 @@ by itself as the player "Playtest" and saves a report and screenshots to `Logs/q
 **Thermo-Tactics ▸ Test ▸ Quick Check of New Screens** checks the menus, Level 1, a loss and the Level 10 boss in about a minute (`Logs/qa/check/`). Rebuilding replaces the scenes, so make manual scene edits after rebuilding.
 Tune levels and units in the `GameData` assets.
 
+### Roster
+
+The full character art is in `Docs/NewCharacters/thermo_tactics_roster_v3/`. **Build Everything** first runs
+**Thermo-Tactics ▸ Steps ▸ 0. Import Roster Art** (`Editor/RosterArtImporter.cs`), which slices it into `Art/Units/<Unit>/` and
+`Art/Bosses/<Boss>/`: 12 idle, 12 attack and 8 hurt frames plus the card. The hurt frames are a white flash, then a fading red
+tint with a 5 px knock-back, made from idle frame 0. Units that already have art are skipped.
+`python Tools/import_roster_v3.py` does the same outside Unity (`--check` confirms the existing art still matches the roster).
+Unit stats live in the `Units` table at the top of `Editor/ThermoTacticsBuilder.cs`.
+
+| Field | Meaning |
+| --- | --- |
+| `speed` (1–10) | The faster unit in a lane attacks first; on a tie the ally goes first (Phase 2) |
+| `category` | Allies: Forest, Ocean, Renewable. Enemies: Extraction, Waste, Emissions, Climate Disaster. Forest > Extraction, Ocean > Waste, Renewable > Emissions (×1.5 damage, Phase 2) |
+| `isHover` | Flying or floating unit (some traits target hovering enemies) |
+| `trait`, `traitValue`, `traitText` | The unit's special rule and its number (Phases 2–3) |
+| `isStarter`, `tier`, `priceCredits`, `unlockStage` | Store data: the 5 starters are owned by everyone; the other 10 allies cost 300–1,600 Carbon Credits and appear in the store once their stage is unlocked (Phases 4–5) |
+
+| Allies | Category | Cost | HP | Dmg | Speed | Store |
+| --- | --- | --- | --- | --- | --- | --- |
+| Mangrove Guardian · Coral Defender · Reef Sentinel | Ocean | 3 | 20 · 18 · 14 | 4 · 4 · 5 | 3 · 4 · 6 | Starters |
+| Wind Caller · Geothermal Sentinel | Renewable | 2 · 4 | 10 · 22 | 4 · 6 | 8 · 3 | Starters |
+| Bamboo Warden · Tarsier Scout · Rice Terrace Warden · Forest Spirit | Forest | 2 · 2 · 3 · 3 | 16 · 8 · 16 · 18 | 3 · 4 · 4 · 6 | 4 · 10 · 5 · 6 | Stage 1: 300 · 300 · 350 · 600 |
+| Hydro Guardian · Seagrass Healer · Sea Turtle Guardian · Eagle Striker | Renewable · Ocean · Ocean · Forest | 4 · 3 · 4 · 4 | 24 · 12 · 32 · 14 | 5 · 3 · 4 · 8 | 3 · 5 · 1 · 9 | Stage 2: 600 · 650 · 650 · 1,000 |
+| Solar Sentinel · Rainforest Ancient | Renewable · Forest | 4 · 6 | 16 · 40 | 7 · 9 | 5 · 2 | Stage 3: 700 · 1,600 |
+
+Enemies keep their Baguio stats. New enemies: Coal Brute, Diesel Drone, Toxic Runoff (Stage 2+), Incinerator Fiend,
+Landfill Leviathan (Stage 3+). Bosses: Clearcut Behemoth (Stage 1), Factory Titan (Overdrive, Stage 4), Typhoon Tyrant
+(Storm Surge, Stage 5). Elites keep +50% HP and +1 damage, take their base unit's category and trait, and get Speed +1.
+
 ## Database (SQLite)
 
 Player data is stored offline in **`thermo_tactics.db`** in `Application.persistentDataPath`
 (Windows editor: `%USERPROFILE%\AppData\LocalLow\DefaultCompany\Thermo-Tactics\`; Android: the app's private storage).
 It is accessed with [SQLite-net for Unity](https://github.com/gilzoide/unity-sqlite-net) (`com.gilzoide.sqlite-net` 1.3.2, MIT)
-by one script, `Scripts/Persistence/ResultsDatabase.cs`. The schema version is kept in `PRAGMA user_version` (now **3**).
+by one script, `Scripts/Persistence/ResultsDatabase.cs`. The schema version is kept in `PRAGMA user_version` (now **5**).
 
 | Table | One row per | Used for |
 | --- | --- | --- |
 | `game_results` | finished level | Results list (name, WIN / LOSS, date, final °C, waves cleared) |
 | `level_progress` | player + stage + level | Unlocking levels; attempts; best (lowest) winning °C; best stars |
-| `saved_session` | player | Continue: level, wave, turn, Oxygen, °C and peak °C, boss turn, units with HP (JSON) |
+| `saved_session` | player | Continue: level, wave, turn, Oxygen, °C and peak °C, boss turn, units with HP and status effects (JSON), squad |
+| `quiz_results` | player + stage + quiz type | First pre / post quiz answers and score (study data) |
+| `facts_seen` | player + fact | Climate facts already shown |
+| `wallet` | player | Carbon Credits balance and total earned |
+| `owned_units` | player + unit | Allies bought in the store (the 5 starters are owned by everyone and not stored) |
 
+Reset my progress clears `level_progress`, `saved_session`, `wallet` and `owned_units`; results, quizzes and seen facts stay.
 Player names match without case ("Jon" = "jon"). Values are bound as parameters (`?`), never concatenated into the SQL.
 A saved game from a different app version is discarded. Results from the older JSON version (`results_db.json`) are imported once.
 The file can be opened with [DB Browser for SQLite](https://sqlitebrowser.org/).

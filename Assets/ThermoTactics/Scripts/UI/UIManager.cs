@@ -23,6 +23,10 @@ namespace ThermoTactics
         [SerializeField] private Button _pauseButton;
         [SerializeField] private Button _endTurnButton;
         [SerializeField] private Text _hint;
+        [Header("Carbon Credits (end screen)")]
+        [SerializeField] private GameObject _endCredits;
+        [SerializeField] private Text _endCreditsText;
+        [SerializeField] private Text _endWalletText;
         [SerializeField] private DeployCard[] _cards = new DeployCard[0];
         [SerializeField] private Text _announcement;
         [SerializeField] private RectTransform _floatingLayer;
@@ -152,7 +156,7 @@ namespace ThermoTactics
             _pausePanel.SetActive(false);
             _results.Hide();            _hud.SetActive(true);
             GameManager gm = GameManager.Instance;
-            UnitData[] roster = gm.Level.allyRoster;
+            UnitData[] roster = gm.Squad;
             for (int i = 0; i < _cards.Length; i++)
                 _cards[i].Setup(i < roster.Length ? roster[i] : null, unit => _deploy.Select(unit));
             _levelTitle.text = $"LEVEL {gm.LevelNumber} · {gm.Level.locationName.ToUpperInvariant()}";
@@ -184,6 +188,8 @@ namespace ThermoTactics
             public int StageCleared;     // levels cleared in the stage
             public int StageLevels;
             public int StageStars;       // stars in the whole stage
+            public CreditReward Reward;  // Carbon Credits earned by this win (Total 0 on a loss)
+            public int Wallet;           // the player's balance after the reward
         }
 
         private System.Action _primaryAction;
@@ -220,6 +226,7 @@ namespace ThermoTactics
             _endBody.text += r.id > 0 ? $"\n<size=13><color=#CFC6B2>Result saved · {r.created_at}</color></size>"
                                       : "\n<size=13><color=#FF9A86>Result not saved: the database could not be written.</color></size>";
 
+            ShowCredits(e);
             foreach (Image star in _endStars) star.gameObject.SetActive(e.Won);
             _endNewBest.SetActive(e.Won && e.NewBest);
             _endStarHint.text = e.Won
@@ -251,6 +258,39 @@ namespace ThermoTactics
             _endResultsButton.gameObject.SetActive(e.Won && e.CanGoNext);
         }
 
+        /// <summary>The "+120 CC" chip counts up from 0; the wallet line shows what the reward was made of.</summary>
+        private void ShowCredits(EndSummary e)
+        {
+            if (_endCredits == null) return;
+            bool paid = e.Won && e.Reward.Total > 0;
+            _endCredits.SetActive(paid);
+            if (_endWalletText != null)
+            {
+                _endWalletText.gameObject.SetActive(e.Won);
+                if (e.Won)
+                {
+                    var parts = new System.Collections.Generic.List<string>();
+                    parts.Add(e.Reward.Replay ? $"replay {e.Reward.Base}" : $"first clear {e.Reward.Base}");
+                    if (e.Reward.BossBonus > 0) parts.Add($"boss {e.Reward.BossBonus}");
+                    if (e.Reward.StarBonus > 0) parts.Add($"new stars {e.Reward.StarBonus}");
+                    _endWalletText.text = $"{string.Join(" + ", parts)} · Wallet {CreditRules.Format(e.Wallet)}";
+                }
+            }
+            if (paid) StartCoroutine(CountUp(_endCreditsText, e.Reward.Total));
+        }
+
+        private static IEnumerator CountUp(Text label, int total)
+        {
+            label.text = "+0 CC";
+            yield return new WaitForSecondsRealtime(0.35f);
+            for (float t = 0f; t < 1f; t += Time.unscaledDeltaTime / 0.9f)
+            {
+                label.text = $"+{Mathf.RoundToInt(Mathf.SmoothStep(0f, total, t))} CC";
+                yield return null;
+            }
+            label.text = "+" + CreditRules.Format(total);
+        }
+
         private void SetPrimary(string label, Sprite icon, Color fill, System.Action action)
         {
             _primaryAction = action;
@@ -279,6 +319,7 @@ namespace ThermoTactics
                 $"You defeated the <b>{BossName(gm)}</b>. Highest temperature: {e.Peak:0.00} °C.\n" +
                 $"Levels cleared: <b>{e.StageCleared} / {e.StageLevels}</b>\n" +
                 $"Stage {stage.stageId} saved by <b>{e.Record.player_name}</b>." +
+                (e.Reward.Total > 0 ? $" <color=#8FE09B>+{CreditRules.Format(e.Reward.Total)}</color> · Wallet {CreditRules.Format(e.Wallet)}" : "") +
                 (e.Record.id > 0 ? "" : "\n<color=#FF9A86>Result not saved: the database could not be written.</color>") +
                 // One line only: the stats box sits right above the STAGE STARS label.
                 (quiz == null ? "" : $"\n<color=#F3C95A>Post-quiz {quiz.KeptScore} / {quiz.MaxScore} · knowledge gain {QuizManager.GainText(quiz.Gain)}</color>");
@@ -391,7 +432,17 @@ namespace ThermoTactics
             }
             _hint.text = sel == null
                 ? "Tap a unit card, then a glowing slot on the road. Tap END TURN when ready."
-                : $"<b>{sel.displayName}</b>: {sel.opCost} OP · {sel.maxHp} HP · {sel.damage} damage. Tap a glowing slot to deploy.";
+                : UnitHint(sel);
+        }
+
+        /// <summary>Two lines for the deploy bar: stats, Speed and category, then the trait and what the category counters.</summary>
+        public static string UnitHint(UnitData u)
+        {
+            string line1 = $"<b>{u.displayName}</b> · {UnitCategoryInfo.Label(u.category)} · {u.opCost} OP · {u.maxHp} HP · {u.damage} dmg · Speed {u.speed}";
+            UnitCategory? counter = UnitCategoryInfo.Counters(u.category);
+            string strong = counter.HasValue ? $" Strong vs {UnitCategoryInfo.Label(counter.Value)} (×1.5)." : "";
+            string line2 = string.IsNullOrEmpty(u.traitText) ? "Tap a glowing slot to deploy." : u.traitText;
+            return $"{line1}\n{line2}{strong}";
         }
 
         private void RefreshBoss()

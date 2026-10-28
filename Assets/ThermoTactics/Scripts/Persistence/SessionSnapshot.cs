@@ -12,6 +12,8 @@ namespace ThermoTactics
         public string unitId;
         public int hp;
         public int maxHp;
+        /// <summary>Poison, Burn, Weaken, Slow, Dodge and trait counters. Missing in older saves (= no effects).</summary>
+        public StatusEffects status;
     }
 
     /// <summary>
@@ -34,6 +36,7 @@ namespace ThermoTactics
         public float temperature;
         public int bossTurn;        // boss turns taken so far (0 when no boss)
         public float peakTemperature; // highest °C reached so far in this level (rates the stars)
+        public string squad;        // allies in the deploy bar, "A01,A06,…" (empty in older saves = the level's roster)
         public List<SavedUnit> allies = new List<SavedUnit>();
         public List<SavedUnit> enemies = new List<SavedUnit>();
         public string savedAt;      // yyyy-MM-dd HH:mm:ss

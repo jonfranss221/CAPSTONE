@@ -80,10 +80,27 @@ namespace ThermoTactics
 
         // ---------------------------------------------------------------- start / resume
 
+        /// <summary>
+        /// The allies in the deploy bar for this level: the squad picked before the level, or the level's roster
+        /// (the starters). The first time a player starts Level 1 the starters are used, so the tutorial matches.
+        /// </summary>
+        public UnitData[] Squad { get; private set; } = new UnitData[0];
+
+        private UnitData[] ChooseSquad(int levelNumber, string savedSquad)
+        {
+            UnitData[] squad = savedSquad != null
+                ? PlayerSquad.Decode(savedSquad, Stage)
+                : GameSession.Squad;
+            bool tutorial = levelNumber == 1 && savedSquad == null && TutorialController.IsDue(PlayerName);
+            if (tutorial || squad == null || squad.Length == 0) return PlayerSquad.Default(Level);
+            return squad;
+        }
+
         public void StartLevel(int levelNumber)
         {
             LevelNumber = levelNumber;
             Level = Stage.GetLevel(levelNumber);
+            Squad = ChooseSquad(levelNumber, null);
             PrepareBoard();
             _temperature.Init(Level.startingTemperature, Level.lossThreshold);
             _waves.Begin(Level);
@@ -158,6 +175,7 @@ namespace ThermoTactics
 
             LevelNumber = s.levelNumber;
             Level = level;
+            Squad = ChooseSquad(s.levelNumber, s.squad ?? "");
             PrepareBoard();
             _temperature.Init(Level.startingTemperature, Level.lossThreshold);
             _temperature.Restore(s.temperature, s.peakTemperature);
@@ -169,6 +187,7 @@ namespace ThermoTactics
                 if (data == null || !_grid.IsAllySlotFree(u.lane)) continue;
                 UnitBase unit = _factory.Spawn(data, u.lane, data.maxHp);
                 unit.SetHp(u.hp);
+                unit.RestoreStatus(u.status);
                 _grid.Place(unit, u.lane);
             }
             foreach (SavedUnit u in s.enemies)
@@ -185,6 +204,7 @@ namespace ThermoTactics
                 }
                 UnitBase unit = _factory.Spawn(data, u.lane, Level.ScaledHp(data));
                 unit.SetHp(u.hp);
+                unit.RestoreStatus(u.status);
                 _grid.Place(unit, u.lane);
             }
 
@@ -201,7 +221,7 @@ namespace ThermoTactics
         {
             _grid.ClearAll();
             _lanes.Init(Level);
-            if (Level.allyRoster.Length > 0) _deploy.Select(Level.allyRoster[0]);
+            if (Squad.Length > 0) _deploy.Select(Squad[0]);
         }
 
         // ---------------------------------------------------------------- saving
@@ -225,11 +245,12 @@ namespace ThermoTactics
                 temperature = _temperature.Current,
                 bossTurn = _grid.Boss != null ? _grid.Boss.BossTurn : 0,
                 peakTemperature = _temperature.Peak,
+                squad = PlayerSquad.Encode(Squad),
             };
             foreach (UnitBase a in _grid.Allies)
-                if (!a.IsDead) s.allies.Add(new SavedUnit { lane = a.Lane, unitId = a.Data.unitId, hp = a.Hp, maxHp = a.MaxHp });
+                if (!a.IsDead) s.allies.Add(new SavedUnit { lane = a.Lane, unitId = a.Data.unitId, hp = a.Hp, maxHp = a.MaxHp, status = a.Status.Copy() });
             foreach (UnitBase e in _grid.Enemies)
-                if (!e.IsDead) s.enemies.Add(new SavedUnit { lane = e.Lane, unitId = e.Data.unitId, hp = e.Hp, maxHp = e.MaxHp });
+                if (!e.IsDead) s.enemies.Add(new SavedUnit { lane = e.Lane, unitId = e.Data.unitId, hp = e.Hp, maxHp = e.MaxHp, status = e.Status.Copy() });
             LastSaveOk = _database.SaveSession(s);
         }
 
@@ -259,6 +280,17 @@ namespace ThermoTactics
             _database.RecordAttempt(PlayerName, Stage.stageId, LevelNumber, won, final, stars);
             GameResult record = _database.Insert(PlayerName, won, final, waves);
 
+            // Carbon Credits: first clear, boss bonus, new stars, or the smaller replay share. A loss pays nothing.
+            CreditReward reward = default;
+            int wallet = _database.GetCredits(PlayerName);
+            if (won)
+            {
+                bool clearedBefore = before != null && before.IsCleared == 1;
+                reward = CreditRules.ForWin(LevelNumber, Level.isBossLevel, clearedBefore, StarRating.For(before), stars);
+                int balance = _database.AddCredits(PlayerName, reward.Total);
+                if (balance >= 0) wallet = balance;
+            }
+
             // Stars and stage totals, read back from level_progress after this attempt.
             int cleared = 0, stageStars = 0;
             LevelProgress after = null;
@@ -282,6 +314,8 @@ namespace ThermoTactics
                 StageCleared = cleared,
                 StageLevels = Stage.LevelCount,
                 StageStars = stageStars,
+                Reward = reward,
+                Wallet = wallet,
             };
             _ui.ShowEnd(summary);
         }

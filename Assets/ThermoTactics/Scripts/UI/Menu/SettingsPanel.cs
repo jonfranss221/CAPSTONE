@@ -69,7 +69,7 @@ namespace ThermoTactics
             bool named = _menu.NameIsValid;
             _resetButton.interactable = named;
             _dataNote.text = named
-                ? $"Reset clears {_menu.PlayerName}'s saved game and unlocked levels. Results, quiz answers and found facts stay."
+                ? $"Reset clears {_menu.PlayerName}'s saved game, unlocked levels, Carbon Credits and bought allies. Results, quiz answers and found facts stay."
                 : "Type your player name on the main menu to reset that player's progress.";
             _root.SetActive(true);
             _root.transform.SetAsLastSibling();
@@ -105,7 +105,7 @@ namespace ThermoTactics
         {
             string name = _menu.PlayerName;
             _menu.Confirm("RESET PROGRESS?",
-                $"This deletes {name}'s saved game and locks Baguio Levels 2–10 again. The Level 1 tutorial shows again. Results and quiz answers stay.",
+                $"This deletes {name}'s saved game, Carbon Credits and bought allies, and locks Baguio Levels 2–10 again. The Level 1 tutorial shows again. Results and quiz answers stay.",
                 "RESET",
                 () =>
                 {
