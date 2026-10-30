@@ -15,6 +15,11 @@ namespace ThermoTactics
         public int Hp { get; private set; }
         public int MaxHp { get; private set; }
         public bool IsDead => Hp <= 0;
+        /// <summary>
+        /// True for an ally placed during the current player turn. Until END TURN it can be moved for free,
+        /// swapped for another unit or taken back with a full Oxygen refund (see DeploySystem).
+        /// </summary>
+        public bool DeployedThisTurn { get; set; }
         public Faction Faction => Data != null ? Data.faction : Faction.Ally;
         /// <summary>Temporary effects (Poison, Burn, Weaken, Slow, Dodge) and trait counters.</summary>
         public StatusEffects Status { get; private set; } = new StatusEffects();
@@ -82,6 +87,20 @@ namespace ThermoTactics
             Status = new StatusEffects { dodge = data != null && data.trait == UnitTrait.NightEyes };
             UpdateHealthBar();
             RefreshStatusIcons();
+        }
+
+        /// <summary>Moves the unit to another lane of its side: position, draw order and name (GridManager keeps the slot table).</summary>
+        public void MoveToLane(int lane)
+        {
+            if (lane == Lane) return;
+            bool enemy = Faction == Faction.Enemy;
+            int oldOrder = IsoBoardLayout.SortingOrderFor(transform.position);
+            Vector3 pos = IsoBoardLayout.SlotPosition(lane, enemy);
+            int delta = IsoBoardLayout.SortingOrderFor(pos) - oldOrder;
+            transform.position = pos;
+            foreach (SpriteRenderer r in GetComponentsInChildren<SpriteRenderer>(true)) r.sortingOrder += delta;
+            gameObject.name = $"{(enemy ? "Enemy" : "Ally")}_{Data.displayName}_L{lane}";
+            Lane = lane;
         }
 
         /// <summary>Puts back the effects of a saved game.</summary>

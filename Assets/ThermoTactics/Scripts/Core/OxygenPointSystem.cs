@@ -47,6 +47,26 @@ namespace ThermoTactics
 
         public bool CanAfford(int cost) => Current >= cost;
 
+        /// <summary>No OP spent yet this turn (a take-back or swap refund counts as unspent again).</summary>
+        public bool IsUntouched => Current >= Allowance && Current > 0;
+
+        /// <summary>Gives back the cost of a unit taken back or swapped in the same turn it was placed.</summary>
+        public void Refund(int amount)
+        {
+            if (amount <= 0) return;
+            Current += amount;
+            Changed?.Invoke();
+        }
+
+        /// <summary>Spends every remaining OP (moving a unit that was placed in an earlier turn). Returns the OP spent.</summary>
+        public int SpendAll()
+        {
+            int spent = Current;
+            Current = 0;
+            Changed?.Invoke();
+            return spent;
+        }
+
         public bool TrySpend(int cost)
         {
             if (cost < 0 || !CanAfford(cost)) return false;

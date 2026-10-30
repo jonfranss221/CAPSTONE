@@ -18,6 +18,7 @@ namespace ThermoTactics
         [SerializeField] private SpriteRenderer _danger;
 
         private bool _deployable;
+        private bool _selected;
         private bool _hovered;
 
         public int Lane => _lane;
@@ -38,6 +39,13 @@ namespace ThermoTactics
             RefreshVisual();
         }
 
+        /// <summary>Shows a gold ring under the ally the player has picked up to move, swap or take back.</summary>
+        public void SetSelected(bool selected)
+        {
+            _selected = selected && !_isEnemySide;
+            RefreshVisual();
+        }
+
         /// <summary>Shows the red warning ring (lanes the boss is about to hit).</summary>
         public void SetDanger(bool danger)
         {
@@ -47,7 +55,7 @@ namespace ThermoTactics
         public void OnPointerClick(PointerEventData eventData)
         {
             if (_isEnemySide || DeploySystem.Instance == null) return;
-            DeploySystem.Instance.TryDeploy(_lane);
+            DeploySystem.Instance.OnAllySlotTapped(_lane);
         }
 
         public void OnPointerEnter(PointerEventData eventData) { _hovered = true; RefreshVisual(); }
@@ -56,10 +64,11 @@ namespace ThermoTactics
         private void RefreshVisual()
         {
             if (_highlight == null) return;
-            _highlight.enabled = _deployable;
-            // High-contrast setting: solid yellow rings instead of the soft green.
-            Color c = SettingsStore.HighContrast ? new Color(1f, 0.92f, 0.2f) : Color.white;
-            c.a = _hovered ? 1f : (SettingsStore.HighContrast ? 0.95f : 0.65f);
+            _highlight.enabled = _deployable || _selected;
+            // High-contrast setting: solid yellow rings instead of the soft green. A picked-up unit's slot is gold.
+            Color c = _selected ? new Color(0.886f, 0.682f, 0.173f)
+                    : SettingsStore.HighContrast ? new Color(1f, 0.92f, 0.2f) : Color.white;
+            c.a = _selected || _hovered ? 1f : (SettingsStore.HighContrast ? 0.95f : 0.65f);
             _highlight.color = c;
         }
     }

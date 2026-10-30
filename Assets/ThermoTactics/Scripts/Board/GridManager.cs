@@ -51,6 +51,19 @@ namespace ThermoTactics
             RefreshSynergies();
         }
 
+        /// <summary>Moves an ally to an empty ally slot of another lane. Returns false if the move is not possible.</summary>
+        public bool MoveAlly(UnitBase unit, int lane)
+        {
+            if (unit == null || unit.Faction != Faction.Ally || !IsAllySlotFree(lane)) return false;
+            int from = System.Array.IndexOf(_allies, unit);
+            if (from < 0) return false;
+            _allies[from] = null;
+            _allies[lane] = unit;
+            unit.MoveToLane(lane);
+            RefreshSynergies();
+            return true;
+        }
+
         /// <summary>
         /// Recomputes every unit's pair synergies and the Canopy aura (lane ± 1). Called after every deploy,
         /// defeat and wave spawn. Raises SynergyFormed the first time a pair appears in this level.
@@ -124,6 +137,14 @@ namespace ThermoTactics
             for (int i = 0; i < LaneCount; i++)
                 if (_allySlots != null && i < _allySlots.Length && _allySlots[i] != null)
                     _allySlots[i].SetDeployable(show && _allies[i] == null);
+        }
+
+        /// <summary>Gold ring on the ally slot of the unit the player has picked up (-1 clears it).</summary>
+        public void SetSelectedLane(int lane)
+        {
+            for (int i = 0; i < LaneCount; i++)
+                if (_allySlots != null && i < _allySlots.Length && _allySlots[i] != null)
+                    _allySlots[i].SetSelected(i == lane);
         }
 
         /// <summary>Marks the ally slots of the given lanes with the red boss warning (null clears all).</summary>

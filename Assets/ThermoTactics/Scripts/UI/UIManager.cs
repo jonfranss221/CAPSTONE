@@ -23,6 +23,9 @@ namespace ThermoTactics
         [SerializeField] private Button _pauseButton;
         [SerializeField] private Button _endTurnButton;
         [SerializeField] private Text _hint;
+        [Tooltip("Shown while a unit placed this turn is picked up: removes it with a full OP refund.")]
+        [SerializeField] private Button _takeBackButton;
+        [SerializeField] private Text _takeBackLabel;
         [Header("Carbon Credits (end screen)")]
         [SerializeField] private GameObject _endCredits;
         [SerializeField] private Text _endCreditsText;
@@ -138,6 +141,9 @@ namespace ThermoTactics
             _oxygen.Changed += RefreshHud;
             _deploy.SelectionChanged += _ => RefreshHud();
             _deploy.Deployed += _ => RefreshHud();
+            _deploy.Rearranged += RefreshHud;
+            _deploy.BoardSelectionChanged += _ => RefreshHud();
+            if (_takeBackButton != null) _takeBackButton.onClick.AddListener(() => _deploy.TakeBack());
 
             _pausePanel.SetActive(false);
             _endPanel.SetActive(false);
@@ -408,10 +414,21 @@ namespace ThermoTactics
             bool canAct = gm.CanPlayerAct;
             _endTurnButton.interactable = canAct && TutorialController.AllowEndTurn;
             _pauseButton.interactable = gm.Current == GameManager.State.Playing && !_turns.IsResolving;
+            UnitBase picked = _deploy.BoardSelected;
+            bool swapping = picked != null && picked.DeployedThisTurn;
             foreach (DeployCard card in _cards)
             {
                 if (card.Data == null) continue;
-                card.Refresh(card.Data == _deploy.Selected, _oxygen.CanAfford(card.Data.opCost), canAct);
+                // While a unit placed this turn is picked up, a card is affordable if its refund covers the difference.
+                int budget = _oxygen.Current + (swapping ? picked.Data.opCost : 0);
+                card.Refresh(picked == null && card.Data == _deploy.Selected, budget >= card.Data.opCost, canAct);
+            }
+            if (_takeBackButton != null)
+            {
+                _takeBackButton.gameObject.SetActive(swapping && canAct);
+                if (swapping && _takeBackLabel != null) _takeBackLabel.text = $"TAKE BACK +{picked.Data.opCost}";
+                // The hint gives way to the button while it shows.
+                _hint.rectTransform.offsetMax = new Vector2(swapping && canAct ? -410f : -250f, _hint.rectTransform.offsetMax.y);
             }
             RefreshBoss();
             RefreshHint();
@@ -419,6 +436,17 @@ namespace ThermoTactics
 
         private void RefreshHint()
         {
+            UnitBase picked = _deploy.BoardSelected;
+            if (picked != null)
+            {
+                string name = $"<b>{picked.Data.displayName}</b> · Lane {picked.Lane + 1}";
+                _hint.text = picked.DeployedThisTurn
+                    ? $"{name}, placed this turn. Tap an empty slot to move it (free), tap another card to swap it, or TAKE BACK. Locked at END TURN."
+                    : !_oxygen.IsUntouched
+                        ? $"{name}. Units from earlier turns can move only before you spend any Oxygen this turn. Tap it again to put it down."
+                        : $"{name}. Tap an empty slot to move it there. This uses all your Oxygen ({_oxygen.Current} OP). Tap it again to cancel.";
+                return;
+            }
             UnitData sel = _deploy.Selected;
             BossUnit boss = _grid.Boss;
             if (boss != null && !boss.IsDead)
@@ -431,7 +459,7 @@ namespace ThermoTactics
                 return;
             }
             _hint.text = sel == null
-                ? "Tap a unit card, then a glowing slot on the road. Tap END TURN when ready."
+                ? "Tap a unit card, then a glowing slot on the road. Tap a placed unit to move it. Tap END TURN when ready."
                 : UnitHint(sel);
         }
 

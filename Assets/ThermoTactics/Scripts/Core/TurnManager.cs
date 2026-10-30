@@ -40,6 +40,7 @@ namespace ThermoTactics
         {
             var gm = GameManager.Instance;
             if (gm == null || !gm.CanPlayerAct || !TutorialController.AllowEndTurn) return;
+            if (DeploySystem.Instance != null) DeploySystem.Instance.LockDeployments();   // no more free moves, swaps or take-backs
             StartCoroutine(ResolveTurn());
         }
 

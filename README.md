@@ -41,13 +41,18 @@ All names, text and dialogue are in English. The Filipino theme is in the enviro
    screen step by step: you really pick a card, deploy and end a turn. It can be skipped and replayed from
    **Pause ▸ How to Play**.
 3. Tap a unit card in the deploy bar, then a glowing ally slot on the road. Each level offers up to 5 unit types.
+   Tap a unit already on the road to pick it up (gold ring), then tap an empty slot to move it. A unit placed **this
+   turn** moves for free, can be swapped by tapping another card (its OP is refunded first) or removed with
+   **TAKE BACK** for a full refund, so a mis-tap costs nothing. Pressing **End Turn** locks it in place. Moving a unit
+   placed in an **earlier** turn is allowed only **before any Oxygen is spent** that turn, uses **all of it**, and
+   only into an empty lane.
 4. Tap **End Turn**. The camera zooms in on lanes 1 to 6 in turn: in each lane your unit attacks, then the enemy
    (if still standing) hits back. A banner shows what happened in each lane. Settings can turn the zoom off.
 5. Clear every wave while the temperature stays **below 1.5 °C** to win. You earn **1–3 stars** from the highest
    temperature reached: 3 stars at 1.20 °C or below, 2 at 1.35 °C or below.
 6. After a level: **Next Level**, **Retry**, **Level Select** or **Stage Select**. Beating Level 10 shows the
    **Stage Complete** screen with your star total.
-7. The game saves itself at the start of every turn, after every deploy and when the app is paused or closed.
+7. The game saves itself at the start of every turn, after every deploy, move or take-back and when the app is paused or closed.
    Next time, type the same name and press **Continue** to return to the same level, wave and turn.
 
 | Rule | Value |

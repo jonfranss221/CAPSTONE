@@ -1011,6 +1011,13 @@ namespace ThermoTactics.EditorTools
             var endTurn = Btn("EndTurnButton", footer.transform, "END TURN", Red, Hex("#FFF6E6"), Ink, 0, 0, 210, 60, 22, 0f);
             AtRight(endTurn, 20, 17, 210, 60);
             refs["_endTurnButton"] = endTurn;
+
+            // TAKE BACK: shown only while a unit placed this turn is picked up (refunds its OP).
+            var takeBack = Btn("TakeBackButton", footer.transform, "TAKE BACK", MossDim, Cream, Moss, 0, 0, 150, 60, 17, 4f);
+            AtRight(takeBack, 244, 17, 150, 60);
+            refs["_takeBackButton"] = takeBack;
+            refs["_takeBackLabel"] = takeBack.GetComponentInChildren<Text>();
+            takeBack.gameObject.SetActive(false);
             _tutorialTargets = (tGroup, ox.rectTransform, cardsArea, (RectTransform)endTurn.transform);
 
             var floating = NewRect("FloatingLayer", hud); Stretch(floating);

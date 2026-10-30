@@ -63,6 +63,7 @@ namespace ThermoTactics
         {
             _temperature.Changed += OnTemperatureChanged;
             _deploy.Deployed += _ => Autosave();
+            _deploy.Rearranged += Autosave;
 
             Stage = GameSession.Stage != null ? GameSession.Stage : _defaultStage;
             PlayerName = ResultsDatabase.Sanitize(string.IsNullOrEmpty(GameSession.PlayerName) ? "Tester" : GameSession.PlayerName);
@@ -192,6 +193,7 @@ namespace ThermoTactics
                 UnitBase unit = _factory.Spawn(data, u.lane, data.maxHp);
                 unit.SetHp(u.hp);
                 unit.RestoreStatus(u.status);
+                unit.DeployedThisTurn = u.fresh;
                 _grid.Place(unit, u.lane);
             }
             foreach (SavedUnit u in s.enemies)
@@ -224,6 +226,7 @@ namespace ThermoTactics
         private void PrepareBoard()
         {
             _grid.ClearAll();
+            _deploy.ClearPickUp();
             _lanes.Init(Level);
             if (Squad.Length > 0) _deploy.Select(Squad[0]);
         }
@@ -252,7 +255,7 @@ namespace ThermoTactics
                 squad = PlayerSquad.Encode(Squad),
             };
             foreach (UnitBase a in _grid.Allies)
-                if (!a.IsDead) s.allies.Add(new SavedUnit { lane = a.Lane, unitId = a.Data.unitId, hp = a.Hp, maxHp = a.MaxHp, status = a.Status.Copy() });
+                if (!a.IsDead) s.allies.Add(new SavedUnit { lane = a.Lane, unitId = a.Data.unitId, hp = a.Hp, maxHp = a.MaxHp, status = a.Status.Copy(), fresh = a.DeployedThisTurn });
             foreach (UnitBase e in _grid.Enemies)
                 if (!e.IsDead) s.enemies.Add(new SavedUnit { lane = e.Lane, unitId = e.Data.unitId, hp = e.Hp, maxHp = e.MaxHp, status = e.Status.Copy() });
             LastSaveOk = _database.SaveSession(s);

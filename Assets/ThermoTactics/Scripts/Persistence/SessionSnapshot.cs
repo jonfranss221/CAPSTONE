@@ -14,6 +14,8 @@ namespace ThermoTactics
         public int maxHp;
         /// <summary>Poison, Burn, Weaken, Slow, Dodge and trait counters. Missing in older saves (= no effects).</summary>
         public StatusEffects status;
+        /// <summary>Ally placed during the saved turn: it can still be moved for free, swapped or taken back.</summary>
+        public bool fresh;
     }
 
     /// <summary>
