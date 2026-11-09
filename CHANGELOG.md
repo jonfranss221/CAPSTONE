@@ -10,6 +10,17 @@ Thermo-Tactics uses semantic versioning, **MAJOR.MINOR.PATCH**:
 Each release is built with **Thermo-Tactics ▸ Release ▸ Build Android APK** from `main`, tagged `vX.Y.Z` in Git,
 and published as `Thermo-Tactics-vX.Y.Z.apk` under the repository's GitHub Releases.
 
+## [0.3.1] — patch
+
+Release type: **Testing**. Found during release testing of 0.3.0 on a phone.
+
+### Fixed
+- The game opened in portrait on phones held upright or with auto-rotate turned off, so only a narrow slice of the
+  screen showed. It is now landscape only: it always opens sideways and turns between landscape left and right.
+
+### Known issues
+- Same as 0.3.0, except the orientation problem above.
+
 ## [0.3.0] — first controlled release
 
 Release type: **Testing** (first build given to testers outside the development team).
