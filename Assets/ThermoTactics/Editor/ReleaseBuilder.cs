@@ -19,11 +19,11 @@ namespace ThermoTactics.EditorTools
     public static class ReleaseBuilder
     {
         /// <summary>The version being released. Change this, then run Build Android APK.</summary>
-        public const string Version = "0.3.0";
+        public const string Version = "0.3.1";
         public const string AndroidPackage = "com.group26.thermotactics";
         public const string OutputFolder = "Builds";
 
-        /// <summary>Android versionCode: MAJOR*10000 + MINOR*100 + PATCH (0.3.0 → 300), always increasing.</summary>
+        /// <summary>Android versionCode: MAJOR*10000 + MINOR*100 + PATCH (0.3.1 → 301), always increasing.</summary>
         public static int VersionCode
         {
             get
@@ -41,8 +41,15 @@ namespace ThermoTactics.EditorTools
             PlayerSettings.bundleVersion = Version;
             PlayerSettings.Android.bundleVersionCode = VersionCode;
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, AndroidPackage);
+
+            // Landscape only (both directions): the UI is laid out for 1280 × 720 landscape.
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
+            PlayerSettings.allowedAutorotateToPortrait = false;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
+            PlayerSettings.allowedAutorotateToLandscapeRight = true;
             AssetDatabase.SaveAssets();
-            Debug.Log($"[Release] Version set to {Version} (Android versionCode {VersionCode}, package {AndroidPackage}).");
+            Debug.Log($"[Release] Version set to {Version} (Android versionCode {VersionCode}, package {AndroidPackage}, landscape only).");
         }
 
         [MenuItem("Thermo-Tactics/Release/Build Android APK")]
