@@ -4,9 +4,10 @@ A Philippine climate-themed 2D turn-based strategy game for Android, built in Un
 Players defend Philippine ecosystems from fossil-fuel threats while keeping the global
 temperature below the **1.5 °C** limit. Capstone project.
 
-> **Status (v0.2.0):** Stage 1 (Baguio) playable from the Main Menu: 10 levels with unlocking and 1–3 stars,
-> a lane-by-lane battle camera, a difficulty spike at Level 5, the Clearcut Behemoth boss at Level 10,
-> a Stage Complete screen, and save / Continue.
+> **Status (v0.3.0, first controlled release):** Stage 1 (Baguio) playable from the Main Menu: 10 levels with unlocking
+> and 1–3 stars, the full roster with Speed, counters, traits and synergies, Carbon Credits, the Store and squad selection,
+> moving and taking back units, the Clearcut Behemoth boss at Level 10, quizzes, and save / Continue.
+> Download the APK from [Releases](https://github.com/jonfranss221/CAPSTONE/releases); changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 All names, text and dialogue are in English. The Filipino theme is in the environments and UI art.
 
@@ -108,6 +109,9 @@ The boss panel always shows its next move.
   until Baguio Level 1 is cleared. The store lists the 10 non-starter allies by tier (Common, Rare, Epic, Legendary) with their stats,
   trait and price; Stage 2 allies appear once all 10 Baguio levels are cleared. Before each level the player picks a squad of up to
   5 owned allies (Level 1 uses the 5 starters while the guide is due); the last squad is remembered and saved with Continue
+- **Moving and taking back units**: a unit placed this turn can be moved for free, swapped for another unit or taken back
+  with a full Oxygen refund until End Turn; a unit from an earlier turn can move to an empty lane only before any Oxygen is
+  spent that turn, and the move uses all of it
 - Clearcut Behemoth boss with cleave, Landslide Slam and enrage; HUD boss panel and danger rings on target lanes
 - Oxygen system with turn penalty, minimum of 2 and no penalty in the boss wave
 - Lane-by-lane End Turn with a zooming camera and a lane banner
@@ -210,6 +214,16 @@ Settings are kept in PlayerPrefs (keys starting with `tt.`) by `Scripts/Core/Set
 ## Documentation
 
 `Docs/` holds the architecture documents (Parts I–VI, .docx) and `Docs/Figures/` the diagrams.
+
+## Building a release
+
+1. Set `Version` in `Assets/ThermoTactics/Editor/ReleaseBuilder.cs` (MAJOR.MINOR.PATCH, see [CHANGELOG.md](CHANGELOG.md))
+   and add the release notes to `CHANGELOG.md`.
+2. In Unity, run **Thermo-Tactics ▸ Release ▸ Build Android APK** (needs Android Build Support in Unity Hub).
+   It sets the version and Android versionCode, rebuilds the scenes and data, and writes a release (non-development) build to
+   `Builds/Thermo-Tactics-vX.Y.Z.apk` with a build record (`Builds/Thermo-Tactics-vX.Y.Z-build.txt`: size, SHA-256, scenes).
+   `Builds/` is not tracked by Git.
+3. Commit the version change, tag it (`git tag vX.Y.Z`, `git push origin vX.Y.Z`) and attach the APK to a GitHub Release for that tag.
 
 ## Version control
 
