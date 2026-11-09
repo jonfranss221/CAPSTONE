@@ -4,7 +4,7 @@ A Philippine climate-themed 2D turn-based strategy game for Android, built in Un
 Players defend Philippine ecosystems from fossil-fuel threats while keeping the global
 temperature below the **1.5 °C** limit. Capstone project.
 
-> **Status (v0.3.0, first controlled release):** Stage 1 (Baguio) playable from the Main Menu: 10 levels with unlocking
+> **Status (v0.3.1):** Stage 1 (Baguio) playable from the Main Menu: 10 levels with unlocking
 > and 1–3 stars, the full roster with Speed, counters, traits and synergies, Carbon Credits, the Store and squad selection,
 > moving and taking back units, the Clearcut Behemoth boss at Level 10, quizzes, and save / Continue.
 > Download the APK from [Releases](https://github.com/jonfranss221/CAPSTONE/releases); changes are listed in [CHANGELOG.md](CHANGELOG.md).
