@@ -10,16 +10,23 @@ using UnityEngine.SceneManagement;
 namespace ThermoTactics.Dev
 {
     /// <summary>
-    /// Editor-only automatic play-test (menu Thermo-Tactics ▸ Test ▸ Play Stage 1 Automatically).
-    /// Plays Baguio Levels 1–10 in order as the player "Playtest" with a simple strategy (fill the lanes that
+    /// Editor-only automatic play-test (menu Thermo-Tactics ▸ Test ▸ Play Stage N Automatically).
+    /// Plays the stage's Levels 1–10 in order as the player "Playtest" with a simple strategy (fill the lanes that
     /// have enemies first, then the rest), retries a lost level up to twice, and saves screenshots and a report
-    /// to Logs/qa/auto/. Never included in a phone build.
+    /// to Logs/qa/auto/ (Logs/qa/auto_stage2/ for Stage 2). For Stage 2 the earlier stage is marked cleared and the
+    /// player gets a mid-game squad (two Stage 2 allies and one store ally). Never included in a phone build.
     /// </summary>
     public class AutoPlaytest : MonoBehaviour
     {
         public const string FlagKey = "tt.autotest";
+        public const string StageKey = "tt.autotest.stage";
+        /// <summary>First level to play (earlier levels of the stage are marked cleared); 1 = the whole stage.</summary>
+        public const string FromKey = "tt.autotest.from";
         public const string Player = "Playtest";
-        private const string OutDir = "Logs/qa/auto";
+        private static string OutDir = "Logs/qa/auto";
+        private int _stageId = 1;
+        private int _from = 1;
+        private UnitData[] _squad;
         private const float FastSpeed = 8f;
 
         private readonly StringBuilder _report = new StringBuilder();
@@ -33,7 +40,11 @@ namespace ThermoTactics.Dev
             UnityEditor.SessionState.SetBool(FlagKey, false);   // one run per menu click
             var go = new GameObject("AutoPlaytest");
             DontDestroyOnLoad(go);
-            go.AddComponent<AutoPlaytest>();
+            var test = go.AddComponent<AutoPlaytest>();
+            test._stageId = Mathf.Max(1, UnityEditor.SessionState.GetInt(StageKey, 1));
+            test._from = Mathf.Max(1, UnityEditor.SessionState.GetInt(FromKey, 1));
+            UnityEditor.SessionState.SetInt(FromKey, 1);
+            OutDir = test._stageId == 1 ? "Logs/qa/auto" : $"Logs/qa/auto_stage{test._stageId}";
         }
 
         private void OnEnable() => Application.logMessageReceived += OnLog;
@@ -55,10 +66,28 @@ namespace ThermoTactics.Dev
             // Start from the Main Menu with a clean "Playtest" player.
             yield return LoadScene(GameSession.MenuScene);
             var menu = FindFirstObjectByType<MainMenuController>();
-            _stage = menu.Stage;
+            _stage = menu.FindStage(_stageId);
             menu.Database.ResetProgress(Player);
             menu.Database.DeleteSession(Player);
             menu.Database.DevClearEducation(Player);
+            if (_stageId > 1)
+            {
+                // Every earlier stage cleared, and a squad a player could have bought by now.
+                foreach (StageData earlier in menu.Stages)
+                    if (earlier != null && earlier.stageId < _stageId)
+                        for (int l = 1; l <= earlier.LevelCount; l++) menu.Database.RecordAttempt(Player, earlier.stageId, l, true, 1.3f, 1);
+                string[] ids = { "A12", "A10", "A09", "A08", "A06" };   // Sea Turtle, Seagrass, Bamboo Warden, Geothermal, Wind Caller
+                var squad = new List<UnitData>();
+                foreach (string id in ids)
+                {
+                    UnitData u = _stage.FindUnit(id);
+                    if (u == null) continue;
+                    if (!u.isStarter) { menu.Database.AddCredits(Player, u.priceCredits); menu.Database.Buy(Player, u.unitId, u.priceCredits); }
+                    squad.Add(u);
+                }
+                _squad = squad.ToArray();
+                Line($"Squad: {string.Join(", ", squad.Select(u => u.displayName))}");
+            }
             PopupManager.DevAutoDismiss = true;   // facts are marked seen without waiting for a tap
             LevelIntro.DevSkip = TutorialController.DevSkip = true;   // no title card or tutorial to wait for
             SettingsStore.LaneCamera = true;
@@ -66,14 +95,16 @@ namespace ThermoTactics.Dev
             Line($"Stage: {_stage.stageName}, {_stage.LevelCount} levels");
             Line("");
 
-            for (int level = 1; level <= _stage.LevelCount; level++)
+            for (int l = 1; l < _from; l++) menu.Database.RecordAttempt(Player, _stage.stageId, l, true, 1.3f, 1);
+            if (_from > 1) Line($"Levels 1–{_from - 1} marked cleared; starting at Level {_from}.");
+            for (int level = _from; level <= _stage.LevelCount; level++)
             {
                 bool won = false;
                 for (int attempt = 1; attempt <= 3 && !won; attempt++)
                 {
                     // The lane camera is shown (and photographed) in Levels 1 and 10; elsewhere it is off to save time.
                     SettingsStore.LaneCamera = level == 1 || level == _stage.LevelCount;
-                    GameSession.Play(Player, _stage, level);
+                    GameSession.Play(Player, _stage, level, null, _squad);
                     yield return LoadScene(GameSession.BattleScene);
                     yield return PlayLevel(level, attempt, r => won = r);
                 }
@@ -96,6 +127,8 @@ namespace ThermoTactics.Dev
             menu.ShowStageSelect();
             yield return Hold(1f);
             yield return Shot("91_stage_select");
+            menu.EnterStage(_stage);
+            yield return Hold(0.5f);
             menu.ShowLevelSelect(5);
             yield return Hold(1f);
             yield return Shot("92_level_select_L5");
@@ -177,7 +210,7 @@ namespace ThermoTactics.Dev
                 yield return Hold(0.6f);
                 yield return Shot("29_post_quiz_compare");
                 quiz.DevContinue();
-                Line($"  Post-quiz submitted: {FindFirstObjectByType<ResultsDatabase>().GetQuiz(Player, _stage.stageId, QuizManager.Post)?.Score} / {_stage.quiz.Count(QuizManager.Post)} (no pre-quiz in this run, so gain is N/A)");
+                Line($"  Post-quiz submitted: {FindFirstObjectByType<ResultsDatabase>().GetQuiz(Player, _stage.stageId, QuizManager.Post)?.Score} / {_stage.quiz.ScoredCount(QuizManager.Post)} (no pre-quiz in this run, so gain is N/A)");
             }
             yield return Hold(1.6f);   // let the stars pop in
             yield return Shot($"{(level == 10 ? "30" : "1" + (level - 1))}_L{level}_end_try{attempt}_{(won ? "win" : "loss")}");

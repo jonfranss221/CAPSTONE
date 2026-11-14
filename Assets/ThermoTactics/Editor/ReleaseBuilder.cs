@@ -19,7 +19,7 @@ namespace ThermoTactics.EditorTools
     public static class ReleaseBuilder
     {
         /// <summary>The version being released. Change this, then run Build Android APK.</summary>
-        public const string Version = "0.3.1";
+        public const string Version = "0.4.0";
         public const string AndroidPackage = "com.group26.thermotactics";
         public const string OutputFolder = "Builds";
 

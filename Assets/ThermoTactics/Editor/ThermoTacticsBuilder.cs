@@ -27,6 +27,9 @@ namespace ThermoTactics.EditorTools
         private const string OldScenePath = Root + "/Scenes/Baguio_Level1.unity";
         private const string TemplateScene = "Assets/Settings/Scenes/URP2DSceneTemplate.unity";
         public const string StagePath = DataDir + "/Stage1_Baguio.asset";
+        public const string Stage2Path = DataDir + "/Stage2_SierraMadreCoast.asset";
+        /// <summary>Every built stage, in order. The Main Menu lists them; the battle scene is shared.</summary>
+        public static readonly string[] StagePaths = { StagePath, Stage2Path };
 
         private struct UnitDef
         {
@@ -127,6 +130,10 @@ namespace ThermoTactics.EditorTools
             ("EL10", "Elite Quarry Colossus", "QuarryColossus",     33, 8),
             ("EL08", "Elite Ravager",         "MiningRavager",      27, 7),
             ("EL04", "Elite Beast",           "DeforestationBeast", 30, 8),
+            // Stage 2 (Sierra Madre Coast)
+            ("EL01", "Elite Coal Brute",      "CoalBrute",          39, 7),
+            ("EL02", "Elite Diesel Drone",    "DieselDrone",        15, 5),
+            ("EL11", "Elite Toxic Runoff",    "ToxicRunoff",        24, 4),
         };
         private static readonly Color EliteTint = new Color(1f, 0.74f, 0.7f);
 
@@ -148,13 +155,14 @@ namespace ThermoTactics.EditorTools
             ImportArt();
             var controllers = BuildAnimations();
             StageData stage = BuildData(controllers);
-            MenuSceneBuilder.Build(stage);
+            MenuSceneBuilder.Build();
             BuildScene(stage);
             SetBuildScenes();
             if (string.IsNullOrEmpty(PlayerSettings.bundleVersion) || PlayerSettings.bundleVersion == "0.1" || PlayerSettings.bundleVersion == "1.0")
                 PlayerSettings.bundleVersion = "0.2.0";
             AssetDatabase.SaveAssets();
-            Debug.Log("[Thermo-Tactics] Built: Main Menu, Baguio battle scene, Levels 1–10, the boss and the 30-unit roster.");
+            EditorSceneManager.OpenScene(MenuSceneBuilder.ScenePath, OpenSceneMode.Single);   // leave the Main Menu open in the editor
+            Debug.Log("[Thermo-Tactics] Built: Main Menu, the battle scene, Stage 1 (Baguio Forest) and Stage 2 (Sierra Madre Coast) with 10 levels and a boss each, and the 30-unit roster.");
         }
 
         // =====================================================================
@@ -163,6 +171,8 @@ namespace ThermoTactics.EditorTools
         [MenuItem("Thermo-Tactics/Steps/1. Import Art")]
         public static void ImportArt()
         {
+            GenerateSideFill(ArtEnv + "/baguio_background.png");
+            GenerateSideFill(ArtEnv + "/coast_background.png");
             AssetDatabase.StartAssetEditing();
             try
             {
@@ -181,8 +191,9 @@ namespace ThermoTactics.EditorTools
                     importer.textureCompression = TextureImporterCompression.Uncompressed;
                     importer.mipmapEnabled = false;
                     importer.alphaIsTransparency = true;
-                    importer.wrapMode = file == "weave_tile" || file == "fog_drift_tileable" ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
-                    importer.spritePixelsPerUnit = ui ? 100 : file == "fog_drift_tileable" ? 32 : file == "pixel" ? 4 : 64;
+                    bool overlay = file == "fog_drift_tileable" || file == "sea_spray_tileable";
+                    importer.wrapMode = file == "weave_tile" || overlay ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
+                    importer.spritePixelsPerUnit = ui ? 100 : overlay ? 32 : file == "pixel" ? 4 : 64;
 
                     var settings = new TextureImporterSettings();
                     importer.ReadTextureSettings(settings);
@@ -437,77 +448,122 @@ namespace ThermoTactics.EditorTools
         };
 
         // =====================================================================
-        // Education content for Stage 1 (question bank "Thermo-Tactics: Pre/Post Quiz Question Bank").
-        // Pre-quiz = Q1–Q5, post-quiz = Q6–Q10. Both are tagged with the same three topics, so learning is
-        // compared topic by topic. Every topic has climate facts (pop-ups) in Levels 1–9 that review the post-quiz.
+        // Education content for Stage 1 (Baguio Forest): matched pairs.
+        // Each concept has one pre question (before the stage) and one post twin (after Level 10) on the same topic, at the
+        // same difficulty but worded differently, so learning is compared concept by concept. Only the 6 pairs are scored;
+        // the post-quiz ends with 2 game comprehension questions that are reported apart. Wrong choices are common
+        // misconceptions, and the answer key is balanced (3 each of A–D over the 12 scored items; the quiz screen also
+        // shuffles the choices). Each concept is taught by a climate fact in Levels 1–6 and recapped in Levels 7–9.
+        // The facts teach the idea in their own words and never show a quiz question or its choices.
         // =====================================================================
         private static readonly (string id, string name)[] BaguioTopics =
         {
-            ("climate", "Climate basics"),
-            ("forests", "Forests & carbon"),
-            ("game", "Game & real world"),
+            ("warming", "Cause of warming"),
+            ("sinks", "Forests & carbon"),
+            ("target", "The 1.5 °C target"),
+            ("wildlife", "Forests & wildlife"),
+            ("geothermal", "Clean energy"),
+            ("risk", "Risk to the Philippines"),
+            ("game", "Game check"),
         };
 
         private struct QuizDef
         {
             public string Id, TopicId, Question; public string[] Choices; public char Answer;
+            public bool Unscored;   // game comprehension: asked, stored, reported apart, not in the score
         }
 
         private static readonly QuizDef[] BaguioPre =
         {
-            new QuizDef { Id = "S1_PRE_Q1", TopicId = "climate", Answer = 'B',
-                Question = "What does the \"1.5°C target\" in the Paris Agreement actually mean?",
-                Choices = new[] { "The maximum temperature a human body can survive",
-                                  "The limit for global warming above pre-industrial levels before climate impacts become severe",
-                                  "The average temperature of the Philippines during summer",
-                                  "The temperature at which forests stop growing" } },
-            new QuizDef { Id = "S1_PRE_Q2", TopicId = "forests", Answer = 'B',
-                Question = "Baguio is famous for its cool climate and pine forests. What role do forests like these play in fighting climate change?",
-                Choices = new[] { "They make the air colder by releasing ice particles",
-                                  "They absorb carbon dioxide (CO2) from the atmosphere and store it",
-                                  "They reflect sunlight back into space permanently",
-                                  "They increase rainfall only in mountainous areas" } },
-            new QuizDef { Id = "S1_PRE_Q3", TopicId = "game", Answer = 'C',
-                Question = "In Thermo-Tactics, the temperature bar starts at 1.0°C. What happens if it reaches 1.5°C?",
-                Choices = new[] { "The player earns bonus Oxygen Points", "The game pauses automatically",
-                                  "The player loses the game", "The enemies retreat" } },
-            new QuizDef { Id = "S1_PRE_Q4", TopicId = "climate", Answer = 'C',
-                Question = "Which of the following is a renewable energy source commonly used in the Philippines?",
-                Choices = new[] { "Coal", "Diesel", "Geothermal energy", "Gasoline" } },
-            new QuizDef { Id = "S1_PRE_Q5", TopicId = "climate", Answer = 'B',
-                Question = "Why is keeping global warming below 1.5°C important for countries like the Philippines?",
-                Choices = new[] { "It guarantees no typhoons will ever occur",
-                                  "The Philippines is highly vulnerable to climate impacts like stronger typhoons, floods, and heat waves",
-                                  "It only matters for cold countries",
-                                  "It has no effect on island nations" } },
+            new QuizDef { Id = "S1_PRE_1", TopicId = "warming", Answer = 'C',
+                Question = "Global temperatures have risen over the past 150 years. What is the main cause?",
+                Choices = new[] { "Natural changes in the amount of energy from the Sun",
+                                  "The hole in the ozone layer letting in more of the Sun's heat",
+                                  "Greenhouse gases released by burning fossil fuels and clearing forests",
+                                  "Heat and ash released by volcanic eruptions" } },
+            new QuizDef { Id = "S1_PRE_2", TopicId = "sinks", Answer = 'A',
+                Question = "The pine forests around Baguio are called \"carbon sinks.\" What does that mean?",
+                Choices = new[] { "They take in CO2 and store the carbon in their wood, roots and soil",
+                                  "They release more oxygen than any other place, and oxygen cools the planet",
+                                  "Their soil soaks up rainwater, which pulls heat out of the air",
+                                  "They turn all the carbon they take in into oxygen, with no limit" } },
+            new QuizDef { Id = "S1_PRE_3", TopicId = "target", Answer = 'B',
+                Question = "What does the 1.5 °C target in the Paris Agreement refer to?",
+                Choices = new[] { "Lowering today's global temperature by 1.5 °C",
+                                  "Limiting global warming to 1.5 °C above pre-industrial levels",
+                                  "Keeping each country's warming below 1.5 °C per year",
+                                  "The amount of warming at which sea levels start to rise" } },
+            new QuizDef { Id = "S1_PRE_4", TopicId = "wildlife", Answer = 'D',
+                Question = "How does protecting a forest like the Sierra Madre help both wildlife and the climate?",
+                Choices = new[] { "Forest animals breathe in CO2, so more animals means less CO2",
+                                  "It helps wildlife, but cutting the trees and replanting elsewhere is just as good for the climate",
+                                  "It helps wildlife only; the climate depends on factories and cars",
+                                  "It keeps the animals' habitat and keeps the forest's carbon stored" } },
+            new QuizDef { Id = "S1_PRE_5", TopicId = "geothermal", Answer = 'B',
+                Question = "The Philippines is one of the world's largest producers of geothermal energy. What is geothermal energy?",
+                Choices = new[] { "Electricity made by burning natural gas found underground",
+                                  "Electricity made from the Earth's natural heat, releasing very little CO2",
+                                  "Electricity from sunlight stored as heat in rocks",
+                                  "Electricity from hot water released by coal plants" } },
+            new QuizDef { Id = "S1_PRE_6", TopicId = "risk", Answer = 'A',
+                Question = "Why is keeping warming below 1.5 °C especially important for the Philippines?",
+                Choices = new[] { "The country faces stronger typhoons, floods, rising seas and heat waves as the planet warms",
+                                  "Warming would make the Philippines too cold for rice farming",
+                                  "The Philippines releases most of the world's greenhouse gases",
+                                  "Climate change mainly affects countries near the North and South Poles" } },
         };
 
         private static readonly QuizDef[] BaguioPost =
         {
-            new QuizDef { Id = "S1_POST_Q6", TopicId = "forests", Answer = 'A',
-                Question = "You just defended the Baguio Forest. Why are forests considered \"carbon sinks\"?",
-                Choices = new[] { "They store carbon in their trunks, roots, and soil, keeping it out of the atmosphere",
-                                  "They sink into the ground during earthquakes",
-                                  "They absorb all the water in the environment",
-                                  "They convert carbon into oxygen without any limits" } },
-            new QuizDef { Id = "S1_POST_Q7", TopicId = "game", Answer = 'B',
-                Question = "In the game, enemy attacks on undefended lanes raise the temperature by +0.1°C. What real-world action does this represent?",
-                Choices = new[] { "Planting trees",
-                                  "Fossil fuel emissions and environmental damage that worsen climate change",
-                                  "Recycling plastic bottles", "Building more forests" } },
-            new QuizDef { Id = "S1_POST_Q8", TopicId = "climate", Answer = 'C',
-                Question = "What is the main cause of the rising global temperature?",
-                Choices = new[] { "The Earth moving closer to the Sun", "Volcanic eruptions",
-                                  "Human activities that release greenhouse gases like CO2 and methane",
-                                  "The moon's gravitational pull" } },
-            new QuizDef { Id = "S1_POST_Q9", TopicId = "forests", Answer = 'B',
-                Question = "The Philippine Eagle is a species found in forests like those in Mindanao and Sierra Madre. How does protecting forests help wildlife AND the climate?",
-                Choices = new[] { "It only helps animals, not the climate", "Forests provide habitat while also absorbing CO2",
-                                  "Animals produce oxygen that cools the planet", "Forests have no connection to wildlife" } },
-            new QuizDef { Id = "S1_POST_Q10", TopicId = "game", Answer = 'B',
-                Question = "In Thermo-Tactics, you deploy units to defend lanes. If you leave a lane undefended, what happens in the game?",
-                Choices = new[] { "You gain bonus Oxygen Points", "The enemy attacks and increases the temperature",
-                                  "The lane becomes a forest", "Nothing happens" } },
+            new QuizDef { Id = "S1_POST_1", TopicId = "warming", Answer = 'A',
+                Question = "Which of these activities adds the most to the gases that trap heat in the atmosphere?",
+                Choices = new[] { "Burning coal, oil and gas for electricity and transport",
+                                  "Using aerosol sprays that damage the ozone layer",
+                                  "Steam coming out of power plant cooling towers",
+                                  "Forest fires started naturally by lightning" } },
+            new QuizDef { Id = "S1_POST_2", TopicId = "sinks", Answer = 'D',
+                Question = "Loggers clear a hillside forest and burn the wood. What happens to the carbon the trees had stored?",
+                Choices = new[] { "It stays locked in the soil, so the climate is not affected",
+                                  "It turns into oxygen when the wood burns",
+                                  "It is destroyed by the fire and disappears",
+                                  "It goes back into the air as CO2 and adds to warming" } },
+            new QuizDef { Id = "S1_POST_3", TopicId = "target", Answer = 'C',
+                Question = "A news report says, \"The world is getting close to passing 1.5 °C.\" What is being measured?",
+                Choices = new[] { "How much hotter this year's summer is than last year's",
+                                  "The average temperature of the Pacific Ocean",
+                                  "How much warmer the Earth's average surface is than before industrialization",
+                                  "The highest temperature recorded in the Philippines this year" } },
+            new QuizDef { Id = "S1_POST_4", TopicId = "wildlife", Answer = 'B',
+                Question = "The Philippine Eagle lives in large, old forests. If its forest is cleared, what is most likely?",
+                Choices = new[] { "The eagle moves to a city park and the climate is unaffected",
+                                  "The eagle loses its home and the stored carbon is released, so wildlife and climate both suffer",
+                                  "Only the eagle is affected, because the trees grow back within a year",
+                                  "The climate improves because fewer trees are using up oxygen" } },
+            new QuizDef { Id = "S1_POST_5", TopicId = "geothermal", Answer = 'D',
+                Question = "Some Philippine provinces get their power from geothermal plants. Why is this better for the climate than a coal plant?",
+                Choices = new[] { "It burns underground fuel more cleanly than coal",
+                                  "It makes more electricity per day than any other source",
+                                  "Its power plants absorb CO2 from the air",
+                                  "It uses the Earth's heat instead of burning fuel, so it releases very little CO2" } },
+            new QuizDef { Id = "S1_POST_6", TopicId = "risk", Answer = 'C',
+                Question = "Which of these is a climate change impact that Filipino communities face greater risk from?",
+                Choices = new[] { "More earthquakes along fault lines",
+                                  "Longer and stronger volcanic eruptions",
+                                  "Stronger typhoons and coastal flooding from rising seas",
+                                  "Colder nights during the rainy season" } },
+            // Game comprehension (not scored): does the player connect the mechanics to real climate action?
+            new QuizDef { Id = "S1_GAME_1", TopicId = "game", Answer = 'B', Unscored = true,
+                Question = "In Thermo-Tactics, what do the enemies coming down the road stand for?",
+                Choices = new[] { "Wild animals that damage farms",
+                                  "Fossil fuel emissions and environmental damage, such as illegal logging, mining and smog",
+                                  "Typhoons that hit Baguio every year",
+                                  "Tourists who crowd the city" } },
+            new QuizDef { Id = "S1_GAME_2", TopicId = "game", Answer = 'A', Unscored = true,
+                Question = "What does deploying a unit to defend a lane represent?",
+                Choices = new[] { "Protecting nature and cutting emissions before they heat the planet",
+                                  "Building more roads to move traffic faster",
+                                  "Planting trees only after the damage is done",
+                                  "Moving people away from the mountains" } },
         };
 
         private struct FactDef
@@ -515,38 +571,319 @@ namespace ThermoTactics.EditorTools
             public string Id, TopicId, Title, Body; public int Level; public PopupTrigger Trigger; public int Wave;
         }
 
-        // The reviewer: facts placed through Levels 1–8, written from the answers of the post-quiz (and pre-quiz).
+        // The reviewer: one concept per level in Levels 1–6 (first time only), recap cards in Levels 7–9, nothing in the
+        // boss level. Each fact teaches its concept in its own words; it never shows a quiz question or its choices.
         private static readonly FactDef[] BaguioFacts =
         {
             new FactDef { Id = "F01", TopicId = "game", Level = 1, Trigger = PopupTrigger.LevelStart,
                 Title = "Every open lane heats the planet",
                 Body = "When an enemy hits a lane you left undefended, the temperature rises by +0.10 °C. The enemies stand for fossil fuel emissions and environmental damage, like illegal logging, mining and smog, that make climate change worse." },
-            new FactDef { Id = "F02", TopicId = "climate", Level = 1, Trigger = PopupTrigger.AfterWave, Wave = 1,
+            new FactDef { Id = "F02", TopicId = "warming", Level = 1, Trigger = PopupTrigger.AfterWave, Wave = 1,
                 Title = "What is warming the planet?",
-                Body = "The main cause of rising global temperature is human activity. Burning coal, oil and gas and clearing forests release greenhouse gases such as carbon dioxide (CO2) and methane, which trap heat in the atmosphere." },
-            new FactDef { Id = "F03", TopicId = "forests", Level = 2, Trigger = PopupTrigger.LevelStart,
+                Body = "Today's warming is caused mainly by people, not by the Sun or volcanoes. Burning coal, oil and gas for power and transport, and clearing forests, release greenhouse gases such as carbon dioxide (CO2) and methane that trap heat in the atmosphere." },
+            new FactDef { Id = "F03", TopicId = "sinks", Level = 2, Trigger = PopupTrigger.LevelStart,
                 Title = "Forests are carbon sinks",
-                Body = "Trees take in CO2 as they grow and store the carbon in their trunks, branches, roots and the soil beneath them. Baguio's pine forests keep that carbon out of the atmosphere, as long as they are left standing." },
-            new FactDef { Id = "F04", TopicId = "climate", Level = 3, Trigger = PopupTrigger.LevelStart,
+                Body = "Trees take in CO2 as they grow and store the carbon in their trunks, roots and the soil. That carbon stays out of the air only while the forest stands: when trees are cut and burned or left to rot, it returns to the atmosphere as CO2." },
+            new FactDef { Id = "F04", TopicId = "target", Level = 3, Trigger = PopupTrigger.LevelStart,
                 Title = "The 1.5 °C target",
-                Body = "Under the Paris Agreement, countries aim to limit global warming to 1.5 °C above pre-industrial levels. Beyond that, impacts such as stronger typhoons, floods and heat waves become far more severe. The temperature bar in this game tracks that limit." },
-            new FactDef { Id = "F05", TopicId = "game", Level = 4, Trigger = PopupTrigger.LevelStart,
+                Body = "Under the Paris Agreement, countries aim to keep global warming within 1.5 °C of pre-industrial times, before the late 1800s. The number is the long-term rise of the whole Earth's average temperature, not one hot day or one place. The temperature bar in this game tracks that limit." },
+            new FactDef { Id = "F05", TopicId = "game", Level = 4, Trigger = PopupTrigger.AfterWave, Wave = 1,
                 Title = "Your units are climate action",
                 Body = "Each unit you deploy stands for protecting nature and cutting emissions. A defended lane stops the damage before it heats the planet; an open lane lets the enemy through and the temperature climbs." },
-            new FactDef { Id = "F06", TopicId = "forests", Level = 6, Trigger = PopupTrigger.LevelStart,
+            new FactDef { Id = "F06", TopicId = "wildlife", Level = 4, Trigger = PopupTrigger.LevelStart,
                 Title = "Homes for wildlife",
-                Body = "Forests shelter wildlife such as the Philippine Eagle, which lives in the forests of Mindanao and the Sierra Madre. Protecting a forest protects its animals and keeps its carbon stored: one action helps wildlife and the climate." },
-            new FactDef { Id = "F07", TopicId = "climate", Level = 7, Trigger = PopupTrigger.LevelStart,
+                Body = "Old forests shelter wildlife such as the Philippine Eagle, which needs large stands of forest in Mindanao and the Sierra Madre. Losing that forest takes away the animals' home and releases its stored carbon, and newly planted trees take decades to replace either." },
+            new FactDef { Id = "F07", TopicId = "geothermal", Level = 5, Trigger = PopupTrigger.LevelStart,
                 Title = "Clean power from the ground",
-                Body = "The Philippines is one of the world's largest producers of geothermal energy, a renewable source that uses the Earth's natural heat. Unlike coal, diesel or gasoline, it releases very little CO2." },
-            new FactDef { Id = "F08", TopicId = "climate", Level = 8, Trigger = PopupTrigger.LevelStart,
+                Body = "The Philippines is one of the world's largest producers of geothermal energy. Geothermal plants make electricity from the Earth's natural underground heat instead of burning fuel, so unlike coal, diesel or gas they release very little CO2." },
+            new FactDef { Id = "F08", TopicId = "risk", Level = 6, Trigger = PopupTrigger.LevelStart,
                 Title = "Why it matters here",
-                Body = "The Philippines is one of the countries most at risk from climate change, facing stronger typhoons, floods, rising seas and heat waves. Keeping warming below 1.5 °C protects Filipino communities." },
+                Body = "The Philippines is one of the countries most at risk from a warming planet: stronger typhoons, heavier floods, rising seas along its long coastline and more dangerous heat waves. Keeping warming below 1.5 °C protects Filipino communities." },
+            // Recaps: a short refresher after Wave 1 of Levels 7–9, two concepts each, before the post-quiz.
+            new FactDef { Id = "R01", TopicId = "recap", Level = 7, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "Recap: heat and forests",
+                Body = "Burning fossil fuels and clearing forests add the heat-trapping gases behind today's warming. Standing forests keep carbon locked in their wood and soil; cutting and burning them sends it back into the air." },
+            new FactDef { Id = "R02", TopicId = "recap", Level = 8, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "Recap: 1.5 °C and wildlife",
+                Body = "The 1.5 °C limit is about how much warmer the whole planet has become since before industry. Protecting old forests helps twice: wildlife keeps its home and the carbon stays stored." },
+            new FactDef { Id = "R03", TopicId = "recap", Level = 9, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "Recap: clean power and our islands",
+                Body = "Geothermal power uses the Earth's own heat, so it releases very little CO2 compared with burning coal. Cutting emissions matters here: the Philippines faces stronger typhoons, floods and rising seas as the planet warms." },
         };
+
+        // =====================================================================
+        // Stage 2 · Sierra Madre Coast: the Pacific coast of Aurora and Isabela, south to north, ending at Palanan.
+        // New enemies: Toxic Runoff (L1), Diesel Drone (L2), Coal Brute (L3). Spike at Level 5, Typhoon Tyrant at Level 10.
+        // =====================================================================
+        private static readonly LevelDef[] CoastLevels =
+        {
+            new LevelDef { Name = "Sabang Beach", Caption = "Sabang", Subtitle = "The surfing beach of Baler", Threat = 3, Scale = 0.80f,
+                Note = "New enemy: Toxic Runoff. Its hit poisons for 2 turns and deals +2 to Ocean allies. A Seagrass Healer cures Poison.",
+                Waves = new[] { (6, new[] { "ToxicRunoff", "OilSlick", "MethaneCloud" }), (7, new[] { "IllegalLogger", "ToxicRunoff", "PlasticGolem" }),
+                                (8, new[] { "ToxicRunoff", "OilSlick", "PlasticGolem", "MethaneCloud" }) } },
+            new LevelDef { Name = "Cemento Beach", Caption = "Cemento", Subtitle = "The reef break of Baler", Threat = 4, Scale = 0.85f,
+                Note = "New enemy: Diesel Drone, fast and hovering. Drones in neighbouring lanes hit harder; Wind Caller and Eagle Striker hit hovering enemies harder.",
+                Waves = new[] { (6, new[] { "DieselDrone", "ToxicRunoff", "IllegalLogger" }), (8, new[] { "DieselDrone", "DieselDrone", "OilSlick", "PlasticGolem" }),
+                                (9, new[] { "QuarryColossus", "DieselDrone", "ToxicRunoff", "MethaneCloud" }) } },
+            new LevelDef { Name = "Digisit", Caption = "Digisit", Subtitle = "Rock formations on the Baler coast", Threat = 4, Scale = 0.85f,
+                Note = "New enemy: Coal Brute (26 HP). Its soot weakens the ally it hits, and every hit adds +0.05 °C.",
+                Waves = new[] { (6, new[] { "CoalBrute", "OilSlick", "MethaneCloud" }), (8, new[] { "ToxicRunoff", "DieselDrone", "PlasticGolem", "IllegalLogger" }),
+                                (10, new[] { "CoalBrute", "QuarryColossus", "DieselDrone", "ToxicRunoff" }) } },
+            new LevelDef { Name = "Dicasalarin Cove", Caption = "Dicasalarin", Subtitle = "A hidden cove below the cliffs", Threat = 5, Scale = 0.90f,
+                Note = "Two Coal Brutes. Sturdy allies such as the Sea Turtle Guardian and the Hydro Guardian hold their lanes.",
+                Waves = new[] { (7, new[] { "CoalBrute", "ToxicRunoff", "DieselDrone" }), (9, new[] { "CoalBrute", "MiningRavager", "SmogWraith", "OilSlick" }),
+                                (10, new[] { "CoalBrute", "QuarryColossus", "DieselDrone", "DieselDrone", "MethaneCloud" }) } },
+            new LevelDef { Name = "Dinadiawan Beach", Caption = "Dinadiawan", Subtitle = "The long beach of Dipaculao", Threat = 8, Scale = 0.95f, Spike = true,
+                Note = "Difficulty spike. Elite Coal Brutes, elite drones and a 4th wave.",
+                Waves = new[] { (7, new[] { "elite:CoalBrute", "DieselDrone", "ToxicRunoff" }), (9, new[] { "elite:DieselDrone", "DieselDrone", "elite:ToxicRunoff", "PlasticGolem" }),
+                                (10, new[] { "elite:QuarryColossus", "CoalBrute", "DieselDrone", "SmogWraith" }),
+                                (11, new[] { "elite:CoalBrute", "elite:PlasticGolem", "DieselDrone", "DieselDrone", "ToxicRunoff" }) } },
+            new LevelDef { Name = "Casiguran Sound", Caption = "Casiguran", Subtitle = "Mangroves of a sheltered bay", Threat = 6, Scale = 0.90f,
+                Note = "A breather after Level 5. Runoff washes into the mangroves: bring a Seagrass Healer.",
+                Waves = new[] { (7, new[] { "ToxicRunoff", "ToxicRunoff", "OilSlick" }), (8, new[] { "CoalBrute", "ToxicRunoff", "SmogWraith", "MethaneCloud" }),
+                                (10, new[] { "elite:ToxicRunoff", "DeforestationBeast", "DieselDrone", "OilSlick" }) } },
+            new LevelDef { Name = "Casapsapan Beach", Caption = "Casapsapan", Subtitle = "White sand of Casiguran", Threat = 7, Scale = 0.95f,
+                Note = "Deforestation Beasts come down to the coast with drones overhead.",
+                Waves = new[] { (7, new[] { "DeforestationBeast", "DieselDrone", "ToxicRunoff" }), (9, new[] { "CoalBrute", "elite:IllegalLogger", "DieselDrone", "SmogWraith" }),
+                                (10, new[] { "elite:CoalBrute", "DeforestationBeast", "MiningRavager", "DieselDrone", "ToxicRunoff" }) } },
+            new LevelDef { Name = "Dilasag Coast", Caption = "Dilasag", Subtitle = "Where Aurora meets Isabela", Threat = 8, Scale = 1.00f,
+                Note = "Four waves with elites mixed in.",
+                Waves = new[] { (7, new[] { "CoalBrute", "DieselDrone", "DieselDrone", "ToxicRunoff" }), (9, new[] { "elite:DieselDrone", "DeforestationBeast", "elite:OilSlick", "SmogWraith" }),
+                                (10, new[] { "elite:CoalBrute", "elite:QuarryColossus", "DieselDrone", "ToxicRunoff", "MethaneCloud" }),
+                                (11, new[] { "elite:ToxicRunoff", "elite:PlasticGolem", "CoalBrute", "DieselDrone", "DieselDrone" }) } },
+            new LevelDef { Name = "Divilacan Bay", Caption = "Divilacan", Subtitle = "Coves of the Northern Sierra Madre", Threat = 9, Scale = 1.00f,
+                Note = "Five-enemy waves. The last test before the typhoon.",
+                Waves = new[] { (7, new[] { "DeforestationBeast", "CoalBrute", "DieselDrone", "ToxicRunoff" }), (9, new[] { "elite:MiningRavager", "elite:DieselDrone", "DieselDrone", "SmogWraith" }),
+                                (10, new[] { "elite:CoalBrute", "DeforestationBeast", "ToxicRunoff", "DieselDrone", "OilSlick" }),
+                                (11, new[] { "elite:DeforestationBeast", "elite:CoalBrute", "elite:ToxicRunoff", "DieselDrone", "DieselDrone" }) } },
+            new LevelDef { Name = "Palanan Coast", Caption = "Palanan", Subtitle = "Where the typhoons make landfall", Threat = 10, Scale = 0.95f, Boss = true,
+                Note = "Four waves, then Wave 5: the Typhoon Tyrant. Its Storm Band moves one lane every turn, and each Forest ally you keep alive weakens its Storm Surge.",
+                Waves = new[] { (7, new[] { "CoalBrute", "DieselDrone", "ToxicRunoff", "SmogWraith" }), (9, new[] { "elite:CoalBrute", "DeforestationBeast", "DieselDrone", "DieselDrone" }),
+                                (10, new[] { "elite:QuarryColossus", "ToxicRunoff", "CoalBrute", "DieselDrone", "MethaneCloud" }),
+                                (11, new[] { "elite:CoalBrute", "elite:DieselDrone", "DeforestationBeast", "ToxicRunoff", "DieselDrone" }), (8, new[] { "typhoon" }) } },
+        };
+
+        // Stage 2 education: matched pairs, built like Baguio's (see the Stage 1 notes). One concept per level in Levels 1–6,
+        // recaps after Wave 1 of Levels 7–9, F09 before the boss (it explains the Storm Surge), nothing in Level 10.
+        // Fact figures checked against their sources: PAGASA (cyclones per year), McIvor et al. 2012 (mangrove waves and
+        // surge), Mei & Xie 2016 (typhoon intensification), Donato et al. 2011 (mangrove carbon), Bagtasa & Racoma 2023
+        // (Sierra Madre), DENR Central Luzon (Aurora turtle releases), NSMNP (protected area).
+        private static readonly (string id, string name)[] CoastTopics =
+        {
+            ("path", "Typhoon path"),
+            ("mangroves", "Mangroves & storm surge"),
+            ("warmseas", "Warmer seas"),
+            ("bluecarbon", "Blue carbon"),
+            ("sierra", "The Sierra Madre"),
+            ("seas", "Rising seas"),
+            ("game", "Game check"),
+        };
+
+        private static readonly QuizDef[] CoastPre =
+        {
+            new QuizDef { Id = "S2_PRE_1", TopicId = "path", Answer = 'B',
+                Question = "Why is the Pacific coast of Luzon, such as Aurora and Isabela, often the first land a typhoon reaches?",
+                Choices = new[] { "Typhoons form over the West Philippine Sea and move east",
+                                  "Most typhoons form over the warm western Pacific Ocean and move west toward the Philippines",
+                                  "The Sierra Madre mountains pull typhoons toward them",
+                                  "Typhoons form only near the coast during El Niño years" } },
+            new QuizDef { Id = "S2_PRE_2", TopicId = "mangroves", Answer = 'D',
+                Question = "How do mangrove forests protect coastal towns during a typhoon?",
+                Choices = new[] { "They absorb rainwater so rivers do not flood",
+                                  "Their leaves block the wind so the typhoon weakens",
+                                  "They pull the storm away from the town",
+                                  "Their roots and trunks slow the waves and lower the storm surge" } },
+            new QuizDef { Id = "S2_PRE_3", TopicId = "warmseas", Answer = 'A',
+                Question = "How does warmer ocean water affect typhoons?",
+                Choices = new[] { "It gives typhoons more energy, so they can become stronger",
+                                  "It cools the air above it, so typhoons weaken",
+                                  "It has no effect; typhoons get their energy only from the wind",
+                                  "It stops typhoons from forming" } },
+            new QuizDef { Id = "S2_PRE_4", TopicId = "bluecarbon", Answer = 'C',
+                Question = "What is \"blue carbon\"?",
+                Choices = new[] { "Carbon dioxide dissolved in rainwater",
+                                  "Pollution from ships that turns the sea blue",
+                                  "Carbon stored by coastal plants such as mangroves and seagrass, much of it in the mud",
+                                  "The carbon in fish and other sea animals that people eat" } },
+            new QuizDef { Id = "S2_PRE_5", TopicId = "sierra", Answer = 'A',
+                Question = "What does the Sierra Madre mountain range do when a typhoon crosses it?",
+                Choices = new[] { "It weakens the typhoon's winds somewhat, but rain can fall even harder on its western side",
+                                  "It blocks the typhoon completely, so western Luzon is safe",
+                                  "It turns the typhoon back out to sea",
+                                  "It has no effect on typhoons at all" } },
+            new QuizDef { Id = "S2_PRE_6", TopicId = "seas", Answer = 'B',
+                Question = "Green sea turtles nest on the beaches of Aurora. How does climate change threaten their nests?",
+                Choices = new[] { "Warmer seas make the turtles stop swimming",
+                                  "Rising seas and stronger waves erode and wash away the beaches they nest on",
+                                  "Typhoon winds scare the turtles away from the Philippines for good",
+                                  "Climate change affects only land animals" } },
+        };
+
+        private static readonly QuizDef[] CoastPost =
+        {
+            new QuizDef { Id = "S2_POST_1", TopicId = "path", Answer = 'D',
+                Question = "Why does a province on Luzon's eastern coast face more typhoon landfalls than one facing the West Philippine Sea?",
+                Choices = new[] { "The west coast has colder water that typhoons cannot cross",
+                                  "Typhoons are drawn toward big cities in the east",
+                                  "The eastern coast has fewer trees, so storms are pulled there",
+                                  "It faces the Pacific, where most typhoons form and head west, so it is often hit first" } },
+            new QuizDef { Id = "S2_POST_2", TopicId = "mangroves", Answer = 'A',
+                Question = "A town's mangroves are cut down to build fishponds. What is most likely during the next typhoon?",
+                Choices = new[] { "Waves and storm surge reach the town with more force",
+                                  "The town is safer, because the fishpond walls hold back the sea",
+                                  "Nothing changes, because only seawalls stop storm surges",
+                                  "The typhoon avoids the town, because there is less forest to attract it" } },
+            new QuizDef { Id = "S2_POST_3", TopicId = "warmseas", Answer = 'C',
+                Question = "Typhoons that hit East and Southeast Asia have grown stronger since the late 1970s. What best explains this?",
+                Choices = new[] { "New mountains and cities changed the region's winds",
+                                  "Typhoons now form closer to the North Pole",
+                                  "The sea surface near these coasts has become warmer",
+                                  "Fewer typhoons form, so each one grows bigger by default" } },
+            new QuizDef { Id = "S2_POST_4", TopicId = "bluecarbon", Answer = 'B',
+                Question = "Why does clearing a mangrove forest harm the climate more than many people expect?",
+                Choices = new[] { "Mangroves are the only plants near the sea that make oxygen",
+                                  "Mangroves store large amounts of carbon, much of it in the mud, and clearing releases it",
+                                  "Cleared mangroves make the sea colder",
+                                  "It harms only the fish, not the climate" } },
+            new QuizDef { Id = "S2_POST_5", TopicId = "sierra", Answer = 'D',
+                Question = "A typhoon heads for Aurora. A resident of Nueva Ecija, west of the Sierra Madre, says, \"We're safe, the mountains will block it.\" What is the best reply?",
+                Choices = new[] { "Right, typhoons never cross the Sierra Madre",
+                                  "Right, but only if the typhoon is weak",
+                                  "Wrong, the mountains make the typhoon stronger",
+                                  "Wrong: the mountains weaken the winds somewhat, but heavy rain and floods are still a danger" } },
+            new QuizDef { Id = "S2_POST_6", TopicId = "seas", Answer = 'C',
+                Question = "Which of these is a climate change threat to coastal places like the beaches of Aurora?",
+                Choices = new[] { "Beaches growing wider because the sea is drying up",
+                                  "Fewer fish because the water is getting too cold",
+                                  "Rising seas and erosion shrinking beaches and coastal habitats",
+                                  "The sea turning into fresh water from heavier rain" } },
+            // Game comprehension (not scored).
+            new QuizDef { Id = "S2_GAME_1", TopicId = "game", Answer = 'C', Unscored = true,
+                Question = "In the Sierra Madre Coast stage, what do the enemies stand for?",
+                Choices = new[] { "Illegal fishermen and pirates",
+                                  "Only the typhoons that hit the coast",
+                                  "Coal and diesel smoke and polluted runoff that harm the coast and the climate",
+                                  "Tourists who litter on the beach" } },
+            new QuizDef { Id = "S2_GAME_2", TopicId = "game", Answer = 'A', Unscored = true,
+                Question = "In the boss level, why does keeping Forest allies alive weaken the Typhoon Tyrant's Storm Surge?",
+                Choices = new[] { "Standing forests slow typhoon winds and hold the soil during heavy rain",
+                                  "Forest allies have the most health in the game",
+                                  "Typhoons are afraid of trees",
+                                  "Forests stop rain from falling" } },
+        };
+
+        private static readonly FactDef[] CoastFacts =
+        {
+            new FactDef { Id = "F01", TopicId = "game", Level = 1, Trigger = PopupTrigger.LevelStart,
+                Title = "A new coast, the same rule",
+                Body = "The Pacific coast of Aurora and Isabela faces the open ocean. Here the enemies stand for coal and diesel smoke and polluted runoff. An undefended lane still adds +0.10 °C." },
+            new FactDef { Id = "F02", TopicId = "path", Level = 1, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "Typhoon country",
+                Body = "About 20 tropical cyclones enter the Philippine Area of Responsibility every year, and about 8 or 9 of them cross the country (PAGASA). Most form over the warm western Pacific and move west, so the Pacific coast of Luzon is often the first land they reach." },
+            new FactDef { Id = "F03", TopicId = "mangroves", Level = 2, Trigger = PopupTrigger.LevelStart,
+                Title = "Mangroves break the waves",
+                Body = "Mangrove roots and trunks slow the sea down. Across 500 metres of mangroves, wave height can drop by half or more, and each kilometre can lower a storm surge by 5 to 50 centimetres. Clearing them leaves the shore open to the waves." },
+            new FactDef { Id = "F04", TopicId = "warmseas", Level = 3, Trigger = PopupTrigger.LevelStart,
+                Title = "Warmer seas, stronger typhoons",
+                Body = "Typhoons draw their energy from warm ocean water. Typhoons that hit East and Southeast Asia have become 12–15% stronger since the late 1970s, as the seas near these coasts warmed. A warmer ocean feeds stronger storms." },
+            new FactDef { Id = "F05", TopicId = "bluecarbon", Level = 4, Trigger = PopupTrigger.LevelStart,
+                Title = "Blue carbon",
+                Body = "Carbon stored by coastal plants such as mangroves and seagrass is called blue carbon. A hectare of mangroves can hold up to four times the carbon of most tropical forests, much of it in the mud under their roots. Clearing them releases it as CO2." },
+            new FactDef { Id = "F06", TopicId = "sierra", Level = 5, Trigger = PopupTrigger.LevelStart,
+                Title = "The Sierra Madre is not a wall",
+                Body = "The Sierra Madre weakens the winds of typhoons that cross it, by about 1–13% in one study. It does not block them, and their rain can fall even harder on its western side, so floods stay a danger. Its forests also hold the soil in place." },
+            new FactDef { Id = "F07", TopicId = "seas", Level = 6, Trigger = PopupTrigger.LevelStart,
+                Title = "Turtles need quiet beaches",
+                Body = "Green sea turtles nest on the beaches of Aurora, and the DENR guards the nests and releases the hatchlings on the shores of Baler. Rising seas, stronger waves and erosion can wash away the beaches that turtles and coastal towns depend on." },
+            new FactDef { Id = "F08", TopicId = "nature", Level = 7, Trigger = PopupTrigger.LevelStart,
+                Title = "The largest protected area",
+                Body = "The Northern Sierra Madre Natural Park in Isabela covers about 359,000 hectares of forest and sea, the largest protected area in the Philippines. The Philippine Eagle, sea turtles and the dugong live there." },
+            new FactDef { Id = "F09", TopicId = "game", Level = 9, Trigger = PopupTrigger.LevelStart,
+                Title = "Forests against the storm",
+                Body = "In the boss level, every Forest ally you keep alive weakens the Typhoon Tyrant's Storm Surge, just as standing forests slow typhoon winds and hold the soil when the heavy rain comes." },
+            // Recaps: a short refresher after Wave 1 of Levels 7–9, two concepts each, before the post-quiz.
+            new FactDef { Id = "R01", TopicId = "recap", Level = 7, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "Recap: the typhoon coast",
+                Body = "Most typhoons form over the warm Pacific and head west, so Luzon's eastern coast is often hit first. Healthy mangroves along that coast slow the waves and lower the storm surge." },
+            new FactDef { Id = "R02", TopicId = "recap", Level = 8, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "Recap: warm seas and blue carbon",
+                Body = "Warmer seas give typhoons more energy, so they grow stronger. Mangroves and seagrass store blue carbon in their mud, which escapes as CO2 when they are cleared." },
+            new FactDef { Id = "R03", TopicId = "recap", Level = 9, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "Recap: mountains and rising seas",
+                Body = "The Sierra Madre weakens typhoon winds but does not block them, and heavy rain can still bring floods. Rising seas and erosion threaten the beaches where turtles nest and people live." },
+        };
+
+        private static (QuizData quiz, PopupData[] facts) BuildCoastEducation(int levelCount)
+        {
+            EnsureFolder(DataDir + "/Quizzes");
+            EnsureFolder(DataDir + "/Facts");
+            var quiz = LoadOrCreate<QuizData>($"{DataDir}/Quizzes/Stage2_Quiz.asset");
+            quiz.quizId = "Q2"; quiz.stageId = 2;
+            quiz.topics = System.Array.ConvertAll(CoastTopics, t => new QuizTopic { id = t.id, name = t.name });
+            quiz.preQuestions = System.Array.ConvertAll(CoastPre, ToQuestion);
+            quiz.postQuestions = System.Array.ConvertAll(CoastPost, ToQuestion);
+            EditorUtility.SetDirty(quiz);
+
+            var facts = new PopupData[CoastFacts.Length];
+            for (int i = 0; i < CoastFacts.Length; i++)
+            {
+                FactDef d = CoastFacts[i];
+                var f = LoadOrCreate<PopupData>($"{DataDir}/Facts/Coast_{d.Id}.asset");
+                f.factId = "S2_" + d.Id; f.stageId = 2; f.topicId = d.TopicId; f.title = d.Title; f.body = d.Body;
+                f.levelNumber = d.Level; f.trigger = d.Trigger; f.waveNumber = Mathf.Max(1, d.Wave);
+                EditorUtility.SetDirty(f);
+                facts[i] = f;
+            }
+            foreach (FactDef d in CoastFacts)
+                if (d.Level < 1 || d.Level > levelCount) Debug.LogError($"[Thermo-Tactics] Stage 2 fact {d.Id} is on a level that does not exist.");
+            CheckQuiz("Sierra Madre Coast", quiz, facts, levelCount);
+            return (quiz, facts);
+        }
+
+        /// <summary>
+        /// Checks a stage's quiz: matched pairs (every scored pre question has exactly one scored post twin on its topic, and
+        /// the reverse), 4 choices and a valid answer, known topics, the quiz fits the quiz screen, no unscored pre question,
+        /// a balanced answer key, and every topic reviewed by a fact before the boss level.
+        /// </summary>
+        private static void CheckQuiz(string stage, QuizData quiz, PopupData[] facts, int levelCount)
+        {
+            foreach (QuizTopic t in quiz.topics)
+            {
+                int pre = System.Array.FindAll(quiz.preQuestions, q => q.topicId == t.id && q.scored).Length;
+                int post = System.Array.FindAll(quiz.postQuestions, q => q.topicId == t.id && q.scored).Length;
+                if (pre != post || pre > 1)
+                    Debug.LogError($"[Thermo-Tactics] {stage} quiz topic \"{t.name}\" has {pre} pre and {post} post scored questions; a matched pair needs 1 and 1.");
+            }
+            if (System.Array.Exists(quiz.preQuestions, q => !q.scored))
+                Debug.LogError($"[Thermo-Tactics] {stage}: game comprehension questions belong in the post-quiz only.");
+            if (quiz.topics.Length > QuizData.MaxTopics)
+                Debug.LogError($"[Thermo-Tactics] The {stage} quiz has {quiz.topics.Length} topics; the result screen shows {QuizData.MaxTopics}.");
+            var key = new int[QuizData.ChoiceCount];
+            foreach (string type in new[] { QuizManager.Pre, QuizManager.Post })
+            {
+                if (quiz.Count(type) > QuizData.MaxQuestions)
+                    Debug.LogError($"[Thermo-Tactics] The {stage} {type}-quiz has {quiz.Count(type)} questions; the quiz screen shows {QuizData.MaxQuestions}.");
+                foreach (QuizQuestion q in quiz.Questions(type))
+                    if (q.scored && q.correctIndex >= 0 && q.correctIndex < key.Length) key[q.correctIndex]++;
+                foreach (QuizQuestion q in quiz.Questions(type))
+                {
+                    if (q.choices.Length != QuizData.ChoiceCount || q.correctIndex < 0 || q.correctIndex >= q.choices.Length)
+                        Debug.LogError($"[Thermo-Tactics] Quiz question {q.questionId} needs {QuizData.ChoiceCount} choices and a valid answer.");
+                    if (quiz.TopicIndex(q.topicId) == 99)
+                        Debug.LogError($"[Thermo-Tactics] Quiz question {q.questionId} has an unknown topic \"{q.topicId}\".");
+                }
+            }
+            if (Mathf.Max(key) - Mathf.Min(key) > 1)
+                Debug.LogWarning($"[Thermo-Tactics] The {stage} answer key is unbalanced (A {key[0]}, B {key[1]}, C {key[2]}, D {key[3]}).");
+            foreach (QuizTopic t in quiz.topics)
+                if (!System.Array.Exists(facts, f => f.topicId == t.id && f.levelNumber < levelCount))
+                    Debug.LogError($"[Thermo-Tactics] {stage} quiz topic \"{t.name}\" has no climate fact in Levels 1–{levelCount - 1}.");
+        }
 
         private static QuizQuestion ToQuestion(QuizDef q) => new QuizQuestion
         {
             questionId = q.Id, topicId = q.TopicId, text = q.Question, choices = (string[])q.Choices.Clone(), correctIndex = q.Answer - 'A',
+            scored = !q.Unscored,
         };
 
         private static (QuizData quiz, PopupData[] facts) BuildEducation()
@@ -571,22 +908,7 @@ namespace ThermoTactics.EditorTools
                 facts[i] = f;
             }
 
-            // Checks: 5 + 5 questions with 4 choices, known topics, and every topic reviewed by a fact before the boss level.
-            foreach (string type in new[] { QuizManager.Pre, QuizManager.Post })
-            {
-                if (quiz.Count(type) != QuizData.QuestionCount)
-                    Debug.LogError($"[Thermo-Tactics] The Baguio {type}-quiz has {quiz.Count(type)} questions; it needs {QuizData.QuestionCount}.");
-                foreach (QuizQuestion q in quiz.Questions(type))
-                {
-                    if (q.choices.Length != QuizData.ChoiceCount || q.correctIndex < 0 || q.correctIndex >= q.choices.Length)
-                        Debug.LogError($"[Thermo-Tactics] Quiz question {q.questionId} needs {QuizData.ChoiceCount} choices and a valid answer.");
-                    if (quiz.TopicIndex(q.topicId) == 99)
-                        Debug.LogError($"[Thermo-Tactics] Quiz question {q.questionId} has an unknown topic \"{q.topicId}\".");
-                }
-            }
-            foreach (QuizTopic t in quiz.topics)
-                if (!System.Array.Exists(facts, f => f.topicId == t.id && f.levelNumber < Levels.Length))
-                    Debug.LogError($"[Thermo-Tactics] Quiz topic \"{t.name}\" has no climate fact in Levels 1–{Levels.Length - 1}.");
+            CheckQuiz("Baguio", quiz, facts, Levels.Length);
             return (quiz, facts);
         }
 
@@ -681,6 +1003,7 @@ namespace ThermoTactics.EditorTools
             boss.trait = UnitTrait.None; boss.traitValue = 0f;
             boss.traitText = "Cleave hits the strongest ally's lane and the lanes beside it; Landslide Slam hits all 6 lanes every 3rd turn; enrages at 40% HP.";
             boss.isStarter = false; boss.tier = UnitTier.Common; boss.priceCredits = 0; boss.unlockStage = 1;
+            boss.cleaveName = "CLEAVE"; boss.slamName = "LANDSLIDE SLAM"; boss.forestShieldPerAlly = 0; boss.forestShieldMax = 0;
             EditorUtility.SetDirty(boss);
             catalog.Add(boss);
 
@@ -692,13 +1015,19 @@ namespace ThermoTactics.EditorTools
                 traitText: "Smokestacks: +0.05 °C every turn while alive; every 3rd turn Overdrive hits 3 lanes.",
                 description: "Later-stage boss: a coal-fired factory on legs with two smokestacks. Overdrive vents a blast across 3 lanes.");
             titan.halfDamageTo = new UnitData[0];
+            titan.cleaveName = "SMOKE BLAST"; titan.slamName = "OVERDRIVE";
             catalog.Add(titan);
+            // Stage 2 boss. Storm Band: 3 neighbouring lanes, moving one lane per turn (4 lanes once it is a Super Typhoon);
+            // Storm Surge: all 6 lanes every 3rd turn (every 2nd below 40% HP), cut by 1 per living Forest ally (max −3).
             BossData typhoon = BuildLaterBoss("TyphoonTyrant", "E15", "Typhoon Tyrant", controllers, UnitCategory.ClimateDisaster,
-                hp: 450, damage: 10, speed: 8, hover: true, stage: 5,
-                pattern: BossPattern.StormSurge, specialLanes: 2, specialDamage: 10, specialEvery: 3,
-                trait: UnitTrait.StormSurge, traitValue: 2f,
-                traitText: "Storm Surge: hits 2 random lanes each turn and every lane every 3rd turn; Mangrove Guardian and Sea Turtle Guardian take half damage.",
-                description: "Final boss: a super typhoon made stronger by warmer seas. Mangroves and sea turtles stand up to its storm surge.");
+                hp: 340, damage: 5, speed: 8, hover: true, stage: 2,
+                pattern: BossPattern.StormSurge, specialLanes: 3, specialDamage: 8, specialEvery: 3,
+                trait: UnitTrait.StormSurge, traitValue: 3f,
+                traitText: "Storm Band hits 3 neighbouring lanes and moves one lane each turn; Storm Surge hits all 6 lanes every 3rd turn, 1 less for each Forest ally (max −3). Below 40% HP: Super Typhoon. Mangrove Guardian and Sea Turtle Guardian take half damage.",
+                description: "Stage 2 boss: a super typhoon fed by warmer seas. The Sierra Madre forest weakens its surge; mangroves and sea turtles stand up to it.");
+            typhoon.enragedCleaveDamage = 7;
+            typhoon.cleaveName = "STORM BAND"; typhoon.slamName = "STORM SURGE";
+            typhoon.forestShieldPerAlly = 1; typhoon.forestShieldMax = 3;
             typhoon.halfDamageTo = new[] { byFolder["MangroveGuardian"], byFolder["SeaTurtleGuardian"] };
             EditorUtility.SetDirty(typhoon);
             catalog.Add(typhoon);
@@ -706,6 +1035,7 @@ namespace ThermoTactics.EditorTools
             UnitData Enemy(string key)
             {
                 if (key == "boss") return boss;
+                if (key == "typhoon") return typhoon;
                 if (key.StartsWith("elite:")) return elites[key.Substring(6)];
                 return byFolder[key];
             }
@@ -716,25 +1046,91 @@ namespace ThermoTactics.EditorTools
             MoveIfExists($"{DataDir}/Baguio_Level1.asset", $"{DataDir}/Levels/Baguio_Level1.asset");
 
             UnitData[] roster = { byFolder["MangroveGuardian"], byFolder["CoralDefender"], byFolder["WindCaller"], byFolder["GeothermalSentinel"], byFolder["ReefSentinel"] };
-            var levels = new LevelData[Levels.Length];
-            for (int i = 0; i < Levels.Length; i++)
+            LevelData[] levels = BuildLevels("Baguio", 1, "Stage 1 · Baguio", Levels, Enemy, roster);
+            LevelData[] coastLevels = BuildLevels("Coast", 2, "Stage 2 · Sierra Madre Coast", CoastLevels, Enemy, roster);
+
+            var stage = LoadOrCreate<StageData>(StagePath);
+            stage.stageId = 1;
+            stage.stageName = "Baguio Forest";
+            stage.region = "Cordillera mountains · pine forest, fog, Kennon Road";
+            stage.threats = "illegal logging, mining, smog";
+            stage.difficulty = "Easy";
+            stage.thumbnail = Ui("stage1_thumb");
+            stage.shortName = "Baguio";
+            stage.battleBackground = Sprite(ArtEnv + "/baguio_background.png");
+            stage.sideFill = Sprite(SideFillPath(ArtEnv + "/baguio_background.png"));
+            stage.overlayTile = Sprite(ArtEnv + "/fog_drift_tileable.png");
+            stage.overlayStrength = 1f;
+            stage.slotMarker = Sprite(ArtEnv + "/slot_marker.png");
+            // White ring tinted to Baguio's blue, so a picked-up unit's ring shows a true gold (the blue file turned it olive).
+            stage.deployHighlight = Sprite(ArtEnv + "/slot_highlight_ring.png");
+            stage.deployTint = new Color(90f / 255f, 200f / 255f, 1f); stage.deployAlpha = 0.65f;
+            stage.dangerHighlight = Sprite(ArtEnv + "/slot_highlight_attack.png");
+            stage.cameraBackground = Night;
+            stage.levelPathArt = Ui("levelpath_background");
+            stage.theme = StageTheme.Forest;
+            stage.nextStageLabel = "Stage 2 · Sierra Madre Coast";
+            stage.nextStageReady = true;
+            stage.levels = levels;
+            stage.unitCatalog = catalog.ToArray();
+            (stage.quiz, stage.facts) = BuildEducation();
+            EditorUtility.SetDirty(stage);
+
+            // ---- Stage 2: Sierra Madre Coast (Aurora and Isabela, the Pacific side of the Sierra Madre) ----
+            var coast = LoadOrCreate<StageData>(Stage2Path);
+            coast.stageId = 2;
+            coast.stageName = "Sierra Madre Coast";
+            coast.shortName = "Sierra Madre";
+            coast.region = "Aurora & Isabela · Pacific coast, mangroves, reefs";
+            coast.threats = "coal and diesel smoke, toxic runoff, typhoons";
+            coast.difficulty = "Easy–Medium";
+            coast.thumbnail = Ui("stage2_thumb");
+            coast.battleBackground = Sprite(ArtEnv + "/coast_background.png");
+            coast.sideFill = Sprite(SideFillPath(ArtEnv + "/coast_background.png"));
+            coast.overlayTile = Sprite(ArtEnv + "/sea_spray_tileable.png");
+            coast.overlayStrength = 0.55f;   // light sea spray, not mountain fog
+            coast.slotMarker = Sprite(ArtEnv + "/slot_marker_sand.png");
+            // On the light sand the rings get a dark edge; the deploy ring is white in the file and tinted here,
+            // so a picked-up unit's ring is a true gold and high contrast a true yellow.
+            coast.deployHighlight = Sprite(ArtEnv + "/slot_highlight_deploy_sand.png");
+            coast.deployTint = new Color(0.36f, 0.78f, 1f); coast.deployAlpha = 0.85f;
+            coast.dangerHighlight = Sprite(ArtEnv + "/slot_highlight_attack_sand.png");
+            coast.cameraBackground = Hex("#0E2A33");
+            coast.levelPathArt = Ui("levelpath_coast");
+            coast.theme = StageTheme.Coast;
+            coast.nextStageLabel = "Stage 3 · Metro Manila";
+            coast.nextStageReady = false;
+            coast.levels = coastLevels;
+            coast.unitCatalog = catalog.ToArray();   // the whole roster, so squads and the store work the same in every stage
+            (coast.quiz, coast.facts) = BuildCoastEducation(coastLevels.Length);
+            EditorUtility.SetDirty(coast);
+            AssetDatabase.SaveAssets();
+            return AssetDatabase.LoadAssetAtPath<StageData>(StagePath);
+        }
+
+        /// <summary>Waves and levels of one stage. Asset names: {prefix}_L{n}_Wave{w}, {prefix}_Level{n}.</summary>
+        private static LevelData[] BuildLevels(string prefix, int stageId, string label, LevelDef[] defs,
+                                               System.Func<string, UnitData> enemy, UnitData[] roster)
+        {
+            var levels = new LevelData[defs.Length];
+            for (int i = 0; i < defs.Length; i++)
             {
-                LevelDef d = Levels[i];
+                LevelDef d = defs[i];
                 int n = i + 1;
                 var waves = new WaveData[d.Waves.Length];
                 for (int w = 0; w < d.Waves.Length; w++)
                 {
-                    var wave = LoadOrCreate<WaveData>($"{DataDir}/Waves/Baguio_L{n}_Wave{w + 1}.asset");
+                    var wave = LoadOrCreate<WaveData>($"{DataDir}/Waves/{prefix}_L{n}_Wave{w + 1}.asset");
                     wave.waveNumber = w + 1;
                     wave.opAllowance = d.Waves[w].op;
-                    wave.enemies = System.Array.ConvertAll(d.Waves[w].enemies, Enemy);
+                    wave.enemies = System.Array.ConvertAll(d.Waves[w].enemies, k => enemy(k));
                     wave.ignorePenalty = wave.HasBoss;
                     EditorUtility.SetDirty(wave);
                     waves[w] = wave;
                 }
-                var level = LoadOrCreate<LevelData>($"{DataDir}/Levels/Baguio_Level{n}.asset");
-                level.levelName = $"Stage 1 · Baguio — {d.Name}";
-                level.stageId = 1; level.levelNumber = n;
+                var level = LoadOrCreate<LevelData>($"{DataDir}/Levels/{prefix}_Level{n}.asset");
+                level.levelName = $"{label} — {d.Name}";
+                level.stageId = stageId; level.levelNumber = n;
                 level.locationName = d.Name; level.pathCaption = d.Caption; level.subtitle = d.Subtitle; level.note = d.Note;
                 level.threat = d.Threat; level.isEliteSpike = d.Spike; level.isBossLevel = d.Boss;
                 level.startingTemperature = 1.0f;
@@ -748,20 +1144,7 @@ namespace ThermoTactics.EditorTools
                 EditorUtility.SetDirty(level);
                 levels[i] = level;
             }
-
-            var stage = LoadOrCreate<StageData>(StagePath);
-            stage.stageId = 1;
-            stage.stageName = "Baguio Forest";
-            stage.region = "Cordillera mountains · pine forest, fog, Kennon Road";
-            stage.threats = "illegal logging, mining, smog";
-            stage.difficulty = "Easy";
-            stage.thumbnail = Ui("stage1_thumb");
-            stage.levels = levels;
-            stage.unitCatalog = catalog.ToArray();
-            (stage.quiz, stage.facts) = BuildEducation();
-            EditorUtility.SetDirty(stage);
-            AssetDatabase.SaveAssets();
-            return AssetDatabase.LoadAssetAtPath<StageData>(StagePath);
+            return levels;
         }
 
         private static void MoveIfExists(string from, string to)
@@ -782,7 +1165,7 @@ namespace ThermoTactics.EditorTools
         }
 
         // =====================================================================
-        // 4. Battle scene (plays every Baguio level; the level comes from GameSession)
+        // 4. Battle scene (plays every level of every stage; the stage and level come from GameSession)
         // =====================================================================
         private static void BuildScene(StageData stage)
         {
@@ -808,16 +1191,34 @@ namespace ThermoTactics.EditorTools
 
             // ---- environment ----
             var env = new GameObject("Environment").transform;
-            var bg = NewSprite("Background_Baguio", env, Sprite(ArtEnv + "/baguio_background.png"), -1000);
+            // Baguio art by default; StageEnvironment swaps in the stage's art when the battle starts.
+            var bg = NewSprite("Background", env, Sprite(ArtEnv + "/baguio_background.png"), -1000);
             bg.transform.position = Vector3.zero;
+
+            // Screens wider than 16:9 (most phones) show more than the 1344 px art. Each side is filled with a
+            // soft, darkened mirror of the art's own edge, so the view keeps its 16:9 framing with no black bars.
+            float artWidth = bg.sprite.bounds.size.x;
+            Sprite sideFill = Sprite(SideFillPath(ArtEnv + "/baguio_background.png"));
+            var sideFills = new SpriteRenderer[2];
+            for (int side = -1; side <= 1; side += 2)
+            {
+                var fill = NewSprite(side < 0 ? "SideFill_Left" : "SideFill_Right", env, sideFill, -1001);
+                sideFills[side < 0 ? 0 : 1] = fill;
+                fill.transform.position = new Vector3(side * artWidth, 0f, 0f);
+                fill.flipX = true;
+                fill.color = SideFillTint;
+            }
 
             var fogRoot = new GameObject("Fog");
             fogRoot.transform.SetParent(env, false);
             var fog = fogRoot.AddComponent<FogScroller>();
-            for (int i = 0; i < 2; i++)
+            // Four tiles (-21, 0, 21, 42) so the drifting fog also covers the side fill on the widest screens (2.4:1).
+            var fogTiles = new SpriteRenderer[4];
+            for (int i = 0; i < 4; i++)
             {
                 var f = NewSprite($"FogTile_{i}", fogRoot.transform, Sprite(ArtEnv + "/fog_drift_tileable.png"), 900);
-                f.transform.localPosition = new Vector3(21f * i, 0f, 0f);
+                fogTiles[i] = f;
+                f.transform.localPosition = new Vector3(21f * (i - 1), 0f, 0f);
                 f.color = new Color(1f, 1f, 1f, 0.85f);
             }
 
@@ -830,6 +1231,15 @@ namespace ThermoTactics.EditorTools
                 allySlots[lane] = NewSlot(board, lane, false);
                 enemySlots[lane] = NewSlot(board, lane, true);
             }
+            var environment = env.gameObject.AddComponent<StageEnvironment>();
+            Ref(environment, "_background", bg);
+            RefArray(environment, "_sideFills", sideFills);
+            RefArray(environment, "_overlayTiles", fogTiles);
+            var markers = new List<SpriteRenderer>();
+            foreach (BoardSlot s in allySlots) markers.Add(s.GetComponent<SpriteRenderer>());
+            foreach (BoardSlot s in enemySlots) markers.Add(s.GetComponent<SpriteRenderer>());
+            RefArray(environment, "_slotMarkers", markers.ToArray());
+            Ref(environment, "_camera", cam);
 
             // ---- systems ----
             var sys = new GameObject("GameSystems");
@@ -865,7 +1275,7 @@ namespace ThermoTactics.EditorTools
             stage = AssetDatabase.LoadAssetAtPath<StageData>(StagePath);   // reload: a stale instance would serialize as null
             Ref(gm, "_defaultStage", stage); Ref(gm, "_turns", turns); Ref(gm, "_waves", waves); Ref(gm, "_oxygen", oxygen);
             Ref(gm, "_temperature", temp); Ref(gm, "_grid", grid); Ref(gm, "_lanes", lanes); Ref(gm, "_deploy", deploy);
-            Ref(gm, "_factory", factory); Ref(gm, "_database", db); Ref(gm, "_ui", ui); Ref(gm, "_fog", fog); Ref(gm, "_camera", battleCam);
+            Ref(gm, "_factory", factory); Ref(gm, "_database", db); Ref(gm, "_ui", ui); Ref(gm, "_fog", fog); Ref(gm, "_camera", battleCam); Ref(gm, "_environment", environment);
             Ref(gm, "_popups", popups); Ref(gm, "_intro", intro); Ref(gm, "_tutorial", tutorial);
             Ref(tutorial, "_grid", grid); Ref(tutorial, "_deploy", deploy); Ref(tutorial, "_turns", turns);
             Ref(tutorial, "_oxygen", oxygen); Ref(tutorial, "_ui", ui);
@@ -876,6 +1286,7 @@ namespace ThermoTactics.EditorTools
             Ref(lanes, "_temperature", temp); Ref(lanes, "_ui", ui);
             Ref(deploy, "_grid", grid); Ref(deploy, "_oxygen", oxygen); Ref(deploy, "_factory", factory); Ref(deploy, "_ui", ui);
             Ref(factory, "_shadowSprite", Sprite(ArtEnv + "/unit_shadow.png")); Ref(factory, "_pixelSprite", Sprite(ArtEnv + "/pixel.png"));
+            Ref(factory, "_bossShadowSprite", Sprite(ArtEnv + "/boss_shadow_soft.png"));
 
             foreach (var kv in refs) if (kv.Value != null) Ref(ui, kv.Key, kv.Value);
             RefArray(ui, "_cards", cards.ToArray());
@@ -1127,7 +1538,9 @@ namespace ThermoTactics.EditorTools
             TxtAt("Eyebrow", sd.transform, "STAGE COMPLETE", BodyBold, 16, GoldLight, 40, 40, 860, 22, TextAnchor.MiddleCenter);
             refs["_stageTitle"] = TxtAt("Title", sd.transform, "BAGUIO FOREST CLEARED", Pixel, 44, Gold, 0, 64, 940, 56, TextAnchor.MiddleCenter);
             var thumbFrame = At(Img("ThumbFrame", sd.transform, Gold), 40, 140, 344, 230);
-            At(Img("Thumb", thumbFrame.transform, Color.white, Ui("stage1_thumb")), 4, 4, 336, 222).preserveAspect = false;
+            var stageThumb = At(Img("Thumb", thumbFrame.transform, Color.white, Ui("stage1_thumb")), 4, 4, 336, 222);
+            stageThumb.preserveAspect = false;
+            refs["_stageThumb"] = stageThumb;
             var lvlStars = new Image[3];
             TxtAt("BossLabel", sd.transform, "LEVEL 10 · BOSS", BodyBold, 13, CreamDim, 40, 384, 344, 18, TextAnchor.MiddleCenter);
             for (int s3 = 0; s3 < 3; s3++)
@@ -1194,6 +1607,63 @@ namespace ThermoTactics.EditorTools
             var card = frame.gameObject.AddComponent<DeployCard>();
             Ref(card, "_button", btn); Ref(card, "_icon", icon); Ref(card, "_frame", frame); Ref(card, "_cost", cost);
             return card;
+        }
+
+        // ---------------- side fill for wide screens ----------------
+        private static readonly Color SideFillTint = new Color(0.55f, 0.55f, 0.55f, 1f);
+        private const int SideFillBlur = 10;   // box-blur radius in pixels (two passes)
+
+        private static string SideFillPath(string background) => background.Replace(".png", "_sidefill.png");
+
+        /// <summary>Writes a blurred copy of a background next to it (used mirrored at the screen sides).
+        /// Rebuilt only when the background is newer than the copy.</summary>
+        private static void GenerateSideFill(string background)
+        {
+            string target = SideFillPath(background);
+            if (!File.Exists(background)) return;
+            if (File.Exists(target) && File.GetLastWriteTimeUtc(target) >= File.GetLastWriteTimeUtc(background)) return;
+
+            var src = new Texture2D(2, 2);
+            src.LoadImage(File.ReadAllBytes(background));
+            int w = src.width, h = src.height;
+            Color32[] px = src.GetPixels32();
+            Object.DestroyImmediate(src);
+            for (int pass = 0; pass < 2; pass++)
+            {
+                px = BoxBlur(px, w, h, SideFillBlur, true);
+                px = BoxBlur(px, w, h, SideFillBlur, false);
+            }
+            var outTex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            outTex.SetPixels32(px);
+            outTex.Apply();
+            File.WriteAllBytes(target, outTex.EncodeToPNG());
+            Object.DestroyImmediate(outTex);
+            AssetDatabase.ImportAsset(target);
+            Debug.Log("[Thermo-Tactics] Side fill written: " + target);
+        }
+
+        private static Color32[] BoxBlur(Color32[] src, int w, int h, int r, bool horizontal)
+        {
+            var dst = new Color32[src.Length];
+            int lines = horizontal ? h : w, len = horizontal ? w : h;
+            for (int line = 0; line < lines; line++)
+            {
+                int sr = 0, sg = 0, sb = 0, count = 0;
+                for (int k = -r; k <= r; k++)
+                {
+                    int i = Mathf.Clamp(k, 0, len - 1);
+                    Color32 c = src[horizontal ? line * w + i : i * w + line];
+                    sr += c.r; sg += c.g; sb += c.b; count++;
+                }
+                for (int i = 0; i < len; i++)
+                {
+                    dst[horizontal ? line * w + i : i * w + line] = new Color32((byte)(sr / count), (byte)(sg / count), (byte)(sb / count), 255);
+                    Color32 add = src[horizontal ? line * w + Mathf.Min(i + r + 1, len - 1) : Mathf.Min(i + r + 1, len - 1) * w + line];
+                    Color32 rem = src[horizontal ? line * w + Mathf.Max(i - r, 0) : Mathf.Max(i - r, 0) * w + line];
+                    sr += add.r - rem.r; sg += add.g - rem.g; sb += add.b - rem.b;
+                }
+            }
+            return dst;
         }
 
         // ---------------- general helpers ----------------

@@ -25,18 +25,24 @@ namespace ThermoTactics.EditorTools
         [MenuItem("Thermo-Tactics/Steps/3. Build Main Menu")]
         public static void BuildMenu()
         {
-            var stage = AssetDatabase.LoadAssetAtPath<StageData>(ThermoTacticsBuilder.StagePath);
-            if (stage == null) { Debug.LogError("[Thermo-Tactics] Run Build Everything first (no StageData)."); return; }
-            Build(stage);
+            if (AssetDatabase.LoadAssetAtPath<StageData>(ThermoTacticsBuilder.StagePath) == null) { Debug.LogError("[Thermo-Tactics] Run Build Everything first (no StageData)."); return; }
+            Build();
         }
 
-        public static void Build(StageData stage)
+        /// <summary>Builds the Main Menu with every built stage (ThermoTacticsBuilder.StagePaths, in order).</summary>
+        public static void Build()
         {
             ThermoTacticsBuilder.EnsureFolder(Root + "/Scenes");
             LoadFonts();
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            // Reload by path: the instance handed over while assets were being created can go stale.
-            stage = AssetDatabase.LoadAssetAtPath<StageData>(ThermoTacticsBuilder.StagePath);
+            // Load by path: the instances handed over while assets were being created can go stale.
+            var stages = new System.Collections.Generic.List<StageData>();
+            foreach (string path in ThermoTacticsBuilder.StagePaths)
+            {
+                var s = AssetDatabase.LoadAssetAtPath<StageData>(path);
+                if (s != null) stages.Add(s);
+            }
+            StageData stage = stages[0];
 
             var camGo = new GameObject("Main Camera", typeof(Camera));
             camGo.tag = "MainCamera";
@@ -50,11 +56,11 @@ namespace ThermoTactics.EditorTools
             Canvas canvas = NewCanvas("UI", 10);
             Transform c = canvas.transform;
             var menu = canvas.gameObject.AddComponent<MainMenuController>();
-            Ref(menu, "_stage", stage);
+            RefArray(menu, "_stages", stages.ToArray());
             Ref(menu, "_database", db);
 
             BuildTitle(c, menu);
-            var stageSelect = BuildStageSelect(c, stage);
+            var stageSelect = BuildStageSelect(c, stages);
             var levelSelect = BuildLevelSelect(c);
             var settings = BuildSettings(c, menu);
             var results = BuildResults(c);
@@ -73,6 +79,15 @@ namespace ThermoTactics.EditorTools
             Ref(menu, "_quiz", quiz);
             Ref(menu, "_store", store);
             Ref(menu, "_squad", squad);
+
+            // Save every pop-up hidden, so the scene opens on the title screen in the editor too
+            // (each panel hides itself at run time anyway).
+            foreach (Component panel in new Component[] { results, facts, quiz, store, squad }) if (panel != null) panel.gameObject.SetActive(false);
+            foreach (string dialog in new[] { "QuitDialog", "ConfirmDialog", "CreditsDialog", "SettingsDialog" })
+            {
+                Transform d = c.Find(dialog);
+                if (d != null) d.gameObject.SetActive(false);
+            }
 
             ThermoTacticsBuilder.NewEventSystem();
             EditorSceneManager.MarkSceneDirty(scene);
@@ -206,9 +221,9 @@ namespace ThermoTactics.EditorTools
             TxtAt("Privacy", form.transform, "Your name is stored only on this device with your results and progress. Not you? Type your own name to switch player.",
                 Body, 13, CreamDim, 28, 364, 384, 54);
 
-            // ---- Baguio progress on the title (levels cleared and stars) ----
+            // ---- Progress of the current stage on the title (levels cleared and stars) ----
             var prog = Box("StageProgress", f, new Color(0.067f, 0.094f, 0.078f, 0.92f), Moss, 776, 572, 440, 86, 0f, "ui_frame2");
-            TxtAt("Stage", prog.transform, "STAGE 1 · BAGUIO FOREST", BodyBold, 14, GoldLight, 16, 10, 260, 20, TextAnchor.MiddleLeft);
+            Ref(menu, "_progressTitle", TxtAt("Stage", prog.transform, "STAGE 1 · BAGUIO FOREST", BodyBold, 14, GoldLight, 16, 10, 300, 20, TextAnchor.MiddleLeft));
             Icon("StarIcon", prog.transform, "icon_star", Gold, 340, 9, 20);
             Ref(menu, "_progressStars", TxtAt("Stars", prog.transform, "0 / 30", BodyBold, 15, Cream, 364, 9, 64, 22, TextAnchor.MiddleLeft));
             var segs = new Image[10];
@@ -356,15 +371,16 @@ namespace ThermoTactics.EditorTools
         // =====================================================================
         // Stage Select (design board "Stage Select")
         // =====================================================================
-        private static readonly (string name, string desc, string diff, string thumb)[] LockedStages =
+        /// <summary>Cards for stages that are not built yet (Stages 3–5).</summary>
+        private static readonly (string name, string desc, string diff, string thumb)[] FutureStages =
         {
-            ("SIERRA MADRE & MANGROVE COAST", "Mangrove forests and river mouths", "Easy–Medium", "stage2_thumb"),
+            ("SIERRA MADRE COAST", "Typhoon coast, mangroves and coral reefs", "Easy–Medium", "stage2_thumb"),
             ("METRO MANILA URBAN", "Jeepneys, EDSA traffic, flooded esteros", "Medium", "stage3_thumb"),
             ("BATANGAS INDUSTRIAL ZONE", "Taal Volcano, refineries, coal plants", "Hard", "stage4_thumb"),
             ("BORACAY & PALAWAN FINAL STAND", "Coral reefs, limestone cliffs, island beaches", "Final", "stage5_thumb"),
         };
 
-        private static StageSelectPanel BuildStageSelect(Transform c, StageData stage)
+        private static StageSelectPanel BuildStageSelect(Transform c, System.Collections.Generic.List<StageData> stages)
         {
             var root = Img("StageSelect", c, Hex("#101814"), null, true); Stretch(root.rectTransform);
             var panel = root.gameObject.AddComponent<StageSelectPanel>();
@@ -387,56 +403,88 @@ namespace ThermoTactics.EditorTools
             for (float x = 140; x < 1140; x += 20) At(Img("Dash", f, Slate), x, 384, 12, 4);   // the dashed trail between cards
 
             const float W = 220, Gap = 21, Top = 140, H = 500;
-            // ---- Stage 1 (open) ----
-            At(Img("Stage1_Shadow", f, Color.black), 48 + 6, Top + 6, W, H);
-            var s1 = At(Img("Stage1", f, Hex("#142019"), null, true), 48, Top, W, H);
-            var b1 = s1.gameObject.AddComponent<Button>(); b1.targetGraphic = s1;
-            s1.gameObject.AddComponent<ButtonFx>();
-            Ref(panel, "_stage1Button", b1);
-            var th = At(Img("Thumb", s1.transform, Color.white, Ui("stage1_thumb")), 0, 0, W, 190);
-            At(Img("ThumbLine", s1.transform, Gold), 0, 190, W, 3);
-            var tag = At(Img("Tag", s1.transform, Gold), 10, 10, 84, 26);
-            var tagT = Txt("Text", tag.transform, "STAGE 1", BodyBold, 15, Ink, TextAnchor.MiddleCenter); Stretch(tagT.rectTransform);
-            TxtAt("Name", s1.transform, "BAGUIO FOREST", Pixel, 24, Cream, 16, 208, W - 32, 28, TextAnchor.MiddleLeft);
-            TxtAt("Region", s1.transform, stage.region, Body, 14, CreamDim, 16, 240, W - 32, 40);
-            TxtAt("Threat", s1.transform, "<color=#CFC6B2>Threat:</color> " + stage.threats, Body, 14, Cream, 16, 284, W - 32, 40);
-            TxtAt("Difficulty", s1.transform, "<color=#CFC6B2>Difficulty:</color> " + stage.difficulty, Body, 14, Cream, 16, 324, W - 32, 20);
-            Icon("StarIcon", s1.transform, "icon_star", Gold, 16, 354, 18);
-            TxtAt("StarsLabel", s1.transform, "Stars", BodyBold, 14, Cream, 40, 354, 80, 20, TextAnchor.MiddleLeft);
-            Ref(panel, "_stage1Stars", TxtAt("StarsCount", s1.transform, "0 / 30", BodyBold, 14, GoldLight, W - 116, 354, 100, 20, TextAnchor.MiddleRight));
-            TxtAt("LevelsLabel", s1.transform, "Levels", BodyBold, 14, Cream, 16, 384, 100, 20, TextAnchor.MiddleLeft);
-            Ref(panel, "_stage1Count", TxtAt("LevelsCount", s1.transform, "0 / 10", BodyBold, 14, Cream, W - 116, 384, 100, 20, TextAnchor.MiddleRight));
-            var bar = At(Img("Progress", s1.transform, Hex("#2A3A30")), 16, 410, W - 32, 10);
-            var fill = Img("Fill", bar.transform, Gold); Stretch(fill.rectTransform);
-            fill.type = Image.Type.Filled; fill.fillMethod = Image.FillMethod.Horizontal; fill.fillAmount = 0.3f;
-            Ref(panel, "_stage1Fill", fill);
-            var play = At(Img("Play", s1.transform, Red), 16, 430, W - 32, 46);
-            Border(play.transform, Ink);
-            var pt = Txt("Text", play.transform, "PLAY", Pixel, 20, Hex("#FFF6E6"), TextAnchor.MiddleCenter); Stretch(pt.rectTransform);
-            Border(s1.transform, Gold);
-
-            // ---- Stages 2–5 (locked) ----
-            var lockTexts = new Text[4];
-            for (int i = 0; i < 4; i++)
+            var so = new SerializedObject(panel);
+            var cards = so.FindProperty("_cards");
+            cards.arraySize = 5;
+            for (int i = 0; i < 5; i++)
             {
-                var info = LockedStages[i];
-                float x = 48 + (i + 1) * (W + Gap);
-                var card = At(Img($"Stage{i + 2}", f, Hex("#131A18")), x, Top, W, H);
-                At(Img("Thumb", card.transform, Color.white, Ui(info.thumb)), 0, 0, W, 190);
-                At(Img("ThumbDim", card.transform, new Color(0.04f, 0.055f, 0.047f, 0.45f)), 0, 0, W, 190);
-                Icon("Lock", card.transform, "icon_lock", Hex("#D8CFBC"), W / 2 - 22, 73, 44);
-                At(Img("ThumbLine", card.transform, Hex("#33423B")), 0, 190, W, 3);
-                var t = At(Img("Tag", card.transform, Hex("#33423B")), 10, 10, 84, 26);
-                var tt = Txt("Text", t.transform, $"STAGE {i + 2}", BodyBold, 15, Hex("#E7DFCC"), TextAnchor.MiddleCenter); Stretch(tt.rectTransform);
-                TxtAt("Name", card.transform, info.name, Pixel, 19, Hex("#E7DFCC"), 14, 204, W - 26, 66, TextAnchor.UpperLeft).lineSpacing = 0.92f;
-                TxtAt("Desc", card.transform, info.desc, Body, 14, Hex("#B8B0A0"), 16, 272, W - 32, 40);
-                TxtAt("Difficulty", card.transform, "Difficulty: " + info.diff, Body, 14, Hex("#B8B0A0"), 16, 314, W - 32, 20);
-                var box = At(Img("LockBox", card.transform, Clear), 16, 404, W - 32, 72);
-                Border(box.transform, Slate, "ui_frame_dashed");
-                lockTexts[i] = TxtAt("Text", box.transform, "Locked.", Body, 14, Hex("#B8B0A0"), 12, 8, W - 56, 58, TextAnchor.MiddleLeft);
-                Border(card.transform, Hex("#33423B"));
+                int id = i + 1;
+                StageData stage = stages.Find(s => s.stageId == id);
+                float x = 48 + i * (W + Gap);
+                var el = cards.GetArrayElementAtIndex(i);
+                el.FindPropertyRelative("stageId").intValue = id;
+                At(Img($"Stage{id}_Shadow", f, Color.black), x + 6, Top + 6, W, H);
+
+                if (stage != null)
+                {
+                    // ---- a built stage: open (PLAY) or locked until the stage before it is cleared ----
+                    var card = At(Img($"Stage{id}", f, Hex("#142019"), null, true), x, Top, W, H);
+                    var btn = card.gameObject.AddComponent<Button>(); btn.targetGraphic = card;
+                    card.gameObject.AddComponent<ButtonFx>();
+                    At(Img("Thumb", card.transform, Color.white, stage.thumbnail), 0, 0, W, 190);
+                    At(Img("ThumbLine", card.transform, Gold), 0, 190, W, 3);
+                    var tag = At(Img("Tag", card.transform, Gold), 10, 10, 84, 26);
+                    var tagT = Txt("Text", tag.transform, $"STAGE {id}", BodyBold, 15, Ink, TextAnchor.MiddleCenter); Stretch(tagT.rectTransform);
+                    // Long names ("SIERRA MADRE COAST") use a smaller size so they stay on one line.
+                    TxtAt("Name", card.transform, stage.stageName.ToUpperInvariant(), Pixel, stage.stageName.Length > 14 ? 17 : 24, Cream, 16, 208, W - 32, 28, TextAnchor.MiddleLeft);
+                    TxtAt("Region", card.transform, stage.region, Body, 14, CreamDim, 16, 240, W - 32, 40);
+                    TxtAt("Threat", card.transform, "<color=#CFC6B2>Threat:</color> " + stage.threats, Body, 14, Cream, 16, 284, W - 32, 40);
+                    TxtAt("Difficulty", card.transform, "<color=#CFC6B2>Difficulty:</color> " + stage.difficulty, Body, 14, Cream, 16, 324, W - 32, 20);
+                    Icon("StarIcon", card.transform, "icon_star", Gold, 16, 354, 18);
+                    TxtAt("StarsLabel", card.transform, "Stars", BodyBold, 14, Cream, 40, 354, 80, 20, TextAnchor.MiddleLeft);
+                    var stars = TxtAt("StarsCount", card.transform, "0 / 30", BodyBold, 14, GoldLight, W - 116, 354, 100, 20, TextAnchor.MiddleRight);
+                    TxtAt("LevelsLabel", card.transform, "Levels", BodyBold, 14, Cream, 16, 384, 100, 20, TextAnchor.MiddleLeft);
+                    var count = TxtAt("LevelsCount", card.transform, "0 / 10", BodyBold, 14, Cream, W - 116, 384, 100, 20, TextAnchor.MiddleRight);
+                    var bar = At(Img("Progress", card.transform, Hex("#2A3A30")), 16, 410, W - 32, 10);
+                    var fill = Img("Fill", bar.transform, Gold); Stretch(fill.rectTransform);
+                    fill.type = Image.Type.Filled; fill.fillMethod = Image.FillMethod.Horizontal; fill.fillAmount = 0f;
+
+                    var open = NewRect("Open", card.transform); Stretch(open);
+                    var play = At(Img("Play", open, Red), 16, 430, W - 32, 46);
+                    Border(play.transform, Ink);
+                    var pt = Txt("Text", play.transform, "PLAY", Pixel, 20, Hex("#FFF6E6"), TextAnchor.MiddleCenter); Stretch(pt.rectTransform);
+
+                    var locked = NewRect("Locked", card.transform); Stretch(locked);
+                    At(Img("ThumbDim", locked, new Color(0.04f, 0.055f, 0.047f, 0.55f)), 0, 0, W, 190);
+                    Icon("Lock", locked, "icon_lock", Hex("#D8CFBC"), W / 2 - 22, 73, 44);
+                    var box = At(Img("LockBox", locked, Hex("#131A18")), 16, 430, W - 32, 58);
+                    Border(box.transform, Slate, "ui_frame_dashed");
+                    var lockText = TxtAt("Text", box.transform, "Locked.", Body, 13, Hex("#B8B0A0"), 10, 4, W - 52, 50, TextAnchor.MiddleLeft);
+                    var border = Border(card.transform, Gold);
+
+                    el.FindPropertyRelative("button").objectReferenceValue = btn;
+                    el.FindPropertyRelative("count").objectReferenceValue = count;
+                    el.FindPropertyRelative("fill").objectReferenceValue = fill;
+                    el.FindPropertyRelative("stars").objectReferenceValue = stars;
+                    el.FindPropertyRelative("openGroup").objectReferenceValue = open.gameObject;
+                    el.FindPropertyRelative("lockedGroup").objectReferenceValue = locked.gameObject;
+                    el.FindPropertyRelative("lockedText").objectReferenceValue = lockText;
+                    el.FindPropertyRelative("border").objectReferenceValue = border;
+                    el.FindPropertyRelative("tag").objectReferenceValue = tag;
+                    el.FindPropertyRelative("tagText").objectReferenceValue = tagT;
+                }
+                else
+                {
+                    // ---- a stage that is not built yet: always locked ----
+                    var info = FutureStages[i - 1];
+                    var card = At(Img($"Stage{id}", f, Hex("#131A18")), x, Top, W, H);
+                    At(Img("Thumb", card.transform, Color.white, Ui(info.thumb)), 0, 0, W, 190);
+                    At(Img("ThumbDim", card.transform, new Color(0.04f, 0.055f, 0.047f, 0.45f)), 0, 0, W, 190);
+                    Icon("Lock", card.transform, "icon_lock", Hex("#D8CFBC"), W / 2 - 22, 73, 44);
+                    At(Img("ThumbLine", card.transform, Hex("#33423B")), 0, 190, W, 3);
+                    var t = At(Img("Tag", card.transform, Hex("#33423B")), 10, 10, 84, 26);
+                    var tt = Txt("Text", t.transform, $"STAGE {id}", BodyBold, 15, Hex("#E7DFCC"), TextAnchor.MiddleCenter); Stretch(tt.rectTransform);
+                    TxtAt("Name", card.transform, info.name, Pixel, 19, Hex("#E7DFCC"), 14, 204, W - 26, 66, TextAnchor.UpperLeft).lineSpacing = 0.92f;
+                    TxtAt("Desc", card.transform, info.desc, Body, 14, Hex("#B8B0A0"), 16, 272, W - 32, 40);
+                    TxtAt("Difficulty", card.transform, "Difficulty: " + info.diff, Body, 14, Hex("#B8B0A0"), 16, 314, W - 32, 20);
+                    var box = At(Img("LockBox", card.transform, Clear), 16, 404, W - 32, 72);
+                    Border(box.transform, Slate, "ui_frame_dashed");
+                    el.FindPropertyRelative("lockedText").objectReferenceValue =
+                        TxtAt("Text", box.transform, "Locked.", Body, 14, Hex("#B8B0A0"), 12, 8, W - 56, 58, TextAnchor.MiddleLeft);
+                    Border(card.transform, Hex("#33423B"));
+                }
             }
-            RefArray(panel, "_lockedTexts", lockTexts);
+            so.ApplyModifiedPropertiesWithoutUndo();
             root.gameObject.SetActive(false);
             return panel;
         }
@@ -452,7 +500,7 @@ namespace ThermoTactics.EditorTools
             WeaveEdge(root.transform, true); WeaveEdge(root.transform, false);
             var f = Frame("Frame", root.transform);
             AddPanelFx(root.gameObject, f);
-            At(Img("PathArt", f, Color.white, Ui("levelpath_background")), 0, 20, 820, 680);
+            Ref(panel, "_pathArt", At(Img("PathArt", f, Color.white, Ui("levelpath_background")), 0, 20, 820, 680));
 
             // gold progress over the grey road: one segment between each pair of nodes
             var segs = new Image[NodePos.Length - 1];
@@ -545,11 +593,12 @@ namespace ThermoTactics.EditorTools
             }
             RefArray(panel, "_enemySlots", slots); RefArray(panel, "_enemyIcons", icons); RefArray(panel, "_enemyRings", rings); RefArray(panel, "_enemyNames", names);
 
-            var note = At(Img("Note", d.transform, new Color(0.886f, 0.682f, 0.173f, 0.08f)), 22, 400, 376, 84);
+            var note = At(Img("Note", d.transform, new Color(0.953f, 0.918f, 0.843f, 0.07f)), 22, 400, 376, 76);   // light tint that suits every stage palette
             Border(note.transform, Hex("#3E3A28"), "ui_frame2");
-            Ref(panel, "_note", TxtAt("Text", note.transform, "", Body, 14, Cream, 12, 8, 352, 70));
-            Ref(panel, "_squad", TxtAt("Squad", d.transform, "Squad for this level: 5 unit types in the deploy bar", Body, 13, CreamDim, 22, 494, 376, 18));
-            Ref(panel, "_saveNote", TxtAt("SaveNote", d.transform, "", BodyBold, 13, GoldLight, 22, 516, 376, 18));
+            Ref(panel, "_note", TxtAt("Text", note.transform, "", Body, 14, Cream, 12, 6, 352, 64));
+            // Two lines for the squad (five unit names), then the saved-game line, both clear of the PLAY button.
+            Ref(panel, "_squad", TxtAt("Squad", d.transform, "Squad for this level: 5 unit types in the deploy bar", Body, 13, CreamDim, 22, 482, 376, 36));
+            Ref(panel, "_saveNote", TxtAt("SaveNote", d.transform, "", BodyBold, 13, GoldLight, 22, 522, 376, 18));
 
             var play = Btn("PlayButton", d.transform, "PLAY", Red, Hex("#FFF6E6"), Ink, 22, 558, 376, 56, 24);
             Ref(panel, "_playButton", play);

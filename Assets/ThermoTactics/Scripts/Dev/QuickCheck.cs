@@ -54,7 +54,7 @@ namespace ThermoTactics.Dev
             // 1. Main Menu with some progress (Levels 1–4 cleared with 3, 2, 1, 3 stars).
             yield return Load(GameSession.MenuScene);
             var menu = FindFirstObjectByType<MainMenuController>();
-            StageData stage = menu.Stage;
+            StageData stage = menu.FirstStage;   // the check covers Baguio (Stage 1), whatever the player opened before
             var db = menu.Database;
             db.ResetProgress(Player);
             int[] stars = { 3, 2, 1, 3 };
@@ -71,7 +71,7 @@ namespace ThermoTactics.Dev
             menu.ShowTitle(); FindFirstObjectByType<SettingsPanel>(FindObjectsInactive.Include).Open(); yield return Hold(0.8f); yield return Shot("04_settings_lane_camera");
             FindFirstObjectByType<SettingsPanel>(FindObjectsInactive.Include).Close();
 
-            // 1b. Pre-quiz on the first entry into Baguio (2 of 5 right), then the level path.
+            // 1b. Pre-quiz on the first entry into Baguio (2 of 6 right), then the level path.
             db.DevClearEducation(Player);
             SettingsStore.PopupsEnabled = true;
             menu.ShowStageSelect(); yield return Hold(0.5f);
@@ -82,7 +82,7 @@ namespace ThermoTactics.Dev
             quiz.DevSubmit(PartlyRight(stage.quiz.preQuestions, 2)); yield return Hold(0.6f); yield return Shot("06_pre_quiz_result");
             quiz.DevContinue(); yield return Hold(0.6f);
             Check("Level path after the pre-quiz", Active("LevelSelect"));
-            Check("Pre-quiz saved (2 / 5)", db.GetQuiz(Player, stage.stageId, QuizManager.Pre)?.Score == 2);
+            Check("Pre-quiz saved (2 / 6)", db.GetQuiz(Player, stage.stageId, QuizManager.Pre)?.Score == 2);
             menu.ShowStageSelect(); menu.EnterStage(); yield return Hold(0.4f);
             Check("No pre-quiz on the second entry", !quiz.IsOpen);
 
@@ -144,16 +144,17 @@ namespace ThermoTactics.Dev
             yield return Play(10, true, w => won = w);
             Check("Boss defeated, Level 10 won", won);
 
-            // Post-quiz (Q6–Q10), all right: 2 / 5 → 5 / 5 = +150%. Pre had Q1 (climate) and Q2 (forests) right, so
-            // climate 1/3 → 1/1 and game 0/1 → 2/2 improve; forests 1/1 → 2/2 stays at 100%.
+            // Post-quiz, all right: 6 pairs + 2 game checks. Pre had pairs 1–2 right, so 2 / 6 → 6 / 6 gives a normalized
+            // gain of (6 − 2) / (6 − 2) = 1.00; concepts 3–6 improve; the game check row is reported apart, not scored.
             yield return Hold(0.8f);
             quiz = FindFirstObjectByType<QuizPanel>(FindObjectsInactive.Include);
             Check("Post-quiz shown before Stage Complete", quiz.IsOpen && !Active("StageCompletePanel"));
             yield return Shot("20_post_quiz");
             quiz.DevSubmit(); yield return Hold(0.8f); yield return Shot("21_post_quiz_compare");
             QuizOutcome post = QuizManager.LoadPost(db, Player, stage);
-            Check("Post-quiz compared with the pre-quiz (gain +150%, 2 of 3 topics improved)",
-                post != null && post.Gain.HasValue && Mathf.Approximately(post.Gain.Value, 150f) && post.ImprovedCount == 2 && post.Topics.Length == 3);
+            Check("Post-quiz compared with the pre-quiz (6 / 6, gain 1.00, 4 of 6 concepts improved, game check apart)",
+                post != null && post.KeptScore == 6 && post.MaxScore == 6 && post.Gain.HasValue && Mathf.Approximately(post.Gain.Value, 1f) &&
+                post.ImprovedCount == 4 && post.Topics.Length == 7 && System.Array.Exists(post.Topics, t => !t.Scored && t.PostCorrect == 2));
             if (post != null)
                 foreach (TopicResult t in post.Topics)
                     Line($"  {t.TopicName}: pre {t.PreCorrect}/{t.PreTotal} → post {t.PostCorrect}/{t.PostTotal}{(t.Improved ? " · improved" : "")}");

@@ -39,7 +39,7 @@ namespace ThermoTactics.EditorTools
             var q = NewRect("QuestionPage", d.transform);
             At(q, 0, 140, 900, 480);
             Ref(panel, "_questionPage", q.gameObject);
-            Ref(panel, "_eyebrow", TxtAt("Eyebrow", q, "QUESTION 1 OF 5", BodyBold, 14, GoldLight, 36, 0, 828, 20, TextAnchor.MiddleLeft));
+            Ref(panel, "_eyebrow", TxtAt("Eyebrow", q, "QUESTION 1 OF 6", BodyBold, 14, GoldLight, 36, 0, 828, 20, TextAnchor.MiddleLeft));
             Ref(panel, "_question", TxtAt("Question", q, "", BodyBold, 22, Cream, 36, 26, 828, 84));
             var choices = new Button[QuizData.ChoiceCount];
             var labels = new Text[QuizData.ChoiceCount];
@@ -55,14 +55,14 @@ namespace ThermoTactics.EditorTools
             RefArray(panel, "_choices", choices);
             RefArray(panel, "_choiceLabels", labels);
             RefArray(panel, "_choiceLetters", letters);
-            var dots = new Image[QuizData.QuestionCount];
+            var dots = new Image[QuizData.MaxQuestions];
             for (int i = 0; i < dots.Length; i++)
             {
                 dots[i] = At(Img($"Dot_{i + 1}", q, Line), 36 + i * 24, 374, 14, 14);
                 Border(dots[i].transform, Ink, "ui_frame2");
             }
             RefArray(panel, "_dots", dots);
-            Ref(panel, "_message", TxtAt("Message", q, "", BodyBold, 14, Hex("#FF9A86"), 200, 370, 460, 22, TextAnchor.MiddleLeft));
+            Ref(panel, "_message", TxtAt("Message", q, "", BodyBold, 14, Hex("#FF9A86"), 250, 370, 420, 22, TextAnchor.MiddleLeft));
             Ref(panel, "_backButton", Btn("BackButton", q, "BACK", Clear, Cream, Slate, 36, 410, 180, 52, 20, 0f));
             var next = Btn("NextButton", q, "NEXT", Gold, Ink, Ink, 684, 410, 180, 52, 22);
             Ref(panel, "_nextButton", next);
@@ -73,25 +73,26 @@ namespace ThermoTactics.EditorTools
             At(r, 0, 140, 900, 480);
             Ref(panel, "_resultPage", r.gameObject);
             Ref(panel, "_resultScore", TxtAt("Score", r, "Pre-quiz: 3 / 5", Pixel, 36, Gold, 36, 0, 828, 44, TextAnchor.MiddleLeft));
-            Ref(panel, "_resultBody", TxtAt("Body", r, "", Body, 16, Cream, 36, 50, 828, 60));
+            Ref(panel, "_resultBody", TxtAt("Body", r, "", Body, 15, Cream, 36, 48, 828, 50));
 
+            // Up to 6 concepts + the game check row: 7 rows of 31 px under a 30 px header.
             var table = NewRect("CompareTable", r);
-            At(table, 36, 116, 828, 252);
+            At(table, 36, 104, 828, 34 + QuizData.MaxTopics * 31);
             Ref(panel, "_compareTable", table.gameObject);
-            var header = At(Img("Header", table, Moss), 0, 0, 828, 36);
-            Columns(header.transform, "TOPIC", "BEFORE", "AFTER", "RESULT", BodyBold, 14, Cream);
-            var topic = new Text[QuizData.QuestionCount]; var before = new Text[QuizData.QuestionCount];
-            var after = new Text[QuizData.QuestionCount]; var status = new Text[QuizData.QuestionCount];
-            for (int i = 0; i < QuizData.QuestionCount; i++)
+            var header = At(Img("Header", table, Moss), 0, 0, 828, 30);
+            Columns(header.transform, "CONCEPT", "BEFORE", "AFTER", "RESULT", BodyBold, 13, Cream);
+            var topic = new Text[QuizData.MaxTopics]; var before = new Text[QuizData.MaxTopics];
+            var after = new Text[QuizData.MaxTopics]; var status = new Text[QuizData.MaxTopics];
+            for (int i = 0; i < QuizData.MaxTopics; i++)
             {
-                var row = At(Img($"Row_{i + 1}", table, new Color(1f, 1f, 1f, i % 2 == 0 ? 0.05f : 0.02f)), 0, 40 + i * 42, 828, 38);
-                Text[] cols = Columns(row.transform, "-", "-", "-", "-", Body, 15, Cream);
+                var row = At(Img($"Row_{i + 1}", table, new Color(1f, 1f, 1f, i % 2 == 0 ? 0.05f : 0.02f)), 0, 34 + i * 31, 828, 29);
+                Text[] cols = Columns(row.transform, "-", "-", "-", "-", Body, 14, Cream);
                 cols[0].font = BodyBold;
                 topic[i] = cols[0]; before[i] = cols[1]; after[i] = cols[2]; status[i] = cols[3];
             }
             RefArray(panel, "_rowTopic", topic); RefArray(panel, "_rowBefore", before);
             RefArray(panel, "_rowAfter", after); RefArray(panel, "_rowStatus", status);
-            Ref(panel, "_gain", TxtAt("Gain", r, "", BodyBold, 18, GoldLight, 36, 376, 600, 26, TextAnchor.MiddleLeft));
+            Ref(panel, "_gain", TxtAt("Gain", r, "", BodyBold, 18, GoldLight, 36, 368, 620, 30, TextAnchor.MiddleLeft));
             Ref(panel, "_continueButton", Btn("ContinueButton", r, "CONTINUE", Gold, Ink, Ink, 664, 410, 200, 52, 22));
             r.gameObject.SetActive(false);
             // The root stays active in the scene: QuizPanel.Awake hides it on load (like the Results panel).
