@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Coast_R01
+  m_EditorClassIdentifier: 
+  factId: S2_R01
+  stageId: 2
+  topicId: recap
+  title: 'Recap: the typhoon coast'
+  body: Most typhoons form over the warm Pacific and head west, so Luzon's eastern
+    coast is often hit first. Healthy mangroves along that coast slow the waves and
+    lower the storm surge.
+  icon: {fileID: 0}
+  levelNumber: 7
+  trigger: 1
+  waveNumber: 1

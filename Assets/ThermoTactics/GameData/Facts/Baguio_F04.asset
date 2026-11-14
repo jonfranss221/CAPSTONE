@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   factId: S1_F04
   stageId: 1
-  topicId: climate
+  topicId: target
   title: "The 1.5 \xB0C target"
-  body: "Under the Paris Agreement, countries aim to limit global warming to 1.5
-    \xB0C above pre-industrial levels. Beyond that, impacts such as stronger typhoons,
-    floods and heat waves become far more severe. The temperature bar in this game
-    tracks that limit."
+  body: "Under the Paris Agreement, countries aim to keep global warming within 1.5
+    \xB0C of pre-industrial times, before the late 1800s. The number is the long-term
+    rise of the whole Earth's average temperature, not one hot day or one place.
+    The temperature bar in this game tracks that limit."
   icon: {fileID: 0}
   levelNumber: 3
   trigger: 0

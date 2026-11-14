@@ -45,6 +45,10 @@ MonoBehaviour:
   enragedSlamEvery: 2
   enrageAtFraction: 0.4
   cleaveRadius: 1
+  cleaveName: CLEAVE
+  slamName: LANDSLIDE SLAM
+  forestShieldPerAlly: 0
+  forestShieldMax: 0
   boardAnchor: {x: 4.5, y: 3}
   worldScale: 1.25
   description: 'Stage 1 boss: felled pine logs, landslide mud and stone, with a chainsaw

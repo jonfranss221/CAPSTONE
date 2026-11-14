@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Baguio_R01
+  m_EditorClassIdentifier: 
+  factId: S1_R01
+  stageId: 1
+  topicId: recap
+  title: 'Recap: heat and forests'
+  body: Burning fossil fuels and clearing forests add the heat-trapping gases behind
+    today's warming. Standing forests keep carbon locked in their wood and soil;
+    cutting and burning them sends it back into the air.
+  icon: {fileID: 0}
+  levelNumber: 7
+  trigger: 1
+  waveNumber: 1

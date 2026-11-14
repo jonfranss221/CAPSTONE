@@ -17,19 +17,21 @@ MonoBehaviour:
   faction: 1
   isElite: 0
   opCost: 0
-  maxHp: 450
-  damage: 10
+  maxHp: 340
+  damage: 5
   speed: 8
   category: 6
   isHover: 1
   trait: 30
-  traitValue: 2
-  traitText: 'Storm Surge: hits 2 random lanes each turn and every lane every 3rd
-    turn; Mangrove Guardian and Sea Turtle Guardian take half damage.'
+  traitValue: 3
+  traitText: "Storm Band hits 3 neighbouring lanes and moves one lane each turn;
+    Storm Surge hits all 6 lanes every 3rd turn, 1 less for each Forest ally (max
+    \u22123). Below 40% HP: Super Typhoon. Mangrove Guardian and Sea Turtle Guardian
+    take half damage."
   isStarter: 0
   tier: 0
   priceCredits: 0
-  unlockStage: 5
+  unlockStage: 2
   card: {fileID: 21300000, guid: a4537bcbbf096a04a80eaeacd04c16e7, type: 3}
   idlePose: {fileID: 21300000, guid: e2fa65025b942724eaae2dfab8cd394d, type: 3}
   animator: {fileID: 9100000, guid: 8b5f891875dd25142a8ffebc7837ca47, type: 2}
@@ -37,17 +39,21 @@ MonoBehaviour:
   hitDelay: 0.42857143
   attackDuration: 0.85714287
   pattern: 2
-  specialLanes: 2
+  specialLanes: 3
   halfDamageTo:
   - {fileID: 11400000, guid: d07420e94e36cf945a3070da84b6a99f, type: 2}
   - {fileID: 11400000, guid: a37b52527129e8b45b52079b81ffbb2e, type: 2}
-  enragedCleaveDamage: 12
-  slamDamage: 10
+  enragedCleaveDamage: 7
+  slamDamage: 8
   slamEvery: 3
   enragedSlamEvery: 2
   enrageAtFraction: 0.4
   cleaveRadius: 0
+  cleaveName: STORM BAND
+  slamName: STORM SURGE
+  forestShieldPerAlly: 1
+  forestShieldMax: 3
   boardAnchor: {x: 4.5, y: 3}
   worldScale: 2.1
-  description: 'Final boss: a super typhoon made stronger by warmer seas. Mangroves
-    and sea turtles stand up to its storm surge.'
+  description: 'Stage 2 boss: a super typhoon fed by warmer seas. The Sierra Madre
+    forest weakens its surge; mangroves and sea turtles stand up to it.'

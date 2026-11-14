@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Coast_F01
+  m_EditorClassIdentifier: 
+  factId: S2_F01
+  stageId: 2
+  topicId: game
+  title: A new coast, the same rule
+  body: "The Pacific coast of Aurora and Isabela faces the open ocean. Here the enemies
+    stand for coal and diesel smoke and polluted runoff. An undefended lane still
+    adds +0.10 \xB0C."
+  icon: {fileID: 0}
+  levelNumber: 1
+  trigger: 0
+  waveNumber: 1

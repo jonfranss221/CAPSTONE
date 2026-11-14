@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db51ff0f90298bc408ae1fa7eee8ed4e, type: 3}
+  m_Name: Coast_Level7
+  m_EditorClassIdentifier: 
+  levelName: "Stage 2 \xB7 Sierra Madre Coast \u2014 Casapsapan Beach"
+  stageId: 2
+  levelNumber: 7
+  locationName: Casapsapan Beach
+  pathCaption: Casapsapan
+  subtitle: White sand of Casiguran
+  note: Deforestation Beasts come down to the coast with drones overhead.
+  threat: 7
+  isEliteSpike: 0
+  isBossLevel: 0
+  startingTemperature: 1
+  lossThreshold: 1.5
+  heatPerUndefendedHit: 0.1
+  coolingPerEmptyLaneAttack: 0.05
+  opPenaltyByTurn: 000000000000000001000000020000000400000008000000
+  allyRoster:
+  - {fileID: 11400000, guid: d07420e94e36cf945a3070da84b6a99f, type: 2}
+  - {fileID: 11400000, guid: 01bf9aa96ff063e4f8abe59701e37041, type: 2}
+  - {fileID: 11400000, guid: b893954e3ef0aec4a87f762a80e4b363, type: 2}
+  - {fileID: 11400000, guid: 108d88f5195330140aa2174262348b44, type: 2}
+  - {fileID: 11400000, guid: dd27d304e2f554d45817b81a4f00b7d8, type: 2}
+  waves:
+  - {fileID: 11400000, guid: ac77c589f458587439a219a7c2f1ae72, type: 2}
+  - {fileID: 11400000, guid: 49625b2866f2d544a994ae80a0e318d9, type: 2}
+  - {fileID: 11400000, guid: 3fe96dd6dca1496489407199755e642e, type: 2}
+  enemyHpScale: 0.95

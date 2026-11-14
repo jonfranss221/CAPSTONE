@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   factId: S1_F08
   stageId: 1
-  topicId: climate
+  topicId: risk
   title: Why it matters here
-  body: "The Philippines is one of the countries most at risk from climate change,
-    facing stronger typhoons, floods, rising seas and heat waves. Keeping warming
-    below 1.5 \xB0C protects Filipino communities."
+  body: "The Philippines is one of the countries most at risk from a warming planet:
+    stronger typhoons, heavier floods, rising seas along its long coastline and more
+    dangerous heat waves. Keeping warming below 1.5 \xB0C protects Filipino communities."
   icon: {fileID: 0}
-  levelNumber: 8
+  levelNumber: 6
   trigger: 0
   waveNumber: 1

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db51ff0f90298bc408ae1fa7eee8ed4e, type: 3}
+  m_Name: Coast_Level5
+  m_EditorClassIdentifier: 
+  levelName: "Stage 2 \xB7 Sierra Madre Coast \u2014 Dinadiawan Beach"
+  stageId: 2
+  levelNumber: 5
+  locationName: Dinadiawan Beach
+  pathCaption: Dinadiawan
+  subtitle: The long beach of Dipaculao
+  note: Difficulty spike. Elite Coal Brutes, elite drones and a 4th wave.
+  threat: 8
+  isEliteSpike: 1
+  isBossLevel: 0
+  startingTemperature: 1
+  lossThreshold: 1.5
+  heatPerUndefendedHit: 0.1
+  coolingPerEmptyLaneAttack: 0.05
+  opPenaltyByTurn: 000000000000000001000000020000000400000008000000
+  allyRoster:
+  - {fileID: 11400000, guid: d07420e94e36cf945a3070da84b6a99f, type: 2}
+  - {fileID: 11400000, guid: 01bf9aa96ff063e4f8abe59701e37041, type: 2}
+  - {fileID: 11400000, guid: b893954e3ef0aec4a87f762a80e4b363, type: 2}
+  - {fileID: 11400000, guid: 108d88f5195330140aa2174262348b44, type: 2}
+  - {fileID: 11400000, guid: dd27d304e2f554d45817b81a4f00b7d8, type: 2}
+  waves:
+  - {fileID: 11400000, guid: 1479336a15e85244191c899de856d9ab, type: 2}
+  - {fileID: 11400000, guid: 502080546a0c61b4aba26e1d47af7e2e, type: 2}
+  - {fileID: 11400000, guid: 278d1c0f335c72d40b35c99e814927c1, type: 2}
+  - {fileID: 11400000, guid: da510f5a3c88e724884f4972f7a9cb43, type: 2}
+  enemyHpScale: 0.95

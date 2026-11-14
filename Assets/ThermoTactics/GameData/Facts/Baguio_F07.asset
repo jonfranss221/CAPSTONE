@@ -14,12 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   factId: S1_F07
   stageId: 1
-  topicId: climate
+  topicId: geothermal
   title: Clean power from the ground
-  body: The Philippines is one of the world's largest producers of geothermal energy,
-    a renewable source that uses the Earth's natural heat. Unlike coal, diesel or
-    gasoline, it releases very little CO2.
+  body: The Philippines is one of the world's largest producers of geothermal energy.
+    Geothermal plants make electricity from the Earth's natural underground heat
+    instead of burning fuel, so unlike coal, diesel or gas they release very little
+    CO2.
   icon: {fileID: 0}
-  levelNumber: 7
+  levelNumber: 5
   trigger: 0
   waveNumber: 1

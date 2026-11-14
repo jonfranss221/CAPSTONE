@@ -14,12 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   factId: S1_F06
   stageId: 1
-  topicId: forests
+  topicId: wildlife
   title: Homes for wildlife
-  body: 'Forests shelter wildlife such as the Philippine Eagle, which lives in the
-    forests of Mindanao and the Sierra Madre. Protecting a forest protects its animals
-    and keeps its carbon stored: one action helps wildlife and the climate.'
+  body: Old forests shelter wildlife such as the Philippine Eagle, which needs large
+    stands of forest in Mindanao and the Sierra Madre. Losing that forest takes away
+    the animals' home and releases its stored carbon, and newly planted trees take
+    decades to replace either.
   icon: {fileID: 0}
-  levelNumber: 6
+  levelNumber: 4
   trigger: 0
   waveNumber: 1

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Coast_R02
+  m_EditorClassIdentifier: 
+  factId: S2_R02
+  stageId: 2
+  topicId: recap
+  title: 'Recap: warm seas and blue carbon'
+  body: Warmer seas give typhoons more energy, so they grow stronger. Mangroves and
+    seagrass store blue carbon in their mud, which escapes as CO2 when they are cleared.
+  icon: {fileID: 0}
+  levelNumber: 8
+  trigger: 1
+  waveNumber: 1

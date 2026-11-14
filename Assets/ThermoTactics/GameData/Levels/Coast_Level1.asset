@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db51ff0f90298bc408ae1fa7eee8ed4e, type: 3}
+  m_Name: Coast_Level1
+  m_EditorClassIdentifier: 
+  levelName: "Stage 2 \xB7 Sierra Madre Coast \u2014 Sabang Beach"
+  stageId: 2
+  levelNumber: 1
+  locationName: Sabang Beach
+  pathCaption: Sabang
+  subtitle: The surfing beach of Baler
+  note: 'New enemy: Toxic Runoff. Its hit poisons for 2 turns and deals +2 to Ocean
+    allies. A Seagrass Healer cures Poison.'
+  threat: 3
+  isEliteSpike: 0
+  isBossLevel: 0
+  startingTemperature: 1
+  lossThreshold: 1.5
+  heatPerUndefendedHit: 0.1
+  coolingPerEmptyLaneAttack: 0.05
+  opPenaltyByTurn: 000000000000000001000000020000000400000008000000
+  allyRoster:
+  - {fileID: 11400000, guid: d07420e94e36cf945a3070da84b6a99f, type: 2}
+  - {fileID: 11400000, guid: 01bf9aa96ff063e4f8abe59701e37041, type: 2}
+  - {fileID: 11400000, guid: b893954e3ef0aec4a87f762a80e4b363, type: 2}
+  - {fileID: 11400000, guid: 108d88f5195330140aa2174262348b44, type: 2}
+  - {fileID: 11400000, guid: dd27d304e2f554d45817b81a4f00b7d8, type: 2}
+  waves:
+  - {fileID: 11400000, guid: e9755c32b7cb8a5458556b4a5fe5098f, type: 2}
+  - {fileID: 11400000, guid: 05e2f806459350546b2a97fcf5632173, type: 2}
+  - {fileID: 11400000, guid: c58fe3c3bf1832642b9b9fdfca8459ed, type: 2}
+  enemyHpScale: 0.8

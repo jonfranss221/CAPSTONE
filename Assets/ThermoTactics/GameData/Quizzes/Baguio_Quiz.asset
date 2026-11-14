@@ -15,111 +15,174 @@ MonoBehaviour:
   quizId: Q1
   stageId: 1
   topics:
-  - id: climate
-    name: Climate basics
-  - id: forests
+  - id: warming
+    name: Cause of warming
+  - id: sinks
     name: Forests & carbon
+  - id: target
+    name: "The 1.5 \xB0C target"
+  - id: wildlife
+    name: Forests & wildlife
+  - id: geothermal
+    name: Clean energy
+  - id: risk
+    name: Risk to the Philippines
   - id: game
-    name: Game & real world
+    name: Game check
   preQuestions:
-  - questionId: S1_PRE_Q1
-    topicId: climate
-    text: "What does the \"1.5\xB0C target\" in the Paris Agreement actually mean?"
+  - questionId: S1_PRE_1
+    topicId: warming
+    text: Global temperatures have risen over the past 150 years. What is the main
+      cause?
     choices:
-    - The maximum temperature a human body can survive
-    - The limit for global warming above pre-industrial levels before climate impacts
-      become severe
-    - The average temperature of the Philippines during summer
-    - The temperature at which forests stop growing
-    correctIndex: 1
-  - questionId: S1_PRE_Q2
-    topicId: forests
-    text: Baguio is famous for its cool climate and pine forests. What role do forests
-      like these play in fighting climate change?
-    choices:
-    - They make the air colder by releasing ice particles
-    - They absorb carbon dioxide (CO2) from the atmosphere and store it
-    - They reflect sunlight back into space permanently
-    - They increase rainfall only in mountainous areas
-    correctIndex: 1
-  - questionId: S1_PRE_Q3
-    topicId: game
-    text: "In Thermo-Tactics, the temperature bar starts at 1.0\xB0C. What happens
-      if it reaches 1.5\xB0C?"
-    choices:
-    - The player earns bonus Oxygen Points
-    - The game pauses automatically
-    - The player loses the game
-    - The enemies retreat
+    - Natural changes in the amount of energy from the Sun
+    - The hole in the ozone layer letting in more of the Sun's heat
+    - Greenhouse gases released by burning fossil fuels and clearing forests
+    - Heat and ash released by volcanic eruptions
     correctIndex: 2
-  - questionId: S1_PRE_Q4
-    topicId: climate
-    text: Which of the following is a renewable energy source commonly used in the
-      Philippines?
+    scored: 1
+  - questionId: S1_PRE_2
+    topicId: sinks
+    text: The pine forests around Baguio are called "carbon sinks." What does that
+      mean?
     choices:
-    - Coal
-    - Diesel
-    - Geothermal energy
-    - Gasoline
-    correctIndex: 2
-  - questionId: S1_PRE_Q5
-    topicId: climate
-    text: "Why is keeping global warming below 1.5\xB0C important for countries like
-      the Philippines?"
-    choices:
-    - It guarantees no typhoons will ever occur
-    - The Philippines is highly vulnerable to climate impacts like stronger typhoons,
-      floods, and heat waves
-    - It only matters for cold countries
-    - It has no effect on island nations
-    correctIndex: 1
-  postQuestions:
-  - questionId: S1_POST_Q6
-    topicId: forests
-    text: You just defended the Baguio Forest. Why are forests considered "carbon
-      sinks"?
-    choices:
-    - They store carbon in their trunks, roots, and soil, keeping it out of the atmosphere
-    - They sink into the ground during earthquakes
-    - They absorb all the water in the environment
-    - They convert carbon into oxygen without any limits
+    - They take in CO2 and store the carbon in their wood, roots and soil
+    - They release more oxygen than any other place, and oxygen cools the planet
+    - Their soil soaks up rainwater, which pulls heat out of the air
+    - They turn all the carbon they take in into oxygen, with no limit
     correctIndex: 0
-  - questionId: S1_POST_Q7
-    topicId: game
-    text: "In the game, enemy attacks on undefended lanes raise the temperature by
-      +0.1\xB0C. What real-world action does this represent?"
+    scored: 1
+  - questionId: S1_PRE_3
+    topicId: target
+    text: "What does the 1.5 \xB0C target in the Paris Agreement refer to?"
     choices:
-    - Planting trees
-    - Fossil fuel emissions and environmental damage that worsen climate change
-    - Recycling plastic bottles
-    - Building more forests
+    - "Lowering today's global temperature by 1.5 \xB0C"
+    - "Limiting global warming to 1.5 \xB0C above pre-industrial levels"
+    - "Keeping each country's warming below 1.5 \xB0C per year"
+    - The amount of warming at which sea levels start to rise
     correctIndex: 1
-  - questionId: S1_POST_Q8
-    topicId: climate
-    text: What is the main cause of the rising global temperature?
+    scored: 1
+  - questionId: S1_PRE_4
+    topicId: wildlife
+    text: How does protecting a forest like the Sierra Madre help both wildlife and
+      the climate?
     choices:
-    - The Earth moving closer to the Sun
-    - Volcanic eruptions
-    - Human activities that release greenhouse gases like CO2 and methane
-    - The moon's gravitational pull
+    - Forest animals breathe in CO2, so more animals means less CO2
+    - It helps wildlife, but cutting the trees and replanting elsewhere is just as
+      good for the climate
+    - It helps wildlife only; the climate depends on factories and cars
+    - It keeps the animals' habitat and keeps the forest's carbon stored
+    correctIndex: 3
+    scored: 1
+  - questionId: S1_PRE_5
+    topicId: geothermal
+    text: The Philippines is one of the world's largest producers of geothermal energy.
+      What is geothermal energy?
+    choices:
+    - Electricity made by burning natural gas found underground
+    - Electricity made from the Earth's natural heat, releasing very little CO2
+    - Electricity from sunlight stored as heat in rocks
+    - Electricity from hot water released by coal plants
+    correctIndex: 1
+    scored: 1
+  - questionId: S1_PRE_6
+    topicId: risk
+    text: "Why is keeping warming below 1.5 \xB0C especially important for the Philippines?"
+    choices:
+    - The country faces stronger typhoons, floods, rising seas and heat waves as
+      the planet warms
+    - Warming would make the Philippines too cold for rice farming
+    - The Philippines releases most of the world's greenhouse gases
+    - Climate change mainly affects countries near the North and South Poles
+    correctIndex: 0
+    scored: 1
+  postQuestions:
+  - questionId: S1_POST_1
+    topicId: warming
+    text: Which of these activities adds the most to the gases that trap heat in
+      the atmosphere?
+    choices:
+    - Burning coal, oil and gas for electricity and transport
+    - Using aerosol sprays that damage the ozone layer
+    - Steam coming out of power plant cooling towers
+    - Forest fires started naturally by lightning
+    correctIndex: 0
+    scored: 1
+  - questionId: S1_POST_2
+    topicId: sinks
+    text: Loggers clear a hillside forest and burn the wood. What happens to the
+      carbon the trees had stored?
+    choices:
+    - It stays locked in the soil, so the climate is not affected
+    - It turns into oxygen when the wood burns
+    - It is destroyed by the fire and disappears
+    - It goes back into the air as CO2 and adds to warming
+    correctIndex: 3
+    scored: 1
+  - questionId: S1_POST_3
+    topicId: target
+    text: "A news report says, \"The world is getting close to passing 1.5 \xB0C.\"
+      What is being measured?"
+    choices:
+    - How much hotter this year's summer is than last year's
+    - The average temperature of the Pacific Ocean
+    - How much warmer the Earth's average surface is than before industrialization
+    - The highest temperature recorded in the Philippines this year
     correctIndex: 2
-  - questionId: S1_POST_Q9
-    topicId: forests
-    text: The Philippine Eagle is a species found in forests like those in Mindanao
-      and Sierra Madre. How does protecting forests help wildlife AND the climate?
+    scored: 1
+  - questionId: S1_POST_4
+    topicId: wildlife
+    text: The Philippine Eagle lives in large, old forests. If its forest is cleared,
+      what is most likely?
     choices:
-    - It only helps animals, not the climate
-    - Forests provide habitat while also absorbing CO2
-    - Animals produce oxygen that cools the planet
-    - Forests have no connection to wildlife
+    - The eagle moves to a city park and the climate is unaffected
+    - The eagle loses its home and the stored carbon is released, so wildlife and
+      climate both suffer
+    - Only the eagle is affected, because the trees grow back within a year
+    - The climate improves because fewer trees are using up oxygen
     correctIndex: 1
-  - questionId: S1_POST_Q10
+    scored: 1
+  - questionId: S1_POST_5
+    topicId: geothermal
+    text: Some Philippine provinces get their power from geothermal plants. Why is
+      this better for the climate than a coal plant?
+    choices:
+    - It burns underground fuel more cleanly than coal
+    - It makes more electricity per day than any other source
+    - Its power plants absorb CO2 from the air
+    - It uses the Earth's heat instead of burning fuel, so it releases very little
+      CO2
+    correctIndex: 3
+    scored: 1
+  - questionId: S1_POST_6
+    topicId: risk
+    text: Which of these is a climate change impact that Filipino communities face
+      greater risk from?
+    choices:
+    - More earthquakes along fault lines
+    - Longer and stronger volcanic eruptions
+    - Stronger typhoons and coastal flooding from rising seas
+    - Colder nights during the rainy season
+    correctIndex: 2
+    scored: 1
+  - questionId: S1_GAME_1
     topicId: game
-    text: In Thermo-Tactics, you deploy units to defend lanes. If you leave a lane
-      undefended, what happens in the game?
+    text: In Thermo-Tactics, what do the enemies coming down the road stand for?
     choices:
-    - You gain bonus Oxygen Points
-    - The enemy attacks and increases the temperature
-    - The lane becomes a forest
-    - Nothing happens
+    - Wild animals that damage farms
+    - Fossil fuel emissions and environmental damage, such as illegal logging, mining
+      and smog
+    - Typhoons that hit Baguio every year
+    - Tourists who crowd the city
     correctIndex: 1
+    scored: 0
+  - questionId: S1_GAME_2
+    topicId: game
+    text: What does deploying a unit to defend a lane represent?
+    choices:
+    - Protecting nature and cutting emissions before they heat the planet
+    - Building more roads to move traffic faster
+    - Planting trees only after the damage is done
+    - Moving people away from the mountains
+    correctIndex: 0
+    scored: 0

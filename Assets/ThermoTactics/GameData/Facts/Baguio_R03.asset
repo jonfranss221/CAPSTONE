@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Baguio_R03
+  m_EditorClassIdentifier: 
+  factId: S1_R03
+  stageId: 1
+  topicId: recap
+  title: 'Recap: clean power and our islands'
+  body: 'Geothermal power uses the Earth''s own heat, so it releases very little
+    CO2 compared with burning coal. Cutting emissions matters here: the Philippines
+    faces stronger typhoons, floods and rising seas as the planet warms.'
+  icon: {fileID: 0}
+  levelNumber: 9
+  trigger: 1
+  waveNumber: 1

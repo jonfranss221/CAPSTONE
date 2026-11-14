@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Coast_F05
+  m_EditorClassIdentifier: 
+  factId: S2_F05
+  stageId: 2
+  topicId: bluecarbon
+  title: Blue carbon
+  body: Carbon stored by coastal plants such as mangroves and seagrass is called
+    blue carbon. A hectare of mangroves can hold up to four times the carbon of most
+    tropical forests, much of it in the mud under their roots. Clearing them releases
+    it as CO2.
+  icon: {fileID: 0}
+  levelNumber: 4
+  trigger: 0
+  waveNumber: 1

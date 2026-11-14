@@ -14,11 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   factId: S1_F03
   stageId: 1
-  topicId: forests
+  topicId: sinks
   title: Forests are carbon sinks
-  body: Trees take in CO2 as they grow and store the carbon in their trunks, branches,
-    roots and the soil beneath them. Baguio's pine forests keep that carbon out of
-    the atmosphere, as long as they are left standing.
+  body: 'Trees take in CO2 as they grow and store the carbon in their trunks, roots
+    and the soil. That carbon stays out of the air only while the forest stands:
+    when trees are cut and burned or left to rot, it returns to the atmosphere as
+    CO2.'
   icon: {fileID: 0}
   levelNumber: 2
   trigger: 0

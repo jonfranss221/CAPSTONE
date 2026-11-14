@@ -1,0 +1,188 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98395f251812ec84d8bbc703ba333038, type: 3}
+  m_Name: Stage2_Quiz
+  m_EditorClassIdentifier: 
+  quizId: Q2
+  stageId: 2
+  topics:
+  - id: path
+    name: Typhoon path
+  - id: mangroves
+    name: Mangroves & storm surge
+  - id: warmseas
+    name: Warmer seas
+  - id: bluecarbon
+    name: Blue carbon
+  - id: sierra
+    name: The Sierra Madre
+  - id: seas
+    name: Rising seas
+  - id: game
+    name: Game check
+  preQuestions:
+  - questionId: S2_PRE_1
+    topicId: path
+    text: Why is the Pacific coast of Luzon, such as Aurora and Isabela, often the
+      first land a typhoon reaches?
+    choices:
+    - Typhoons form over the West Philippine Sea and move east
+    - Most typhoons form over the warm western Pacific Ocean and move west toward
+      the Philippines
+    - The Sierra Madre mountains pull typhoons toward them
+    - "Typhoons form only near the coast during El Ni\xF1o years"
+    correctIndex: 1
+    scored: 1
+  - questionId: S2_PRE_2
+    topicId: mangroves
+    text: How do mangrove forests protect coastal towns during a typhoon?
+    choices:
+    - They absorb rainwater so rivers do not flood
+    - Their leaves block the wind so the typhoon weakens
+    - They pull the storm away from the town
+    - Their roots and trunks slow the waves and lower the storm surge
+    correctIndex: 3
+    scored: 1
+  - questionId: S2_PRE_3
+    topicId: warmseas
+    text: How does warmer ocean water affect typhoons?
+    choices:
+    - It gives typhoons more energy, so they can become stronger
+    - It cools the air above it, so typhoons weaken
+    - It has no effect; typhoons get their energy only from the wind
+    - It stops typhoons from forming
+    correctIndex: 0
+    scored: 1
+  - questionId: S2_PRE_4
+    topicId: bluecarbon
+    text: What is "blue carbon"?
+    choices:
+    - Carbon dioxide dissolved in rainwater
+    - Pollution from ships that turns the sea blue
+    - Carbon stored by coastal plants such as mangroves and seagrass, much of it
+      in the mud
+    - The carbon in fish and other sea animals that people eat
+    correctIndex: 2
+    scored: 1
+  - questionId: S2_PRE_5
+    topicId: sierra
+    text: What does the Sierra Madre mountain range do when a typhoon crosses it?
+    choices:
+    - It weakens the typhoon's winds somewhat, but rain can fall even harder on its
+      western side
+    - It blocks the typhoon completely, so western Luzon is safe
+    - It turns the typhoon back out to sea
+    - It has no effect on typhoons at all
+    correctIndex: 0
+    scored: 1
+  - questionId: S2_PRE_6
+    topicId: seas
+    text: Green sea turtles nest on the beaches of Aurora. How does climate change
+      threaten their nests?
+    choices:
+    - Warmer seas make the turtles stop swimming
+    - Rising seas and stronger waves erode and wash away the beaches they nest on
+    - Typhoon winds scare the turtles away from the Philippines for good
+    - Climate change affects only land animals
+    correctIndex: 1
+    scored: 1
+  postQuestions:
+  - questionId: S2_POST_1
+    topicId: path
+    text: Why does a province on Luzon's eastern coast face more typhoon landfalls
+      than one facing the West Philippine Sea?
+    choices:
+    - The west coast has colder water that typhoons cannot cross
+    - Typhoons are drawn toward big cities in the east
+    - The eastern coast has fewer trees, so storms are pulled there
+    - It faces the Pacific, where most typhoons form and head west, so it is often
+      hit first
+    correctIndex: 3
+    scored: 1
+  - questionId: S2_POST_2
+    topicId: mangroves
+    text: A town's mangroves are cut down to build fishponds. What is most likely
+      during the next typhoon?
+    choices:
+    - Waves and storm surge reach the town with more force
+    - The town is safer, because the fishpond walls hold back the sea
+    - Nothing changes, because only seawalls stop storm surges
+    - The typhoon avoids the town, because there is less forest to attract it
+    correctIndex: 0
+    scored: 1
+  - questionId: S2_POST_3
+    topicId: warmseas
+    text: Typhoons that hit East and Southeast Asia have grown stronger since the
+      late 1970s. What best explains this?
+    choices:
+    - New mountains and cities changed the region's winds
+    - Typhoons now form closer to the North Pole
+    - The sea surface near these coasts has become warmer
+    - Fewer typhoons form, so each one grows bigger by default
+    correctIndex: 2
+    scored: 1
+  - questionId: S2_POST_4
+    topicId: bluecarbon
+    text: Why does clearing a mangrove forest harm the climate more than many people
+      expect?
+    choices:
+    - Mangroves are the only plants near the sea that make oxygen
+    - Mangroves store large amounts of carbon, much of it in the mud, and clearing
+      releases it
+    - Cleared mangroves make the sea colder
+    - It harms only the fish, not the climate
+    correctIndex: 1
+    scored: 1
+  - questionId: S2_POST_5
+    topicId: sierra
+    text: A typhoon heads for Aurora. A resident of Nueva Ecija, west of the Sierra
+      Madre, says, "We're safe, the mountains will block it." What is the best reply?
+    choices:
+    - Right, typhoons never cross the Sierra Madre
+    - Right, but only if the typhoon is weak
+    - Wrong, the mountains make the typhoon stronger
+    - 'Wrong: the mountains weaken the winds somewhat, but heavy rain and floods
+      are still a danger'
+    correctIndex: 3
+    scored: 1
+  - questionId: S2_POST_6
+    topicId: seas
+    text: Which of these is a climate change threat to coastal places like the beaches
+      of Aurora?
+    choices:
+    - Beaches growing wider because the sea is drying up
+    - Fewer fish because the water is getting too cold
+    - Rising seas and erosion shrinking beaches and coastal habitats
+    - The sea turning into fresh water from heavier rain
+    correctIndex: 2
+    scored: 1
+  - questionId: S2_GAME_1
+    topicId: game
+    text: In the Sierra Madre Coast stage, what do the enemies stand for?
+    choices:
+    - Illegal fishermen and pirates
+    - Only the typhoons that hit the coast
+    - Coal and diesel smoke and polluted runoff that harm the coast and the climate
+    - Tourists who litter on the beach
+    correctIndex: 2
+    scored: 0
+  - questionId: S2_GAME_2
+    topicId: game
+    text: In the boss level, why does keeping Forest allies alive weaken the Typhoon
+      Tyrant's Storm Surge?
+    choices:
+    - Standing forests slow typhoon winds and hold the soil during heavy rain
+    - Forest allies have the most health in the game
+    - Typhoons are afraid of trees
+    - Forests stop rain from falling
+    correctIndex: 0
+    scored: 0

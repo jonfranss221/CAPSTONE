@@ -45,6 +45,10 @@ MonoBehaviour:
   enragedSlamEvery: 2
   enrageAtFraction: 0.4
   cleaveRadius: 0
+  cleaveName: SMOKE BLAST
+  slamName: OVERDRIVE
+  forestShieldPerAlly: 0
+  forestShieldMax: 0
   boardAnchor: {x: 4.5, y: 3}
   worldScale: 2.1
   description: 'Later-stage boss: a coal-fired factory on legs with two smokestacks.

@@ -18,6 +18,21 @@ MonoBehaviour:
   threats: illegal logging, mining, smog
   difficulty: Easy
   thumbnail: {fileID: 21300000, guid: b21c2898ca0e3374a8b25bb1bfda0723, type: 3}
+  shortName: Baguio
+  battleBackground: {fileID: 21300000, guid: 24e7e79daa5b8e94bbaf76e603b94508, type: 3}
+  sideFill: {fileID: 21300000, guid: d4185c6b27e24514fa3ee68d8b12f688, type: 3}
+  overlayTile: {fileID: 21300000, guid: 8c2a347c3c85fd64999636f921a463a3, type: 3}
+  overlayStrength: 1
+  slotMarker: {fileID: 21300000, guid: 03f869680a5e0bd43a409be13f7e4b2c, type: 3}
+  deployHighlight: {fileID: 21300000, guid: bfebd5214fa73f7449f99a18ee97be0a, type: 3}
+  deployTint: {r: 0.3529412, g: 0.78431374, b: 1, a: 1}
+  deployAlpha: 0.65
+  dangerHighlight: {fileID: 21300000, guid: 7f4244ebff4de3a478fd5c99588236c1, type: 3}
+  cameraBackground: {r: 0.05490196, g: 0.08235294, b: 0.06666667, a: 1}
+  nextStageLabel: "Stage 2 \xB7 Sierra Madre Coast"
+  nextStageReady: 1
+  levelPathArt: {fileID: 21300000, guid: d8f090182ced3c0439f18d558f512fd5, type: 3}
+  theme: 0
   levels:
   - {fileID: 11400000, guid: 05e0f44d30d9b0f48b92d8d296cebbb2, type: 2}
   - {fileID: 11400000, guid: 3131fbd7aabdffe4fb8de49a10901ede, type: 2}
@@ -64,6 +79,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7e4574e2ed7fbda4590d3caa8f711d44, type: 2}
   - {fileID: 11400000, guid: 8633af3ba1b8cfc458a6f078b1434d39, type: 2}
   - {fileID: 11400000, guid: 13afeb6ec6d14674aa12df7623a0b0a4, type: 2}
+  - {fileID: 11400000, guid: 5cef704f9b3441c439f51de94530823f, type: 2}
+  - {fileID: 11400000, guid: dbb052a751513cb4d8eca83733057786, type: 2}
+  - {fileID: 11400000, guid: cbb08bbe73b43ca4586762d6a257a58c, type: 2}
   - {fileID: 11400000, guid: 14ecf08c7be239540ae0e57f736a4760, type: 2}
   - {fileID: 11400000, guid: a181aec865b99e84fa8bff3fb1f5306d, type: 2}
   - {fileID: 11400000, guid: c60942d66cfeb204ab1497426a51bafb, type: 2}
@@ -77,3 +95,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f8c6965c5dae81c4bb87f5dcb3ae3da8, type: 2}
   - {fileID: 11400000, guid: 2bf6daa304a1ffe43a2c336027313ecf, type: 2}
   - {fileID: 11400000, guid: 839367d5e338cba48b4f3f7dc603ee2b, type: 2}
+  - {fileID: 11400000, guid: 87244671ca8197548a349a79b192d033, type: 2}
+  - {fileID: 11400000, guid: b44097577c002a646b2278e3c32d2d15, type: 2}
+  - {fileID: 11400000, guid: c8577f8e2ddc84541b2a039c52396263, type: 2}

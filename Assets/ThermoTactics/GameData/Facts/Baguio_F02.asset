@@ -14,11 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   factId: S1_F02
   stageId: 1
-  topicId: climate
+  topicId: warming
   title: What is warming the planet?
-  body: The main cause of rising global temperature is human activity. Burning coal,
-    oil and gas and clearing forests release greenhouse gases such as carbon dioxide
-    (CO2) and methane, which trap heat in the atmosphere.
+  body: Today's warming is caused mainly by people, not by the Sun or volcanoes.
+    Burning coal, oil and gas for power and transport, and clearing forests, release
+    greenhouse gases such as carbon dioxide (CO2) and methane that trap heat in the
+    atmosphere.
   icon: {fileID: 0}
   levelNumber: 1
   trigger: 1

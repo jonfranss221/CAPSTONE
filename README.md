@@ -4,9 +4,10 @@ A Philippine climate-themed 2D turn-based strategy game for Android, built in Un
 Players defend Philippine ecosystems from fossil-fuel threats while keeping the global
 temperature below the **1.5 °C** limit. Capstone project.
 
-> **Status (v0.3.1):** Stage 1 (Baguio) playable from the Main Menu: 10 levels with unlocking
-> and 1–3 stars, the full roster with Speed, counters, traits and synergies, Carbon Credits, the Store and squad selection,
-> moving and taking back units, the Clearcut Behemoth boss at Level 10, quizzes, and save / Continue.
+> **Status (v0.4.0):** Stage 1 (Baguio Forest) and Stage 2 (Sierra Madre Coast) playable from the Main Menu: 10 levels
+> each with unlocking and 1–3 stars, the full roster with Speed, counters, traits and synergies, Carbon Credits, the Store
+> and squad selection, moving and taking back units, a boss per stage (Clearcut Behemoth, Typhoon Tyrant), matched-pair pre- and post-quizzes
+> with recap cards for both stages, and save / Continue.
 > Download the APK from [Releases](https://github.com/jonfranss221/CAPSTONE/releases); changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 All names, text and dialogue are in English. The Filipino theme is in the environments and UI art.
@@ -31,12 +32,13 @@ All names, text and dialogue are in English. The Filipino theme is in the enviro
 2. Open the folder in **Unity Hub → Add → Add project from disk** (Unity 6000.0.84f1).
    The first open rebuilds the `Library/` folder and takes a few minutes.
 3. Open `Assets/ThermoTactics/Scenes/MainMenu.unity` and press **Play**.
-   (Playing `Baguio_Battle.unity` directly starts the level set on its GameManager, Level 1 by default.)
+   (`Baguio_Battle.unity` is the battle scene for every stage; played directly it starts Baguio Level 1.)
 
 ## How to play
 
 1. On the title screen, type a **player name** (2–20 characters). A tester code is optional.
-2. Press **Start**, pick **Baguio Forest**, then a level on the path. Level 1 is open; clearing a level opens the next.
+2. Press **Start**, pick a stage, then a level on the path. Level 1 is open; clearing a level opens the next.
+   **Sierra Madre Coast** opens once all 10 Baguio levels are cleared.
    Every level opens with a short intro: the screen fades in, the camera glides onto the road and a title card shows
    the stage, level and place (tap to skip). The first time a player starts Level 1, a **tutorial** walks through the
    screen step by step: you really pick a card, deploy and end a turn. It can be skipped and replayed from
@@ -80,6 +82,26 @@ All names, text and dialogue are in English. The Filipino theme is in the enviro
 | 9 | Tam-awan Village | 4 | 7 · 9 · 10 · 11 | |
 | 10 | Mt. Santo Tomas | 5 | 7 · 9 · 10 · 11 · 8 | Wave 5: Clearcut Behemoth (boss) |
 
+### Sierra Madre Coast levels (Stage 2)
+
+| Level | Location | Waves | Oxygen per wave | Notes |
+| --- | --- | --- | --- | --- |
+| 1 | Sabang Beach | 3 | 6 · 7 · 8 | New: Toxic Runoff |
+| 2 | Cemento Beach | 3 | 6 · 8 · 9 | New: Diesel Drone |
+| 3 | Digisit | 3 | 6 · 8 · 10 | New: Coal Brute |
+| 4 | Dicasalarin Cove | 3 | 7 · 9 · 10 | |
+| 5 | Dinadiawan Beach | 4 | 7 · 9 · 10 · 11 | Difficulty spike: elite enemies |
+| 6 | Casiguran Sound | 3 | 7 · 8 · 10 | |
+| 7 | Casapsapan Beach | 3 | 7 · 9 · 10 | |
+| 8 | Dilasag Coast | 4 | 7 · 9 · 10 · 11 | |
+| 9 | Divilacan Bay | 4 | 7 · 9 · 10 · 11 | |
+| 10 | Palanan Coast | 5 | 7 · 9 · 10 · 11 · 8 | Wave 5: Typhoon Tyrant (boss) |
+
+**Typhoon Tyrant:** 340 HP (323 at Level 10's ×0.95), hovering, fills all 6 enemy slots. **Storm Band** hits 3 neighbouring lanes for 5 and moves one
+lane every turn (1-2-3, 2-3-4 … and back), so the next band is always known. **Storm Surge** hits all 6 lanes for 8 every
+3rd turn, 1 less for each living Forest ally (max −3). Below 40% HP it becomes a **Super Typhoon**: a 4-lane band for 7 and a
+surge every 2nd turn. Mangrove Guardian and Sea Turtle Guardian take half damage from it.
+
 **Clearcut Behemoth:** 300 HP and fills all 6 enemy slots. **Cleave** hits the lane of your strongest unit and the lanes beside it for 8.
 **Landslide Slam** hits all 6 lanes for 7 every 3rd turn. At 40% HP it **enrages**: cleave 10, slam every 2nd turn.
 The boss panel always shows its next move.
@@ -87,13 +109,16 @@ The boss panel always shows its next move.
 ## Implemented features
 
 - Main Menu: living background (pan, fog, pollen), player profile, Continue, Start, Settings, Quit (with confirmation),
-  Credits, Results, and a Baguio progress strip with stars; buttons and screens animate
-- Stage Select (Baguio open; four more stages locked) and the 10-node Baguio level path with stars and best temperatures
+  Credits, Results, and a progress strip with stars for the current stage; buttons and screens animate
+- Stage Select (Baguio open; Sierra Madre Coast opens after Baguio; three more stages locked) and a 10-node level path per
+  stage with stars and best temperatures (same layout, recoloured per stage)
+- **Stages share one battle scene**: `StageEnvironment` swaps in the stage's background, side fill, weather overlay (Baguio fog,
+  coastal sea spray), slot markers and camera colour. Wider-than-16:9 phones get a soft, darkened extension at the sides
 - Settings: music and effects volume (used once audio is added), battle speed (1× / 1.5× / 2×), large text, high contrast, climate pop-ups,
   damage numbers, boss warning, lane camera zoom, and resetting a player's progress
-- 13 unit types in play in Baguio (5 allies, 8 enemies) and 6 elite variants, each with **idle**, **attack** and **hurt** animations
+- 13 unit types in play in Baguio (5 allies, 8 enemies) and 6 elite variants; Stage 2 adds Coal Brute, Diesel Drone and Toxic Runoff with 3 more elites; each with **idle**, **attack** and **hurt** animations
 - Full roster data (roster v3, Phase 1): all 30 characters (15 allies, 15 enemies) plus the Factory Titan and Typhoon Tyrant
-  bosses exist as unit assets with art and animations; Baguio still uses the 5 starters and its 8 enemies (see *Roster* below)
+  bosses exist as unit assets with art and animations (see *Roster* below)
 - **Speed and counters** (Phase 2): in each lane the faster unit attacks first (a tie goes to the ally; Tarsier Scout's Night Eyes
   always goes first). Allies deal ×1.5 to the enemy category they counter (Forest > Extraction, Ocean > Waste, Renewable > Emissions);
   "+N vs X" traits, armour and Pierce apply. All damage comes from `Core/DamageRules.cs`. The lane banner says who strikes first and why;
@@ -112,7 +137,8 @@ The boss panel always shows its next move.
 - **Moving and taking back units**: a unit placed this turn can be moved for free, swapped for another unit or taken back
   with a full Oxygen refund until End Turn; a unit from an earlier turn can move to an empty lane only before any Oxygen is
   spent that turn, and the move uses all of it
-- Clearcut Behemoth boss with cleave, Landslide Slam and enrage; HUD boss panel and danger rings on target lanes
+- Clearcut Behemoth boss (cleave, Landslide Slam, enrage) and Typhoon Tyrant boss (moving Storm Band, Storm Surge with a
+  forest shield, Super Typhoon); HUD boss panel and danger rings on target lanes
 - Oxygen system with turn penalty, minimum of 2 and no penalty in the boss wave
 - Lane-by-lane End Turn with a zooming camera and a lane banner
 - Level intro (fade in, camera glide, title card with stage, level, place and waves) and a hands-on Level 1 tutorial
@@ -121,20 +147,21 @@ The boss panel always shows its next move.
   Stage Complete screen after Level 10
 - Local **SQLite** database: results, level progress (unlocks, best stars) and the saved game behind Continue
 
-- Education: pre-quiz before Baguio, climate-fact pop-ups during Levels 1–9 (one per quiz topic) with a Climate Facts
+- Education: Stage 2 has 9 climate-fact pop-ups (typhoons, mangroves and blue carbon, the Sierra Madre, sea turtles) and no quiz yet.
+  Stage 1: pre-quiz before Baguio, climate-fact pop-ups during Levels 1–9 (one per quiz topic) with a Climate Facts
   review list, post-quiz after Level 10 with a topic-by-topic comparison and knowledge gain, and a quiz CSV export for
   the study (database schema version 4: `quiz_results`, `facts_seen`)
 
-Planned: audio, enemy movement (EnemyAI), stages 2–5 with their own bosses.
+Planned: audio, enemy movement (EnemyAI), a Stage 2 quiz, stages 3–5 with their own bosses.
 
 ## Project structure
 
 ```
 Assets/ThermoTactics/
-├── Art/            Units/<Unit>/ (28) · Bosses/ClearcutBehemoth, FactoryTitan, TyphoonTyrant · Environment/ (Baguio) · UI/ (icons, thumbnails, level path)
+├── Art/            Units/<Unit>/ (28) · Bosses/ClearcutBehemoth, FactoryTitan, TyphoonTyrant · Environment/ (Baguio, coast) · UI/ (icons, thumbnails, level paths)
 ├── Animations/     Idle / Attack / Hurt clips + Animator controller per unit and for the boss
 ├── Fonts/          Pixelify Sans, Atkinson Hyperlegible (SIL Open Font Licence)
-├── GameData/       Stage1_Baguio · Levels/ (Baguio_Level1–10) · Waves/ (35) · Units/ (37: 28 units, 6 elites, 3 bosses)
+├── GameData/       Stage1_Baguio · Stage2_SierraMadreCoast · Levels/ (Baguio_Level1–10, Coast_Level1–10) · Waves/ (71) · Units/ (40: 28 units, 9 elites, 3 bosses)
 ├── Scenes/         MainMenu.unity · Baguio_Battle.unity
 ├── Scripts/
 │   ├── Core/          GameManager, GameSession, SettingsStore, StarRating, TurnManager, WaveManager, OxygenPointSystem, TemperatureSystem,
@@ -143,18 +170,18 @@ Assets/ThermoTactics/
 │   ├── Units/         UnitBase, AllyUnit, EnemyUnit, BossUnit, StatusEffects
 │   ├── Data/          StageData, LevelData, WaveData, UnitData, BossData (ScriptableObjects), UnitTraits (enums)
 │   ├── UI/            UIManager, DeployCard, ResultsPanel, TextScaler, ButtonFx, PanelFx
-│   │   └── Menu/      MainMenuController, MenuAmbience, SettingsPanel, StageSelectPanel, LevelSelectPanel, LevelNode
+│   │   └── Menu/      MainMenuController, MenuAmbience, SettingsPanel, StageSelectPanel, LevelSelectPanel, LevelNode, StageThemes
 │   ├── Models/        LevelResult, SavedLevelResult, StageSummary (data passed from the game logic to the services)
 │   ├── Services/      ProgressService (saves a finished level and reads stage progress; GameManager.EndLevel goes through it)
 │   ├── Persistence/   ResultsDatabase, SessionSnapshot
-│   ├── Presentation/  FogScroller, BattleCamera
+│   ├── Presentation/  FogScroller, BattleCamera, StageEnvironment
 │   └── Dev/           AutoPlaytest, QuickCheck (editor only)
 └── Editor/         ThermoTacticsBuilder, MenuSceneBuilder, RosterArtImporter, UiKit, PlaytestMenu
 ```
 
-**Thermo-Tactics ▸ Build Everything** imports the art, builds the animations, the 10 levels and both scenes.
-Single steps are under **Thermo-Tactics ▸ Steps**. **Thermo-Tactics ▸ Test ▸ Play Stage 1 Automatically** plays all 10 levels
-by itself as the player "Playtest" and saves a report and screenshots to `Logs/qa/auto/` (not committed).
+**Thermo-Tactics ▸ Build Everything** imports the art, builds the animations, both stages (20 levels) and both scenes.
+Single steps are under **Thermo-Tactics ▸ Steps**. **Thermo-Tactics ▸ Test ▸ Play Stage 1 (or 2) Automatically** plays all 10 levels
+by itself as the player "Playtest" and saves a report and screenshots to `Logs/qa/auto/` or `Logs/qa/auto_stage2/` (not committed).
 **Thermo-Tactics ▸ Test ▸ Quick Check of New Screens** checks the menus, Level 1, a loss and the Level 10 boss in about a minute (`Logs/qa/check/`). Rebuilding replaces the scenes, so make manual scene edits after rebuilding.
 Tune levels and units in the `GameData` assets.
 
@@ -184,8 +211,8 @@ Unit stats live in the `Units` table at the top of `Editor/ThermoTacticsBuilder.
 | Solar Sentinel · Rainforest Ancient | Renewable · Forest | 4 · 6 | 16 · 40 | 7 · 9 | 5 · 2 | Stage 3: 700 · 1,600 |
 
 Enemies keep their Baguio stats. New enemies: Coal Brute, Diesel Drone, Toxic Runoff (Stage 2+), Incinerator Fiend,
-Landfill Leviathan (Stage 3+). Bosses: Clearcut Behemoth (Stage 1), Factory Titan (Overdrive, Stage 4), Typhoon Tyrant
-(Storm Surge, Stage 5). Elites keep +50% HP and +1 damage, take their base unit's category and trait, and get Speed +1.
+Landfill Leviathan (Stage 3+). Bosses: Clearcut Behemoth (Stage 1), Typhoon Tyrant (Storm Band and Storm Surge, Stage 2),
+Factory Titan (Overdrive, a later stage). Elites keep +50% HP and +1 damage, take their base unit's category and trait, and get Speed +1.
 
 ## Database (SQLite)
 
