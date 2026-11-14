@@ -254,14 +254,14 @@ namespace ThermoTactics
                 SetPrimary("LEVEL SELECT", _iconLevels, gold, () => gm.ToLevelSelect());
                 SetSecondary(0, "RETRY", _iconRetry, () => gm.Restart());
                 SetSecondary(1, "STAGE SELECT", _iconStages, () => gm.ToStageSelect());
-                SetSecondary(2, "RESULTS", _iconResults, OpenResults);
+                SetSecondary(2, "LEADERBOARD", _iconResults, OpenResults);
             }
             else
             {
                 SetPrimary("RETRY LEVEL", _iconRetry, new Color(0.64f, 0.14f, 0.11f), () => gm.Restart());
                 SetSecondary(0, "LEVEL SELECT", _iconLevels, () => gm.ToLevelSelect());
                 SetSecondary(1, "STAGE SELECT", _iconStages, () => gm.ToStageSelect());
-                SetSecondary(2, "RESULTS", _iconResults, OpenResults);
+                SetSecondary(2, "LEADERBOARD", _iconResults, OpenResults);
             }
             _endResultsButton.gameObject.SetActive(e.Won && e.CanGoNext);
         }
@@ -391,7 +391,8 @@ namespace ThermoTactics
             return "boss";
         }
 
-        public void OpenResults() => _results.Show(_database.GetAll(), _database.FilePath);
+        /// <summary>The leaderboard (players on this phone ranked by total stars), with this player highlighted.</summary>
+        public void OpenResults() => _results.ShowLeaderboard(_database.GetLeaderboard(), GameManager.Instance != null ? GameManager.Instance.PlayerName : "");
 
         // ---------------- HUD ----------------
 

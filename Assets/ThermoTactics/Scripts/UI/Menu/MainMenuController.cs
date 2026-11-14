@@ -22,7 +22,8 @@ namespace ThermoTactics
         [Header("Title screen")]
         [SerializeField] private GameObject _titleScreen;
         [SerializeField] private InputField _nameInput;
-        [SerializeField] private InputField _testerInput;
+        [SerializeField] private Text _codeText;
+        [SerializeField] private GameObject _adminTag;
         [SerializeField] private Text _nameMessage;
         [SerializeField] private Button _continueButton;
         [SerializeField] private GameObject _continueOn;
@@ -143,9 +144,8 @@ namespace ThermoTactics
             Time.timeScale = 1f;
             SettingsStore.Apply();
             _nameInput.characterLimit = ResultsDatabase.MaxNameLength;
-            _testerInput.characterLimit = 8;
             _nameInput.onValueChanged.AddListener(_ => RefreshProfile());
-            _testerInput.onEndEdit.AddListener(v => SettingsStore.TesterCode = v.Trim());
+            AdminSession.Changed += RefreshAdminTag;
             _continueButton.onClick.AddListener(OnContinue);
             _startButton.onClick.AddListener(OnStart);
             _settingsButton.onClick.AddListener(() => _settings.Open());
@@ -160,11 +160,18 @@ namespace ThermoTactics
             _versionText.text = built > 1 ? $"v{Application.version} · Stages 1–{built}" : $"v{Application.version} · Stage 1 prototype";
         }
 
+        private void OnDestroy() => AdminSession.Changed -= RefreshAdminTag;
+
+        private void RefreshAdminTag()
+        {
+            if (_adminTag != null) _adminTag.SetActive(AdminSession.Unlocked);
+        }
+
         private void Start()
         {
             string name = !string.IsNullOrEmpty(GameSession.PlayerName) ? GameSession.PlayerName : SettingsStore.LastPlayer;
             _nameInput.SetTextWithoutNotify(name);
-            _testerInput.SetTextWithoutNotify(SettingsStore.TesterCode);
+            RefreshAdminTag();
             _quitDialog.SetActive(false);
             _confirmDialog.SetActive(false);
             _creditsDialog.SetActive(false);
@@ -253,7 +260,14 @@ namespace ThermoTactics
             if (_facts != null) _facts.Show(_stage, PlayerName, _database);
         }
 
-        public void OpenResults() => _results.Show(_database.GetAll(), _database.FilePath);
+        /// <summary>Everyone: players on this phone ranked by total stars.</summary>
+        public void OpenLeaderboard() => _results.ShowLeaderboard(_database.GetLeaderboard(), NameIsValid ? PlayerName : SettingsStore.LastPlayer);
+
+        /// <summary>Admin only: every saved win and loss, with player codes.</summary>
+        public void OpenAdminResults()
+        {
+            if (AdminSession.Unlocked) _results.ShowRecords(_database.GetAll(), _database);
+        }
 
         public void OpenCredits()
         {
@@ -310,6 +324,7 @@ namespace ThermoTactics
             else
                 _infoNewText.text = $"New player. Press <b>Start</b> to begin in {FirstStage.stageName}. Your progress saves automatically on this phone.";
             _nameMessage.text = "";
+            RefreshCode(name);
             RefreshProgress(name);
             RefreshWallet(name);
         }
@@ -373,6 +388,16 @@ namespace ThermoTactics
                 : $"{cleared} of {levels} cleared";
         }
 
+        /// <summary>The profile's player code line: the registered code, or the code a new name will get.</summary>
+        private void RefreshCode(string name)
+        {
+            if (_codeText == null) return;
+            PlayerRecord rec = NameIsValid ? _database.FindPlayer(name) : null;
+            if (!NameIsValid) _codeText.text = "<color=#CFC6B2>Type your name to see your code.</color>";
+            else if (rec != null) _codeText.text = $"<color=#FFD15C>{rec.Code}</color>  <color=#CFC6B2>· registered on this phone</color>";
+            else _codeText.text = $"<color=#CFC6B2>New player · gets</color> <color=#FFD15C>{_database.NextCode()}</color> <color=#CFC6B2>when you press Start</color>";
+        }
+
         private static string Escape(string s) => s.Replace("<", "‹").Replace(">", "›");
 
         private bool CheckName()
@@ -380,25 +405,61 @@ namespace ThermoTactics
             string name = PlayerName;
             if (name.Length == 0) { _nameMessage.text = "Please enter your player name."; return false; }
             if (name.Length < 2) { _nameMessage.text = "Use at least 2 characters."; return false; }
-            SettingsStore.LastPlayer = name;
-            SettingsStore.TesterCode = _testerInput.text.Trim();
-            GameSession.PlayerName = name;
+            if (!ResultsDatabase.IsAllowedName(name) && _database.FindPlayer(name) == null)
+            {
+                _nameMessage.text = "Use letters, numbers, spaces and . - ' only.";
+                return false;
+            }
             return true;
         }
 
-        private void OnStart()
+        /// <summary>
+        /// Every name is one player on this phone, with one code (capitals and extra spaces do not count, so "juan" is
+        /// "Juan"). When the typed name is already registered and is not the last player, asks "is this you?" first, so
+        /// two people with the same first name do not share progress by accident.
+        /// </summary>
+        private void Proceed(Action next)
         {
             if (!CheckName()) return;
-            ShowStageSelect();
+            string name = PlayerName;
+            PlayerRecord rec = _database.FindPlayer(name);
+            if (rec != null && !string.Equals(rec.Name, SettingsStore.LastPlayer, StringComparison.OrdinalIgnoreCase))
+            {
+                Confirm("IS THIS YOU?",
+                    $"<b>{Escape(rec.Name)}</b> is already registered on this phone as <b>{rec.Code}</b>. If that is not you, press CANCEL and add your surname or initial, e.g. {Escape(rec.Name)} R.",
+                    "THAT'S ME",
+                    () => { if (Register()) next(); });
+                return;
+            }
+            if (Register()) next();
         }
+
+        /// <summary>Gives a new name its code (existing names keep theirs) and makes it the current player.</summary>
+        private bool Register()
+        {
+            PlayerRecord rec = _database.RegisterPlayer(PlayerName);
+            if (rec == null) { _nameMessage.text = "Could not save this player. Ask your researcher for help."; return false; }
+            // Use the spelling saved first, so "juan" and "Juan" always read and write the same progress.
+            _nameInput.SetTextWithoutNotify(rec.Name);
+            SettingsStore.LastPlayer = rec.Name;
+            GameSession.PlayerName = rec.Name;
+            RefreshProfile();
+            return true;
+        }
+
+        private void OnStart() => Proceed(ShowStageSelect);
 
         private void OnContinue()
         {
-            if (!CheckName() || _save == null) return;
-            StageData saveStage = FindStage(_save.stageId);
-            if (saveStage == null) return;
-            _stage = saveStage;
-            PlayLevel(_save.levelNumber, _save);
+            if (_save == null) return;
+            Proceed(() =>
+            {
+                if (_save == null) return;
+                StageData saveStage = FindStage(_save.stageId);
+                if (saveStage == null) return;
+                _stage = saveStage;
+                PlayLevel(_save.levelNumber, _save);
+            });
         }
 
         /// <summary>Loads the battle scene. With a snapshot, the board is rebuilt exactly as saved (with its squad).</summary>

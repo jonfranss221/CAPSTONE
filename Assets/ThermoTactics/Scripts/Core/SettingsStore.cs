@@ -33,7 +33,25 @@ namespace ThermoTactics
 
         /// <summary>The name typed last time, so the profile form is filled in on the next launch.</summary>
         public static string LastPlayer { get => PlayerPrefs.GetString("tt.last_player", ""); set { PlayerPrefs.SetString("tt.last_player", value ?? ""); PlayerPrefs.Save(); } }
-        public static string TesterCode { get => PlayerPrefs.GetString("tt.tester_code", ""); set { PlayerPrefs.SetString("tt.tester_code", value ?? ""); PlayerPrefs.Save(); } }
+
+        /// <summary>
+        /// This phone's letter (A–Z), the first part of every participant code it gives out (A-001, A-002 …). Each phone in a
+        /// study gets its own letter (set in admin mode), so codes never clash when the exports of several phones are merged.
+        /// </summary>
+        public static string PhoneLetter
+        {
+            get
+            {
+                string v = PlayerPrefs.GetString("tt.phone_letter", "A");
+                return v.Length == 1 && v[0] >= 'A' && v[0] <= 'Z' ? v : "A";
+            }
+            set
+            {
+                string v = (value ?? "A").Trim().ToUpperInvariant();
+                PlayerPrefs.SetString("tt.phone_letter", v.Length == 1 && v[0] >= 'A' && v[0] <= 'Z' ? v : "A");
+                PlayerPrefs.Save();
+            }
+        }
 
         /// <summary>True once this player finished or skipped the Level 1 tutorial (names match without case, like the database).</summary>
         public static bool TutorialDone(string player) => PlayerPrefs.GetInt(TutorialKey(player), 0) == 1;

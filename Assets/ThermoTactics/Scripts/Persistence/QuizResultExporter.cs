@@ -9,7 +9,8 @@ namespace ThermoTactics
 {
     /// <summary>
     /// Writes the quiz results for the study as a CSV file the researcher copies off the phone (USB or Android share).
-    /// One row per player and stage: pre / post score, gain, and each question's pre / post correctness by topic.
+    /// One row per player and stage: the player's code (A-001 ...) and name, pre / post score, gain, and each question's
+    /// pre / post correctness by topic. Admin only: Settings enables the button once the admin code is entered.
     /// Reads the records through ResultsDatabase only; never opens the database itself.
     /// </summary>
     public static class QuizResultExporter
@@ -21,14 +22,20 @@ namespace ThermoTactics
             public string Message;
         }
 
-        public static ExportResult Export(ResultsDatabase db, StageData stage, string testerCode)
+        public static ExportResult Export(ResultsDatabase db, StageData stage)
         {
+            // Checked here, where the data is read, not only by greying out the button: no screen can export without admin.
+            if (!AdminSession.Unlocked)
+            {
+                Debug.LogWarning("[QuizResultExporter] Export refused: admin tools are locked.");
+                return new ExportResult { Message = "Admin only: enter the admin code in Settings first." };
+            }
             List<QuizRecord> records = db.GetAllQuizzes();
             if (records.Count == 0) return new ExportResult { Message = "No quiz results to export yet." };
 
-            string tester = SafeFile(string.IsNullOrWhiteSpace(testerCode) ? "device" : testerCode.Trim());
-            string csv = BuildCsv(db, records, stage, tester);
-            string file = $"quiz_results_{tester}_{DateTime.Now:yyyy-MM-dd}.csv";
+            string csv = BuildCsv(db, records, stage);
+            // The phone letter in the name keeps files from different phones apart when they are merged.
+            string file = $"quiz_results_phone{SafeFile(SettingsStore.PhoneLetter)}_{DateTime.Now:yyyy-MM-dd}.csv";
 
             foreach (string dir in Folders())
             {
@@ -59,14 +66,14 @@ namespace ThermoTactics
             yield return System.IO.Path.Combine(Application.persistentDataPath, "Exports");
         }
 
-        private static string BuildCsv(ResultsDatabase db, List<QuizRecord> records, StageData stage, string tester)
+        private static string BuildCsv(ResultsDatabase db, List<QuizRecord> records, StageData stage)
         {
             QuizData stageQuiz = stage != null ? stage.quiz : null;
             int preCount = stageQuiz != null ? stageQuiz.Count(QuizManager.Pre) : 0;
             int postCount = stageQuiz != null ? stageQuiz.Count(QuizManager.Post) : 0;
             QuizTopic[] topics = stageQuiz != null && stageQuiz.topics != null ? stageQuiz.topics : new QuizTopic[0];
             var sb = new StringBuilder();
-            var header = new List<string> { "tester", "player_name", "stage_id", "stage_name", "pre_score", "post_score", "max_score", "normalized_gain" };
+            var header = new List<string> { "participant_code", "player_name", "stage_id", "stage_name", "pre_score", "post_score", "max_score", "normalized_gain" };
             for (int q = 0; q < preCount; q++) header.Add(ColumnId(stageQuiz?.preQuestions, q, "pre"));
             for (int q = 0; q < postCount; q++) header.Add(ColumnId(stageQuiz?.postQuestions, q, "post"));
             foreach (QuizTopic t in topics) header.AddRange(new[] { $"topic_{t.id}_pre", $"topic_{t.id}_post" });
@@ -89,7 +96,7 @@ namespace ThermoTactics
 
                 var row = new List<string>
                 {
-                    tester, player, stageId.ToString(), sameStage ? stage.stageName : "",
+                    db.CodeOf(player), player, stageId.ToString(), sameStage ? stage.stageName : "",
                     pre != null ? pre.Score.ToString() : "", post != null ? post.Score.ToString() : "", max.ToString(),
                     QuizManager.GainText(gain),
                 };

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using SQLite;
 using UnityEngine;
 
@@ -55,6 +56,31 @@ namespace ThermoTactics
         [Column("best_stars")]      public int     BestStars     { get; set; }
     }
 
+    /// <summary>
+    /// One registered player: a name (unique on this phone, matched without regard to capitals or extra spaces) and the
+    /// participant code given automatically when the name first registers. Codes are never reused.
+    /// </summary>
+    [UnityEngine.Scripting.Preserve]
+    public class PlayerRecord
+    {
+        [Column("code")]        public string Code      { get; set; }
+        [Column("player_name")] public string Name      { get; set; }
+        [Column("created_at")]  public string CreatedAt { get; set; }
+    }
+
+    /// <summary>One leaderboard line: a registered player and their total stars over every stage.</summary>
+    [UnityEngine.Scripting.Preserve]
+    public class LeaderboardRow
+    {
+        [Column("code")]        public string Code  { get; set; }
+        [Column("player_name")] public string Name  { get; set; }
+        [Column("stars")]       public int    Stars { get; set; }
+        public int Rank;   // set by the caller: players with equal stars share a rank
+    }
+
+    [UnityEngine.Scripting.Preserve]
+    internal class NameRow { [Column("player_name")] public string player_name { get; set; } }
+
     /// <summary>Row shape for the saved_session table.</summary>
     [UnityEngine.Scripting.Preserve]
     internal class SavedSessionRow
@@ -96,9 +122,9 @@ namespace ThermoTactics
     /// Local database: SQLite file at Application.persistentDataPath/thermo_tactics.db
     /// (package com.gilzoide.sqlite-net, native SQLite for Android and Windows).
     ///
-    /// Tables (schema version 7; version 3 added best_stars and peak_temperature, version 4 the two education tables,
+    /// Tables (schema version 8; version 3 added best_stars and peak_temperature, version 4 the two education tables,
     /// version 5 the wallet and owned units, version 6 the squad of the saved game, version 7 quiz scores up to max_score
-    /// for the matched-pair quizzes):
+    /// for the matched-pair quizzes, version 8 the players table with automatic participant codes):
     ///   game_results(id, player_name, result, created_at, final_temperature, waves_cleared) — one row per finished level
     ///   level_progress(player_name, stage_id, level_number, is_cleared, attempts, best_final_temp) — drives unlocking
     ///   saved_session(player_name, stage_id, level_number, wave_number, turn_number, …) — the Continue save, one per player
@@ -111,7 +137,7 @@ namespace ThermoTactics
     public class ResultsDatabase : MonoBehaviour
     {
         public const int MaxNameLength = 20;
-        public const int SchemaVersion = 7;
+        public const int SchemaVersion = 8;
         private const string FileName = "thermo_tactics.db";
         private const string LegacyJsonName = "results_db.json";
 
@@ -227,9 +253,30 @@ namespace ThermoTactics
             "  bought_at   TEXT NOT NULL," +
             "  PRIMARY KEY (player_name, unit_id))";
 
+        // Version 8: one row per registered name. code = "<phone letter>-<3 digits>" (A-001), unique; the name is unique on
+        // this phone without regard to capitals; (prefix, seq) is unique so a code can never be issued twice.
+        private const string CreatePlayersSql =
+            "CREATE TABLE IF NOT EXISTS players (" +
+            "  code        TEXT    NOT NULL PRIMARY KEY," +
+            "  player_name TEXT    NOT NULL UNIQUE COLLATE NOCASE CHECK (length(player_name) BETWEEN 1 AND 20)," +
+            "  prefix      TEXT    NOT NULL CHECK (length(prefix) = 1)," +
+            "  seq         INTEGER NOT NULL CHECK (seq BETWEEN 1 AND 999)," +
+            "  created_at  TEXT    NOT NULL," +
+            "  UNIQUE (prefix, seq))";
+
         private SQLiteConnection _db;
 
-        public string FilePath => Path.Combine(Application.persistentDataPath, FileName);
+        public string FilePath =>
+#if UNITY_EDITOR
+            !string.IsNullOrEmpty(DevPathOverride) ? DevPathOverride :
+#endif
+            Path.Combine(Application.persistentDataPath, FileName);
+
+#if UNITY_EDITOR
+        /// <summary>Editor tests only: a separate database file, so tests never touch the real one.</summary>
+        public string DevPathOverride;
+        public void DevClose() => Close();
+#endif
 
         private void Awake() => Open();
 
@@ -590,15 +637,118 @@ namespace ThermoTactics
             catch (Exception e) { Debug.LogError($"[ResultsDatabase] Reset progress failed: {e.Message}"); }
         }
 
+        // ---------------------------------------------------------------- players (participant codes)
+
+        /// <summary>The registered player with this name (capitals and extra spaces ignored), or null if the name is new.</summary>
+        public PlayerRecord FindPlayer(string name)
+        {
+            name = Sanitize(name);
+            if (name.Length == 0 || !EnsureOpen()) return null;
+            try { return _db.Query<PlayerRecord>("SELECT code, player_name, created_at FROM players WHERE player_name = ?", name).FirstOrDefault(); }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Find player failed: {e.Message}"); return null; }
+        }
+
+        /// <summary>The participant code of a name, or "" if the name is not registered.</summary>
+        public string CodeOf(string name) => FindPlayer(name)?.Code ?? "";
+
+        /// <summary>The code the next new player on this phone would get (shown before they press Start).</summary>
+        public string NextCode()
+        {
+            if (!EnsureOpen()) return "";
+            string prefix = SettingsStore.PhoneLetter;
+            int seq = _db.ExecuteScalar<int>("SELECT COALESCE(MAX(seq), 0) FROM players WHERE prefix = ?", prefix) + 1;
+            return FormatCode(prefix, seq);
+        }
+
+        /// <summary>
+        /// Registers a name and gives it the next participant code of this phone (phone letter + number). A name that is
+        /// already registered keeps its code. Returns null if the name is invalid, the codes for this letter ran out, or
+        /// the database could not be written.
+        /// </summary>
+        public PlayerRecord RegisterPlayer(string name)
+        {
+            name = Sanitize(name);
+            if (name.Length < 2 || !EnsureOpen()) return null;
+            PlayerRecord existing = FindPlayer(name);
+            // Checked here too, not only on the name field, so no screen or tool can register a name with symbols.
+            if (existing == null && !IsAllowedName(name))
+            {
+                Debug.LogWarning("[ResultsDatabase] Refused to register a player name with symbols.");
+                return null;
+            }
+            if (existing != null) return existing;
+            try
+            {
+                PlayerRecord added = null;
+                _db.RunInTransaction(() => added = InsertPlayer(name, SettingsStore.PhoneLetter));
+                return added;
+            }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Register player failed: {e.Message}"); return null; }
+        }
+
+        /// <summary>Every registered player, in the order they registered.</summary>
+        public List<PlayerRecord> GetPlayers()
+        {
+            if (!EnsureOpen()) return new List<PlayerRecord>();
+            try { return _db.Query<PlayerRecord>("SELECT code, player_name, created_at FROM players ORDER BY prefix, seq"); }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Players query failed: {e.Message}"); return new List<PlayerRecord>(); }
+        }
+
+        /// <summary>
+        /// Every registered player with their total stars over all stages (best stars per cleared level), most stars first.
+        /// Players with equal stars share a rank (22, 22, 19 → 1, 1, 3). Quiz scores are never part of it.
+        /// </summary>
+        public List<LeaderboardRow> GetLeaderboard()
+        {
+            var rows = new List<LeaderboardRow>();
+            if (!EnsureOpen()) return rows;
+            try
+            {
+                rows = _db.Query<LeaderboardRow>(
+                    "SELECT p.code AS code, p.player_name AS player_name, " +
+                    $"COALESCE(SUM(CASE WHEN lp.is_cleared = 1 THEN MAX(1, MIN({StarRating.MaxStars}, lp.best_stars)) ELSE 0 END), 0) AS stars " +
+                    "FROM players p LEFT JOIN level_progress lp ON lp.player_name = p.player_name COLLATE NOCASE " +
+                    "GROUP BY p.code ORDER BY stars DESC, p.player_name COLLATE NOCASE");
+                for (int i = 0; i < rows.Count; i++)
+                    rows[i].Rank = i > 0 && rows[i].Stars == rows[i - 1].Stars ? rows[i - 1].Rank : i + 1;
+            }
+            catch (Exception e) { Debug.LogError($"[ResultsDatabase] Leaderboard query failed: {e.Message}"); }
+            return rows;
+        }
+
+        public static string FormatCode(string prefix, int seq) => $"{prefix}-{seq:000}";
+
+        private PlayerRecord InsertPlayer(string name, string prefix)
+        {
+            int seq = _db.ExecuteScalar<int>("SELECT COALESCE(MAX(seq), 0) FROM players WHERE prefix = ?", prefix) + 1;
+            if (seq > 999) { Debug.LogError($"[ResultsDatabase] Phone letter {prefix} has no codes left; pick another letter."); return null; }
+            var rec = new PlayerRecord { Code = FormatCode(prefix, seq), Name = name, CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") };
+            _db.Execute("INSERT INTO players (code, player_name, prefix, seq, created_at) VALUES (?, ?, ?, ?, ?)", rec.Code, rec.Name, prefix, seq, rec.CreatedAt);
+            return rec;
+        }
+
         public int Count()
         {
             if (!EnsureOpen()) return 0;
             return _db.ExecuteScalar<int>("SELECT COUNT(*) FROM game_results");
         }
 
+        /// <summary>Trims the name and turns runs of spaces into one, so "Juan  D " and "Juan D" are the same player.</summary>
+        /// <summary>
+        /// A player name may use letters (ñ and accents too), digits, spaces and . - ' only. Symbols such as &lt; &gt; { } " ;
+        /// are refused, so a name can never carry text formatting or anything that looks like code into the screens or the CSV.
+        /// </summary>
+        public static bool IsAllowedName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            foreach (char c in name)
+                if (!(char.IsLetterOrDigit(c) || c == ' ' || c == '.' || c == '-' || c == '\'')) return false;
+            return true;
+        }
+
         public static string Sanitize(string name)
         {
-            name = (name ?? string.Empty).Trim();
+            name = System.Text.RegularExpressions.Regex.Replace((name ?? string.Empty).Trim(), @"\s+", " ");
             if (name.Length > MaxNameLength) name = name.Substring(0, MaxNameLength);
             return name;
         }
@@ -625,7 +775,9 @@ namespace ThermoTactics
             }
             catch (Exception e)
             {
-                Debug.LogError($"[ResultsDatabase] Could not open {FilePath}: {e.Message}");
+                // Short message only (no stack trace on screen); the game carries on with empty data instead of crashing.
+                Debug.LogError($"[ResultsDatabase] Could not open the save file: {e.Message}");
+                try { _db?.Close(); } catch { /* already closed */ }
                 _db = null;
             }
         }
@@ -686,6 +838,28 @@ namespace ThermoTactics
                     _db.Execute("INSERT INTO quiz_results (id, player_name, stage_id, quiz_type, answers, score, max_score, taken_at, attempts) " +
                                 "SELECT id, player_name, stage_id, quiz_type, answers, score, max_score, taken_at, attempts FROM quiz_results_v6");
                     _db.Execute("DROP TABLE quiz_results_v6");
+                });
+            }
+            if (from < 8)
+            {
+                // Version 8: the players table. Names already on this phone are registered in the order they first
+                // appear (oldest results first), each with the next code of this phone's letter.
+                _db.RunInTransaction(() =>
+                {
+                    _db.Execute(CreatePlayersSql);
+                    if (from > 0)
+                    {
+                        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        var names = new List<string>();
+                        foreach (string table in new[] { "game_results", "level_progress", "quiz_results", "saved_session", "wallet", "owned_units", "facts_seen" })
+                            foreach (NameRow r in _db.Query<NameRow>($"SELECT DISTINCT player_name FROM {table}"))
+                            {
+                                string n = Sanitize(r.player_name);
+                                if (n.Length > 0 && seen.Add(n)) names.Add(n);
+                            }
+                        foreach (string n in names)
+                            if (_db.ExecuteScalar<int>("SELECT COUNT(*) FROM players WHERE player_name = ?", n) == 0) InsertPlayer(n, SettingsStore.PhoneLetter);
+                    }
                 });
             }
             if (from > 0 && from < SchemaVersion) Debug.Log($"[ResultsDatabase] Upgraded database from version {from} to {SchemaVersion}.");
