@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace ThermoTactics
 {
-    /// <summary>One quiz topic in the pre → post comparison (questions right / asked, in each quiz).</summary>
+    /// <summary>One concept in the pre → post comparison (questions right / asked, in each quiz).</summary>
     public class TopicResult
     {
         public string TopicId;
@@ -11,6 +11,7 @@ namespace ThermoTactics
         public int PreCorrect, PreTotal;     // PreTotal 0: no pre-quiz on record (or no pre question on this topic)
         public int PostCorrect, PostTotal;
         public string ReviewFact;            // title of a fact that teaches this topic (for "review" hints)
+        public bool Scored = true;           // false for the game comprehension row (reported apart from the score)
 
         public bool HasPre => PreTotal > 0;
         public float PreShare => PreTotal > 0 ? PreCorrect / (float)PreTotal : 0f;
@@ -26,25 +27,25 @@ namespace ThermoTactics
         public string Type;
         public int Score;            // this attempt
         public int KeptScore;        // the stored (first) score, the one the study uses
-        public int MaxScore;
+        public int MaxScore;         // scored questions only (the matched pairs)
         public bool IsRetake;
         public bool Saved;
         public int? PreScore;        // post-quiz: the player's pre-quiz score for the stage
-        public float? Gain;          // post-quiz: ((post − pre) / pre) × 100, null when pre is missing or 0
+        public float? Gain;          // post-quiz: normalized gain (post − pre) / (max − pre), null when pre is missing or full
         public TopicResult[] Topics = new TopicResult[0];   // post-quiz: one row per topic
-        public int ImprovedCount => Topics.Count(t => t.Improved);
+        public int ImprovedCount => Topics.Count(t => t.Scored && t.Improved);
     }
 
     /// <summary>
-    /// Scores the pre- and post-quizzes and compares them (Parts II and IV, Process 2). The two quizzes have
-    /// different questions on the same topics, so the comparison is per topic: questions right before vs after.
-    /// Gain is computed from the total scores, never stored.
+    /// Scores the pre- and post-quizzes and compares them (Parts II and IV, Process 2). The quizzes are matched pairs:
+    /// each concept has one pre question and one post twin on the same topic, so the comparison is per concept.
+    /// Only scored questions count; game comprehension questions are reported apart. Gain is the normalized gain
+    /// (post − pre) / (max − pre), computed from the stored scores, never stored itself.
     /// </summary>
     public static class QuizManager
     {
         public const string Pre = "pre";
         public const string Post = "post";
-        public const float GainGoal = 30f;
 
         public static bool IsComplete(int[] answers, QuizData quiz, string type)
         {
@@ -61,7 +62,14 @@ namespace ThermoTactics
             return result;
         }
 
-        public static int Score(int[] answers, QuizQuestion[] questions) => Correct(answers, questions).Count(c => c);
+        /// <summary>Right answers among the scored questions (game comprehension questions do not count).</summary>
+        public static int Score(int[] answers, QuizQuestion[] questions)
+        {
+            bool[] ok = Correct(answers, questions);
+            int n = 0;
+            for (int i = 0; i < questions.Length; i++) if (ok[i] && questions[i].scored) n++;
+            return n;
+        }
 
         public static string FormatAnswers(int[] answers) => string.Join(",", answers);
 
@@ -72,13 +80,17 @@ namespace ThermoTactics
             return s.Split(',').Select(p => int.TryParse(p.Trim(), out int v) ? v : -1).ToArray();
         }
 
-        public static float? Gain(int? pre, int? post)
+        /// <summary>
+        /// Normalized gain: the share of the room left after the pre-quiz that the player gained, (post − pre) / (max − pre).
+        /// Null when a score is missing or the pre-quiz was already full (no room to gain). Negative when the score dropped.
+        /// </summary>
+        public static float? Gain(int? pre, int? post, int max)
         {
-            if (!pre.HasValue || !post.HasValue || pre.Value <= 0) return null;
-            return (post.Value - pre.Value) / (float)pre.Value * 100f;
+            if (!pre.HasValue || !post.HasValue || max <= 0 || pre.Value >= max) return null;
+            return (post.Value - pre.Value) / (float)(max - pre.Value);
         }
 
-        public static string GainText(float? gain) => gain.HasValue ? $"{(gain.Value >= 0 ? "+" : "")}{gain.Value:0.0}%" : "N/A";
+        public static string GainText(float? gain) => gain.HasValue ? gain.Value.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "N/A";
 
         public static bool NeedsPre(ResultsDatabase db, string player, StageData stage)
             => Ready(stage, Pre) && db.GetQuiz(player, stage.stageId, Pre) == null;
@@ -95,13 +107,13 @@ namespace ThermoTactics
             if (!IsComplete(answers, quiz, type)) return null;
             QuizQuestion[] questions = quiz.Questions(type);
             int score = Score(answers, questions);
-            QuizRecord stored = db.SaveQuiz(player, stage.stageId, type, FormatAnswers(answers), score, questions.Length, out bool retake);
+            QuizRecord stored = db.SaveQuiz(player, stage.stageId, type, FormatAnswers(answers), score, quiz.ScoredCount(type), out bool retake);
             QuizOutcome o = Build(db, player, stage, type, stored != null ? ParseAnswers(stored.Answers) : answers);
             o.Score = score;
             o.KeptScore = stored != null ? stored.Score : score;
             o.IsRetake = retake;
             o.Saved = stored != null;
-            if (type == Post) o.Gain = Gain(o.PreScore, o.KeptScore);
+            if (type == Post) o.Gain = Gain(o.PreScore, o.KeptScore, o.MaxScore);
             return o;
         }
 
@@ -114,7 +126,7 @@ namespace ThermoTactics
             QuizOutcome o = Build(db, player, stage, Post, ParseAnswers(post.Answers));
             o.Score = o.KeptScore = post.Score;
             o.Saved = true;
-            o.Gain = Gain(o.PreScore, post.Score);
+            o.Gain = Gain(o.PreScore, post.Score, o.MaxScore);
             return o;
         }
 
@@ -122,7 +134,7 @@ namespace ThermoTactics
         private static QuizOutcome Build(ResultsDatabase db, string player, StageData stage, string type, int[] answers)
         {
             QuizData quiz = stage.quiz;
-            var o = new QuizOutcome { Type = type, MaxScore = quiz.Count(type) };
+            var o = new QuizOutcome { Type = type, MaxScore = quiz.ScoredCount(type) };
             if (type != Post) return o;
 
             QuizRecord preRecord = db.GetQuiz(player, stage.stageId, Pre);
@@ -135,7 +147,12 @@ namespace ThermoTactics
             {
                 var r = new TopicResult { TopicId = t.id, TopicName = t.name, ReviewFact = FactFor(stage, t.id)?.title };
                 for (int i = 0; i < quiz.postQuestions.Length; i++)
-                    if (quiz.postQuestions[i].topicId == t.id) { r.PostTotal++; if (post[i]) r.PostCorrect++; }
+                    if (quiz.postQuestions[i].topicId == t.id)
+                    {
+                        r.PostTotal++;
+                        if (post[i]) r.PostCorrect++;
+                        if (!quiz.postQuestions[i].scored) r.Scored = false;
+                    }
                 if (pre != null)
                     for (int i = 0; i < quiz.preQuestions.Length; i++)
                         if (quiz.preQuestions[i].topicId == t.id) { r.PreTotal++; if (pre[i]) r.PreCorrect++; }

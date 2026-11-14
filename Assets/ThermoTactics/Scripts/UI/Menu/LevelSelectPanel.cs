@@ -5,7 +5,8 @@ using UnityEngine.UI;
 namespace ThermoTactics
 {
     /// <summary>
-    /// The Baguio level path: 10 levels in a line; beating a level unlocks the next.
+    /// A stage's level path: 10 levels in a line; beating a level unlocks the next. Every stage uses the same
+    /// layout; the path art and the colours (StageThemes) come from the stage.
     /// The side panel shows the selected level (waves, Oxygen, best temperature, threat, enemies) and Play.
     /// Progress comes from the level_progress table; a saved game turns Play into Continue.
     /// </summary>
@@ -20,6 +21,7 @@ namespace ThermoTactics
         [SerializeField] private Text _storeBalance;
         [SerializeField] private Text _title;
         [SerializeField] private Text _subtitle;
+        [SerializeField] private Image _pathArt;
         [SerializeField] private LevelNode[] _nodes = new LevelNode[0];
         [Tooltip("Road segment i joins node i and node i+1; gold once level i is cleared.")]
         [SerializeField] private Image[] _segments = new Image[0];
@@ -54,8 +56,9 @@ namespace ThermoTactics
         private readonly HashSet<int> _cleared = new HashSet<int>();
         private readonly Dictionary<int, LevelProgress> _progress = new Dictionary<int, LevelProgress>();
         private int _selected = 1;
+        private StageTheme _applied = StageTheme.Forest;   // the colours the screen was built with
 
-        private static Color Hex(string h) { ColorUtility.TryParseHtmlString(h, out Color c); return c; }
+        private static Color Hex(string h) => StageThemes.C(h);   // Baguio colours, translated to the stage's theme
 
         private void Awake()
         {
@@ -80,13 +83,17 @@ namespace ThermoTactics
                 _progress[p.LevelNumber] = p;
                 if (p.IsCleared == 1) _cleared.Add(p.LevelNumber);
             }
+            StageThemes.Current = menu.Stage.theme;
+            StageThemes.Recolor(_root.transform, _applied, menu.Stage.theme);
+            _applied = menu.Stage.theme;
+            if (_pathArt != null && menu.Stage.levelPathArt != null) _pathArt.sprite = menu.Stage.levelPathArt;
             _title.text = $"STAGE {menu.Stage.stageId} · {menu.Stage.stageName.ToUpperInvariant()}";
             _subtitle.text = $"Beat a level to open the next one · {_cleared.Count} of {menu.Stage.LevelCount} cleared";
             RefreshStore();
             for (int i = 0; i < _segments.Length; i++)
                 _segments[i].color = _cleared.Contains(i + 1) ? Hex("#E2AE2C") : new Color(0, 0, 0, 0);
 
-            SessionSnapshot save = menu.SavedGame;
+            SessionSnapshot save = menu.SavedGameHere;
             int pick = selectLevel > 0 && IsUnlocked(selectLevel) ? selectLevel
                      : save != null ? save.levelNumber
                      : CurrentLevel();
@@ -94,7 +101,11 @@ namespace ThermoTactics
             Select(pick);
         }
 
-        public void Hide() => _root.SetActive(false);
+        public void Hide()
+        {
+            _root.SetActive(false);
+            StageThemes.Current = StageTheme.Forest;   // the other menus use the Baguio colours
+        }
 
         private bool IsUnlocked(int level) => level == 1 || _cleared.Contains(level - 1);
 
@@ -163,22 +174,25 @@ namespace ThermoTactics
                 _enemyNames[i].text = e.displayName;
             }
             _note.text = l.note;
-            if (l.levelNumber == 1 && TutorialController.IsDue(_menu.PlayerName))
+            if (l.levelNumber == 1 && _menu.Stage.stageId == 1 && TutorialController.IsDue(_menu.PlayerName))
                 _squad.text = "Squad: the 5 starters (the Level 1 guide uses them)";
             else
             {
                 UnitData[] last = PlayerSquad.Load(_menu.PlayerName, _menu.Stage, _menu.Database.GetOwned(_menu.PlayerName), l);
                 var names = new List<string>();
                 foreach (UnitData u in last) names.Add(u.displayName);
-                _squad.text = $"Last squad: {string.Join(", ", names)}. You can change it after you press Play.";
+                _squad.text = $"Last squad: {string.Join(", ", names)}. Change it after PLAY.";
             }
 
             SessionSnapshot save = _menu.SavedGame;
-            bool savedHere = save != null && save.levelNumber == l.levelNumber;
+            bool sameStage = save != null && save.stageId == _menu.Stage.stageId;
+            bool savedHere = sameStage && save.levelNumber == l.levelNumber;
+            StageData saveStage = save != null ? _menu.FindStage(save.stageId) : null;
             _saveNote.gameObject.SetActive(save != null);
             _saveNote.text = savedHere
                 ? $"Saved game here: Wave {save.waveNumber}, Turn {save.turnNumber}."
-                : save != null ? $"Your saved game is at Level {save.levelNumber}." : "";
+                : sameStage ? $"Your saved game is at Level {save.levelNumber}."
+                : save != null ? $"Your saved game is at {(saveStage != null ? saveStage.ShortName : "another stage")} Level {save.levelNumber}." : "";
 
             _playButton.gameObject.SetActive(unlocked);
             _lockedBox.SetActive(!unlocked);
@@ -219,7 +233,7 @@ namespace ThermoTactics
         private void OnPlay()
         {
             if (!IsUnlocked(_selected)) return;
-            SessionSnapshot save = _menu.SavedGame;
+            SessionSnapshot save = _menu.SavedGameHere;
             if (save != null && save.levelNumber == _selected) _menu.PlayLevel(_selected, save);
             else _menu.StartFresh(_selected);
         }

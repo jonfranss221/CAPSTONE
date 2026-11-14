@@ -30,17 +30,29 @@ namespace ThermoTactics
 
         public bool IsOpen => _root != null && _root.activeSelf;
 
+        private bool _ready, _opening;
+
         private void Awake()
         {
+            Init();
+            if (!_opening) _root.SetActive(false);
+        }
+
+        /// <summary>Wires the buttons once. The panel is saved hidden in the scene, so Show calls this too.</summary>
+        private void Init()
+        {
+            if (_ready) return;
+            _ready = true;
             _cancelButton.onClick.AddListener(Hide);
             _startButton.onClick.AddListener(OnStart);
             if (_defaultButton != null) _defaultButton.onClick.AddListener(UseStarters);
             _tileTemplate.SetActive(false);
-            _root.SetActive(false);
         }
 
         public void Show(MainMenuController menu, int levelNumber, Action<UnitData[]> onStart)
         {
+            _opening = true;
+            Init();
             _onStart = onStart;
             _level = menu.Stage.GetLevel(levelNumber);
             HashSet<string> owned = menu.Database.GetOwned(menu.PlayerName);
@@ -68,6 +80,7 @@ namespace ThermoTactics
             _info.text = "Tap an ally to add or remove it. The order you pick is the order in the deploy bar.";
             Refresh();
             _root.SetActive(true);
+            _opening = false;
             _root.transform.SetAsLastSibling();
         }
 

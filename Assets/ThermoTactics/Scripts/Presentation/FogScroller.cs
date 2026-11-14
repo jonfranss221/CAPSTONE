@@ -2,8 +2,8 @@ using UnityEngine;
 
 /// <summary>
 /// Drifts a horizontally-tileable fog sprite sideways forever.
-/// Put this on a parent object that holds TWO copies of the same fog sprite
-/// placed side by side (the second at x = +21 world units).
+/// Put this on a parent object that holds copies of the same fog sprite placed side by side,
+/// 21 world units apart (the battle scene uses four, at -21, 0, 21 and 42, to cover wide screens).
 /// </summary>
 namespace ThermoTactics
 {

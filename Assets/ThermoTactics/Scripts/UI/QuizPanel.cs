@@ -5,10 +5,11 @@ using UnityEngine.UI;
 namespace ThermoTactics
 {
     /// <summary>
-    /// The Pre-Quiz / Post-Quiz screen (Main Menu and battle scene). One question per page, 4 choices,
-    /// Back / Next, Submit only when all 5 are answered. Answers are not marked during the quiz.
-    /// The result page shows the score; after the post-quiz it compares every topic with the pre-quiz
-    /// (before → after) and shows the knowledge gain.
+    /// The Pre-Quiz / Post-Quiz screen (Main Menu and battle scene). One question per page, 4 choices shown in a
+    /// shuffled order (answers are stored as the original choice, so scoring and the CSV are unaffected),
+    /// Back / Next, Submit only when every question is answered. Answers are not marked during the quiz.
+    /// The result page shows the score; after the post-quiz it compares every concept with the pre-quiz
+    /// (before → after), shows the game comprehension questions apart, and the normalized knowledge gain.
     /// </summary>
     public class QuizPanel : MonoBehaviour
     {
@@ -23,7 +24,7 @@ namespace ThermoTactics
         [SerializeField] private Button[] _choices = new Button[QuizData.ChoiceCount];
         [SerializeField] private Text[] _choiceLabels = new Text[QuizData.ChoiceCount];
         [SerializeField] private Text[] _choiceLetters = new Text[QuizData.ChoiceCount];
-        [SerializeField] private Image[] _dots = new Image[QuizData.QuestionCount];
+        [SerializeField] private Image[] _dots = new Image[QuizData.MaxQuestions];
         [SerializeField] private Button _backButton;
         [SerializeField] private Button _nextButton;
         [SerializeField] private Text _nextLabel;
@@ -34,10 +35,10 @@ namespace ThermoTactics
         [SerializeField] private Text _resultScore;
         [SerializeField] private Text _resultBody;
         [SerializeField] private GameObject _compareTable;
-        [SerializeField] private Text[] _rowTopic = new Text[QuizData.QuestionCount];
-        [SerializeField] private Text[] _rowBefore = new Text[QuizData.QuestionCount];
-        [SerializeField] private Text[] _rowAfter = new Text[QuizData.QuestionCount];
-        [SerializeField] private Text[] _rowStatus = new Text[QuizData.QuestionCount];
+        [SerializeField] private Text[] _rowTopic = new Text[QuizData.MaxTopics];
+        [SerializeField] private Text[] _rowBefore = new Text[QuizData.MaxTopics];
+        [SerializeField] private Text[] _rowAfter = new Text[QuizData.MaxTopics];
+        [SerializeField] private Text[] _rowStatus = new Text[QuizData.MaxTopics];
         [SerializeField] private Text _gain;
         [SerializeField] private Button _continueButton;
 
@@ -54,13 +55,26 @@ namespace ThermoTactics
         private ResultsDatabase _db;
         private Action<QuizOutcome> _onDone;
         private QuizOutcome _outcome;
-        private int[] _answers;
+        private int[] _answers;          // original choice index per question (-1 = not answered)
+        private int[][] _order;          // per question: _order[q][slot] = original choice shown in that slot
         private int _page;
+        private static readonly System.Random Shuffler = new System.Random();
 
         public bool IsOpen => _root != null && _root.activeSelf;
 
+        private bool _ready, _opening;
+
         private void Awake()
         {
+            Init();
+            if (!_opening) _root.SetActive(false);
+        }
+
+        /// <summary>Wires the buttons once. The panel is saved hidden in the scene, so Show calls this too.</summary>
+        private void Init()
+        {
+            if (_ready) return;
+            _ready = true;
             for (int i = 0; i < _choices.Length; i++)
             {
                 int index = i;
@@ -69,25 +83,40 @@ namespace ThermoTactics
             _backButton.onClick.AddListener(() => ShowPage(_page - 1));
             _nextButton.onClick.AddListener(OnNext);
             _continueButton.onClick.AddListener(Finish);
-            _root.SetActive(false);
         }
 
         public void Show(StageData stage, string type, string player, ResultsDatabase db, Action<QuizOutcome> onDone)
         {
+            _opening = true;
+            Init();
             _stage = stage; _type = type; _player = player; _db = db; _onDone = onDone; _outcome = null;
             int n = stage.quiz.Count(type);
             _answers = new int[n];
-            for (int i = 0; i < n; i++) _answers[i] = -1;
+            _order = new int[n][];
+            for (int i = 0; i < n; i++)
+            {
+                _answers[i] = -1;
+                _order[i] = new int[QuizData.ChoiceCount];
+                for (int c = 0; c < QuizData.ChoiceCount; c++) _order[i][c] = c;
+                for (int c = QuizData.ChoiceCount - 1; c > 0; c--)
+                {
+                    int k = Shuffler.Next(c + 1);
+                    (_order[i][c], _order[i][k]) = (_order[i][k], _order[i][c]);
+                }
+            }
             for (int i = 0; i < _dots.Length; i++) _dots[i].gameObject.SetActive(i < n);
 
             bool post = type == QuizManager.Post;
             _heading.text = post ? "POST-QUIZ" : "PRE-QUIZ";
+            int scored = stage.quiz.ScoredCount(type), extra = n - scored;
             _intro.text = post
-                ? $"You cleared {stage.stageName}! {n} questions on the same topics as the pre-quiz. Let's see what you learned."
+                ? $"You cleared {stage.stageName}! {scored} questions on the same ideas as the pre-quiz" +
+                  (extra > 0 ? $", then {extra} quick question{(extra == 1 ? "" : "s")} about the game (not scored)." : ".") + " Let's see what you learned."
                 : $"Before you play {stage.stageName}: {n} quick questions. It is not graded, so just pick what you think is right.";
             _questionPage.SetActive(true);
             _resultPage.SetActive(false);
             _root.SetActive(true);
+            _opening = false;
             _root.transform.SetAsLastSibling();
             ShowPage(0);
         }
@@ -102,18 +131,20 @@ namespace ThermoTactics
             _question.text = q.text;
             for (int i = 0; i < _choices.Length; i++)
             {
-                bool has = q.choices != null && i < q.choices.Length && !string.IsNullOrEmpty(q.choices[i]);
+                int c = _order[_page][i];
+                bool has = q.choices != null && c < q.choices.Length && !string.IsNullOrEmpty(q.choices[c]);
                 _choices[i].gameObject.SetActive(has);
-                if (has) _choiceLabels[i].text = q.choices[i];
+                if (has) _choiceLabels[i].text = q.choices[c];
             }
             _backButton.gameObject.SetActive(_page > 0);
             _message.text = "";
             Refresh();
         }
 
-        private void Choose(int choice)
+        /// <summary>A tap on the choice in this slot: stores the original choice it shows.</summary>
+        private void Choose(int slot)
         {
-            _answers[_page] = choice;
+            _answers[_page] = _order[_page][slot];
             _message.text = "";
             Refresh();
         }
@@ -122,7 +153,7 @@ namespace ThermoTactics
         {
             for (int i = 0; i < _choices.Length; i++)
             {
-                bool on = _answers[_page] == i;
+                bool on = _answers[_page] == _order[_page][i];
                 _choices[i].GetComponent<Image>().color = on ? Gold : Choice;
                 _choiceLabels[i].color = on ? Ink : Cream;
                 if (_choiceLetters[i] != null) _choiceLetters[i].color = on ? Ink : Gold;
@@ -133,7 +164,7 @@ namespace ThermoTactics
             bool last = _page == _answers.Length - 1;
             _nextLabel.text = last ? "SUBMIT" : "NEXT";
             _nextButton.interactable = last ? QuizManager.IsComplete(_answers, _stage.quiz, _type) : _answers[_page] >= 0;
-            if (last && !_nextButton.interactable && _answers[_page] >= 0) _message.text = "Answer all 5 questions.";
+            if (last && !_nextButton.interactable && _answers[_page] >= 0) _message.text = $"Answer all {_answers.Length} questions.";
         }
 
         private void OnNext()
@@ -145,7 +176,7 @@ namespace ThermoTactics
         private void Submit(int[] answers)
         {
             QuizOutcome o = QuizManager.Submit(_db, _player, _stage, _type, answers);
-            if (o == null) { _message.text = "Answer all 5 questions."; return; }
+            if (o == null) { _message.text = $"Answer all {answers.Length} questions."; return; }
             _outcome = o;
             ShowResult(o);
         }
@@ -180,7 +211,8 @@ namespace ThermoTactics
                 _rowBefore[i].color = !t.HasPre ? Cream : Tone(t.PreShare);
                 _rowAfter[i].text = t.PostTotal > 0 ? $"{t.PostCorrect} / {t.PostTotal}" : "—";
                 _rowAfter[i].color = t.PostTotal > 0 ? Tone(t.PostShare) : Cream;
-                _rowStatus[i].text = t.Improved ? "<color=#F3C95A><b>Improved!</b></color>"
+                _rowStatus[i].text = !t.Scored ? "<color=#CFC6B2>Game check, not scored</color>"
+                    : t.Improved ? "<color=#F3C95A><b>Improved!</b></color>"
                     : t.Mastered ? "<color=#9BD3B0>Mastered</color>"
                     : !string.IsNullOrEmpty(t.ReviewFact) ? $"<color=#CFC6B2>Review: {t.ReviewFact}</color>"
                     : "<color=#CFC6B2>Review this topic</color>";
@@ -188,11 +220,13 @@ namespace ThermoTactics
             int improved = o.ImprovedCount;
             _resultBody.text = note + (o.PreScore.HasValue
                 ? $"Pre-quiz {o.PreScore.Value} / {o.MaxScore}, post-quiz {o.KeptScore} / {o.MaxScore}. " +
-                  (improved > 0 ? $"You improved in <b>{improved} topic{(improved == 1 ? "" : "s")}</b>." : "Your answers are on record.")
+                  (improved > 0 ? $"You improved in <b>{improved} concept{(improved == 1 ? "" : "s")}</b>." : "Your answers are on record.")
                 : "No pre-quiz on record, so there is nothing to compare with.");
+            // Normalized gain: 0 = no change, 1 = every point missing in the pre-quiz gained. No pass mark here;
+            // what counts as success is set in the study's methodology.
             _gain.text = o.Gain.HasValue
-                ? $"Knowledge gain <b>{QuizManager.GainText(o.Gain)}</b> (goal: at least {QuizManager.GainGoal:0}%)"
-                : $"Knowledge gain: N/A{(o.PreScore.HasValue ? "" : " (no pre-quiz)")}";
+                ? $"Knowledge gain <b>{QuizManager.GainText(o.Gain)}</b>  <size=14><color=#CFC6B2>(post − pre) ÷ ({o.MaxScore} − pre)</color></size>"
+                : $"Knowledge gain: N/A{(!o.PreScore.HasValue ? " (no pre-quiz)" : " (pre-quiz already full marks)")}";
         }
 
         /// <summary>Green when all right, red when none, cream in between.</summary>

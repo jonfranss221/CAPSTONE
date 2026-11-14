@@ -62,11 +62,11 @@ namespace ThermoTactics
         private static string BuildCsv(ResultsDatabase db, List<QuizRecord> records, StageData stage, string tester)
         {
             QuizData stageQuiz = stage != null ? stage.quiz : null;
-            int preCount = stageQuiz != null ? stageQuiz.Count(QuizManager.Pre) : QuizData.QuestionCount;
-            int postCount = stageQuiz != null ? stageQuiz.Count(QuizManager.Post) : QuizData.QuestionCount;
+            int preCount = stageQuiz != null ? stageQuiz.Count(QuizManager.Pre) : 0;
+            int postCount = stageQuiz != null ? stageQuiz.Count(QuizManager.Post) : 0;
             QuizTopic[] topics = stageQuiz != null && stageQuiz.topics != null ? stageQuiz.topics : new QuizTopic[0];
             var sb = new StringBuilder();
-            var header = new List<string> { "tester", "player_name", "stage_id", "stage_name", "pre_score", "post_score", "gain_pct" };
+            var header = new List<string> { "tester", "player_name", "stage_id", "stage_name", "pre_score", "post_score", "max_score", "normalized_gain" };
             for (int q = 0; q < preCount; q++) header.Add(ColumnId(stageQuiz?.preQuestions, q, "pre"));
             for (int q = 0; q < postCount; q++) header.Add(ColumnId(stageQuiz?.postQuestions, q, "post"));
             foreach (QuizTopic t in topics) header.AddRange(new[] { $"topic_{t.id}_pre", $"topic_{t.id}_post" });
@@ -82,15 +82,16 @@ namespace ThermoTactics
                 int stageId = g.Key.Item2;
                 bool sameStage = stage != null && stage.stageId == stageId;
                 QuizData quiz = sameStage ? stage.quiz : null;
-                float? gain = QuizManager.Gain(pre?.Score, post?.Score);
+                int max = quiz != null ? quiz.ScoredCount(QuizManager.Post) : (post ?? pre).MaxScore;
+                float? gain = QuizManager.Gain(pre?.Score, post?.Score, max);
                 HashSet<string> seen = db.GetSeenFacts(player);
                 int facts = sameStage && stage.facts != null ? stage.facts.Count(f => f != null && seen.Contains(f.factId)) : 0;
 
                 var row = new List<string>
                 {
                     tester, player, stageId.ToString(), sameStage ? stage.stageName : "",
-                    pre != null ? pre.Score.ToString() : "", post != null ? post.Score.ToString() : "",
-                    gain.HasValue ? gain.Value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) : "N/A",
+                    pre != null ? pre.Score.ToString() : "", post != null ? post.Score.ToString() : "", max.ToString(),
+                    QuizManager.GainText(gain),
                 };
                 // Per question: 1 = right, 0 = wrong, blank = not taken.
                 bool[] preOk = pre != null && quiz != null ? QuizManager.Correct(QuizManager.ParseAnswers(pre.Answers), quiz.preQuestions) : null;

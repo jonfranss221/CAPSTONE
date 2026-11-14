@@ -17,6 +17,10 @@ namespace ThermoTactics
         [Tooltip("Red ring on lanes the boss will hit next.")]
         [SerializeField] private SpriteRenderer _danger;
 
+        /// <summary>Set per stage by StageEnvironment: the deploy ring's colour and strength.</summary>
+        public static Color NormalTint = Color.white;
+        public static float NormalAlpha = 0.65f;
+
         private bool _deployable;
         private bool _selected;
         private bool _hovered;
@@ -67,8 +71,8 @@ namespace ThermoTactics
             _highlight.enabled = _deployable || _selected;
             // High-contrast setting: solid yellow rings instead of the soft green. A picked-up unit's slot is gold.
             Color c = _selected ? new Color(0.886f, 0.682f, 0.173f)
-                    : SettingsStore.HighContrast ? new Color(1f, 0.92f, 0.2f) : Color.white;
-            c.a = _selected || _hovered ? 1f : (SettingsStore.HighContrast ? 0.95f : 0.65f);
+                    : SettingsStore.HighContrast ? new Color(1f, 0.92f, 0.2f) : NormalTint;
+            c.a = _selected || _hovered ? 1f : (SettingsStore.HighContrast ? 0.95f : NormalAlpha);
             _highlight.color = c;
         }
     }

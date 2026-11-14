@@ -8,11 +8,15 @@ namespace ThermoTactics
     /// <summary>
     /// The Main Menu scene: player profile form, Continue / Start / Settings / Quit, and the shared dialogs
     /// (quit, credits, "replace saved game?"). Continue is enabled only when the typed player has a saved game
-    /// in the saved_session table; it then reopens the battle at the same level, wave and turn.
+    /// in the saved_session table; it then reopens the battle at the same stage, level, wave and turn.
+    /// Stages: Baguio Forest is open from the start; each later stage opens once every level of the stage before it
+    /// is cleared. The "current" stage is the one the player picked, else the stage of the saved game, else the
+    /// newest stage they have opened.
     /// </summary>
     public class MainMenuController : MonoBehaviour
     {
-        [SerializeField] private StageData _stage;
+        [Tooltip("Every built stage, in order (Stage 1 first).")]
+        [SerializeField] private StageData[] _stages = new StageData[0];
         [SerializeField] private ResultsDatabase _database;
 
         [Header("Title screen")]
@@ -36,6 +40,7 @@ namespace ThermoTactics
 
         [Header("Stage progress strip (title screen)")]
         [SerializeField] private GameObject _progressRoot;
+        [SerializeField] private Text _progressTitle;
         [SerializeField] private Text _progressStars;
         [SerializeField] private Text _progressInfo;
         [SerializeField] private Image[] _progressSegments = new Image[10];
@@ -77,12 +82,61 @@ namespace ThermoTactics
 
         private Action _onConfirm;
         private SessionSnapshot _save;
+        private StageData _stage;
+        private bool _stagePicked;   // true once the player chose a stage (or came back from one); cleared on the title
 
+        /// <summary>The stage the menus show (level path, squad, facts).</summary>
         public StageData Stage => _stage;
+        public StageData[] Stages => _stages;
+        public StageData FirstStage => _stages != null && _stages.Length > 0 ? _stages[0] : null;
         public ResultsDatabase Database => _database;
         public string PlayerName => ResultsDatabase.Sanitize(_nameInput.text);
         public bool NameIsValid => PlayerName.Length >= 2;
+        /// <summary>The player's saved game, in any stage.</summary>
         public SessionSnapshot SavedGame => _save;
+        /// <summary>The saved game if it belongs to the current stage, else null.</summary>
+        public SessionSnapshot SavedGameHere => _save != null && _stage != null && _save.stageId == _stage.stageId ? _save : null;
+
+        public StageData FindStage(int stageId)
+        {
+            if (_stages == null) return null;
+            foreach (StageData s in _stages) if (s != null && s.stageId == stageId) return s;
+            return null;
+        }
+
+        /// <summary>Stage 1 is always open; a later stage opens when every level of the stage before it is cleared.</summary>
+        public bool IsStageOpen(int stageId)
+        {
+            if (stageId <= 1) return FindStage(stageId) != null;
+            StageData prev = FindStage(stageId - 1);
+            return FindStage(stageId) != null && prev != null && NameIsValid
+                   && _database.CountCleared(PlayerName, prev.stageId) >= prev.LevelCount;
+        }
+
+        /// <summary>True when every level of the stage is cleared.</summary>
+        public bool IsStageDone(StageData stage) => stage != null && NameIsValid && _database.CountCleared(PlayerName, stage.stageId) >= stage.LevelCount;
+
+        /// <summary>The newest open stage (Stage 1 for a new player).</summary>
+        public StageData NewestOpenStage
+        {
+            get
+            {
+                StageData best = FirstStage;
+                if (_stages != null) foreach (StageData s in _stages) if (s != null && IsStageOpen(s.stageId)) best = s;
+                return best;
+            }
+        }
+
+        /// <summary>The highest stage whose allies are sold: one past the last fully cleared stage (at least 1).</summary>
+        public int StoreStage
+        {
+            get
+            {
+                int stage = 1;
+                if (_stages != null) foreach (StageData s in _stages) if (s != null && IsStageDone(s)) stage = Mathf.Max(stage, s.stageId + 1);
+                return stage;
+            }
+        }
 
         private void Awake()
         {
@@ -102,7 +156,8 @@ namespace ThermoTactics
             _confirmCancel.onClick.AddListener(() => _confirmDialog.SetActive(false));
             _confirmOk.onClick.AddListener(() => { _confirmDialog.SetActive(false); _onConfirm?.Invoke(); });
             _creditsClose.onClick.AddListener(() => _creditsDialog.SetActive(false));
-            _versionText.text = $"v{Application.version} · Stage 1 prototype";
+            int built = _stages != null ? _stages.Length : 0;
+            _versionText.text = built > 1 ? $"v{Application.version} · Stages 1–{built}" : $"v{Application.version} · Stage 1 prototype";
         }
 
         private void Start()
@@ -116,6 +171,12 @@ namespace ThermoTactics
             _settings.Close();
             _results.Hide();
             if (_facts != null) _facts.Hide();
+            // Back from a battle: stay in that stage.
+            if (GameSession.Stage != null && FindStage(GameSession.Stage.stageId) != null && (GameSession.OpenLevelSelect || GameSession.OpenStageSelect))
+            {
+                _stage = FindStage(GameSession.Stage.stageId);
+                _stagePicked = true;
+            }
             RefreshProfile();
 
             if (GameSession.OpenLevelSelect && NameIsValid)
@@ -139,6 +200,7 @@ namespace ThermoTactics
             _stageSelect.Hide();
             _levelSelect.Hide();
             _titleScreen.SetActive(true);
+            _stagePicked = false;
             RefreshProfile();
         }
 
@@ -156,9 +218,19 @@ namespace ThermoTactics
             _levelSelect.Show(this, selectLevel);
         }
 
+        /// <summary>A stage card: makes it the current stage, then enters it.</summary>
+        public void EnterStage(StageData stage)
+        {
+            if (stage == null || !IsStageOpen(stage.stageId)) return;
+            _stage = stage;
+            _stagePicked = true;
+            EnterStage();
+        }
+
         /// <summary>
-        /// The stage card: the pre-quiz first if this player has not taken it, then the level path. If the stage was
-        /// finished but the post-quiz was never submitted (the app closed during it), the post-quiz comes first instead.
+        /// Enters the current stage: the pre-quiz first if this player has not taken it, then the level path. If the stage
+        /// was finished but the post-quiz was never submitted (the app closed during it), the post-quiz comes first instead.
+        /// A stage without a quiz goes straight to the level path.
         /// </summary>
         public void EnterStage()
         {
@@ -206,7 +278,9 @@ namespace ThermoTactics
         {
             string name = PlayerName;
             _save = NameIsValid ? _database.LoadSession(name) : null;
-            if (_save != null && (_stage == null || _save.stageId != _stage.stageId || _stage.GetLevel(_save.levelNumber) == null)) _save = null;
+            StageData saveStage = _save != null ? FindStage(_save.stageId) : null;
+            if (_save != null && (saveStage == null || saveStage.GetLevel(_save.levelNumber) == null)) { _save = null; saveStage = null; }
+            if (!_stagePicked || _stage == null) _stage = saveStage != null ? saveStage : NewestOpenStage;
             bool canContinue = _save != null;
 
             _continueOn.SetActive(canContinue);
@@ -218,14 +292,15 @@ namespace ThermoTactics
 
             if (canContinue)
             {
-                LevelData lv = _stage.GetLevel(_save.levelNumber);
-                _continueDetail.text = $"Baguio Level {_save.levelNumber} · Wave {_save.waveNumber} of {lv.waves.Length} · Turn {_save.turnNumber} · {_save.temperature:0.00} °C";
+                LevelData lv = saveStage.GetLevel(_save.levelNumber);
+                _continueDetail.text = $"{saveStage.ShortName} Level {_save.levelNumber} · Wave {_save.waveNumber} of {lv.waves.Length} · Turn {_save.turnNumber} · {_save.temperature:0.00} °C";
                 _continueSaved.text = $"Saved {_save.FriendlySavedAt()} — resumes at Wave {_save.waveNumber}, Turn {_save.turnNumber}";
             }
 
             _infoSaved.SetActive(canContinue);
             _infoNew.SetActive(!canContinue);
-            string clearedText = cleared == 0 ? "No Baguio levels cleared yet." : cleared == 1 ? "Baguio Level 1 cleared." : $"Baguio Levels 1–{cleared} cleared.";
+            string where = _stage.ShortName;
+            string clearedText = cleared == 0 ? $"No {where} levels cleared yet." : cleared == 1 ? $"{where} Level 1 cleared." : $"{where} Levels 1–{cleared} cleared.";
             if (canContinue)
                 _infoSavedText.text = $"Saved session found for <b>{Escape(name)}</b>. {clearedText} Press <b>Continue</b> to resume.";
             else if (!NameIsValid)
@@ -233,7 +308,7 @@ namespace ThermoTactics
             else if (cleared > 0)
                 _infoNewText.text = $"Welcome back, <b>{Escape(name)}</b>. {clearedText} Press <b>Start</b> to pick a level.";
             else
-                _infoNewText.text = "New player. Press <b>Start</b> to begin in Baguio Forest. Your progress saves automatically on this phone.";
+                _infoNewText.text = $"New player. Press <b>Start</b> to begin in {FirstStage.stageName}. Your progress saves automatically on this phone.";
             _nameMessage.text = "";
             RefreshProgress(name);
             RefreshWallet(name);
@@ -262,15 +337,16 @@ namespace ThermoTactics
             }
         }
 
-        /// <summary>The Store opens once the player has cleared Baguio Level 1.</summary>
-        public bool StoreUnlocked => NameIsValid && _database != null && _stage != null && _database.CountCleared(PlayerName, _stage.stageId) >= 1;
+        /// <summary>The Store opens once the player has cleared Level 1 of the first stage (Baguio).</summary>
+        public bool StoreUnlocked => NameIsValid && _database != null && FirstStage != null && _database.CountCleared(PlayerName, FirstStage.stageId) >= 1;
 
-        /// <summary>The Baguio strip on the title: one block per level (gold = cleared, red = next) and the star total.</summary>
+        /// <summary>The current stage's strip on the title: one block per level (gold = cleared, red = next) and the star total.</summary>
         private void RefreshProgress(string name)
         {
             if (_progressRoot == null) return;
             _progressRoot.SetActive(NameIsValid);
             if (!NameIsValid) return;
+            if (_progressTitle != null) _progressTitle.text = $"STAGE {_stage.stageId} · {_stage.stageName.ToUpperInvariant()}";
             var progress = new System.Collections.Generic.Dictionary<int, LevelProgress>();
             int stars = 0;
             foreach (LevelProgress p in _database.GetProgress(name, _stage.stageId))
@@ -319,6 +395,9 @@ namespace ThermoTactics
         private void OnContinue()
         {
             if (!CheckName() || _save == null) return;
+            StageData saveStage = FindStage(_save.stageId);
+            if (saveStage == null) return;
+            _stage = saveStage;
             PlayLevel(_save.levelNumber, _save);
         }
 
@@ -347,7 +426,7 @@ namespace ThermoTactics
         /// </summary>
         private void ChooseSquadThenPlay(int levelNumber)
         {
-            if (_squad == null || (levelNumber == 1 && TutorialController.IsDue(PlayerName)))
+            if (_squad == null || (levelNumber == 1 && _stage.stageId == 1 && TutorialController.IsDue(PlayerName)))
             {
                 PlayLevel(levelNumber, null);
                 return;
@@ -369,7 +448,7 @@ namespace ThermoTactics
                 return;
             }
             Confirm("REPLACE SAVED GAME?",
-                $"You have a saved game at Baguio Level {_save.levelNumber}, Wave {_save.waveNumber}, Turn {_save.turnNumber}. Starting Level {levelNumber} deletes it.",
+                $"You have a saved game at {SavedStageName} Level {_save.levelNumber}, Wave {_save.waveNumber}, Turn {_save.turnNumber}. Starting {_stage.ShortName} Level {levelNumber} deletes it.",
                 "REPLACE",
                 () =>
                 {
@@ -379,13 +458,15 @@ namespace ThermoTactics
                 });
         }
 
+        private string SavedStageName => _save != null && FindStage(_save.stageId) is StageData s ? s.ShortName : "";
+
         // ---------------------------------------------------------------- quit
 
         private void OpenQuit()
         {
             RefreshProfile();
             _quitInfo.text = _save != null
-                ? $"Your progress is saved. Next time, press <b>Continue</b> to return to Baguio Level {_save.levelNumber}, Wave {_save.waveNumber}, Turn {_save.turnNumber}."
+                ? $"Your progress is saved. Next time, press <b>Continue</b> to return to {SavedStageName} Level {_save.levelNumber}, Wave {_save.waveNumber}, Turn {_save.turnNumber}."
                 : "Your cleared levels are saved on this phone.";
             _quitDialog.SetActive(true);
             _quitDialog.transform.SetAsLastSibling();

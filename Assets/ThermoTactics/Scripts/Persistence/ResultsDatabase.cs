@@ -96,8 +96,9 @@ namespace ThermoTactics
     /// Local database: SQLite file at Application.persistentDataPath/thermo_tactics.db
     /// (package com.gilzoide.sqlite-net, native SQLite for Android and Windows).
     ///
-    /// Tables (schema version 6; version 3 added best_stars and peak_temperature, version 4 the two education tables,
-    /// version 5 the wallet and owned units, version 6 the squad of the saved game):
+    /// Tables (schema version 7; version 3 added best_stars and peak_temperature, version 4 the two education tables,
+    /// version 5 the wallet and owned units, version 6 the squad of the saved game, version 7 quiz scores up to max_score
+    /// for the matched-pair quizzes):
     ///   game_results(id, player_name, result, created_at, final_temperature, waves_cleared) — one row per finished level
     ///   level_progress(player_name, stage_id, level_number, is_cleared, attempts, best_final_temp) — drives unlocking
     ///   saved_session(player_name, stage_id, level_number, wave_number, turn_number, …) — the Continue save, one per player
@@ -110,7 +111,7 @@ namespace ThermoTactics
     public class ResultsDatabase : MonoBehaviour
     {
         public const int MaxNameLength = 20;
-        public const int SchemaVersion = 6;
+        public const int SchemaVersion = 7;
         private const string FileName = "thermo_tactics.db";
         private const string LegacyJsonName = "results_db.json";
 
@@ -190,8 +191,8 @@ namespace ThermoTactics
             "  stage_id    INTEGER NOT NULL CHECK (stage_id BETWEEN 1 AND 5)," +
             "  quiz_type   TEXT    NOT NULL CHECK (quiz_type IN ('pre','post'))," +
             "  answers     TEXT    NOT NULL," +
-            "  score       INTEGER NOT NULL CHECK (score BETWEEN 0 AND 5)," +
-            "  max_score   INTEGER NOT NULL DEFAULT 5," +
+            "  score       INTEGER NOT NULL CHECK (score >= 0 AND score <= max_score)," +
+            "  max_score   INTEGER NOT NULL DEFAULT 6 CHECK (max_score BETWEEN 1 AND 20)," +
             "  taken_at    TEXT    NOT NULL," +
             "  attempts    INTEGER NOT NULL DEFAULT 1," +
             "  UNIQUE (player_name, stage_id, quiz_type))";
@@ -672,6 +673,20 @@ namespace ThermoTactics
                 // Version 6: the saved game remembers the squad picked before the level.
                 try { _db.Execute("ALTER TABLE saved_session ADD COLUMN squad TEXT NOT NULL DEFAULT ''"); }
                 catch (Exception e) when (e.Message.Contains("duplicate column")) { /* already there */ }
+            }
+            if (from >= 4 && from < 7)
+            {
+                // Version 7: the quiz table had score BETWEEN 0 AND 5 (5-question quizzes). The matched-pair quizzes score
+                // out of 6, so the table is rebuilt with score <= max_score. SQLite cannot change a CHECK in place:
+                // the old rows are copied into the new table, unchanged.
+                _db.RunInTransaction(() =>
+                {
+                    _db.Execute("ALTER TABLE quiz_results RENAME TO quiz_results_v6");
+                    _db.Execute(CreateQuizSql);
+                    _db.Execute("INSERT INTO quiz_results (id, player_name, stage_id, quiz_type, answers, score, max_score, taken_at, attempts) " +
+                                "SELECT id, player_name, stage_id, quiz_type, answers, score, max_score, taken_at, attempts FROM quiz_results_v6");
+                    _db.Execute("DROP TABLE quiz_results_v6");
+                });
             }
             if (from > 0 && from < SchemaVersion) Debug.Log($"[ResultsDatabase] Upgraded database from version {from} to {SchemaVersion}.");
             _db.Execute($"PRAGMA user_version = {SchemaVersion}");

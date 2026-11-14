@@ -88,7 +88,8 @@ namespace ThermoTactics
         {
             BossUnit boss = _grid.Boss;
             if (boss == null || !SettingsStore.BossWarning || boss.TurnsUntilSlam != 1) return;
-            _ui.Announce($"Warning: {boss.Data.displayName} will slam ALL 6 lanes this turn! Fill every lane.", UIManager.Warning);
+            string shield = boss.IsStorm ? " Forest allies weaken it." : "";
+            _ui.Announce($"Warning: {boss.Data.displayName} {boss.SlamName} hits ALL 6 lanes this turn! Fill every lane.{shield}", UIManager.Warning);
         }
 
         /// <summary>
@@ -471,14 +472,14 @@ namespace ThermoTactics
             }
         }
 
-        /// <summary>The boss's turn: one cleave (target lane ± 1) or one slam (all 6 lanes).</summary>
+        /// <summary>The boss's turn: one cleave (target lane ± 1) or storm band, or one slam/surge (all 6 lanes).</summary>
         private IEnumerator BossPhase(BossUnit boss)
         {
             BossUnit.BossMove move = boss.PlanNext(_grid);
             _ui.ShowBossMove(move, boss);
             string what = move.IsSlam
-                ? $"LANDSLIDE SLAM on all 6 lanes, {move.Damage} damage each"
-                : $"CLEAVE on lanes {move.Lanes[0] + 1}–{move.Lanes[move.Lanes.Count - 1] + 1}, {move.Damage} damage each";
+                ? $"{move.Name} on all 6 lanes, {move.Damage} damage each" + (move.Shield > 0 ? $" (forest shield −{move.Shield})" : "")
+                : $"{move.Name} on lanes {move.Lanes[0] + 1}–{move.Lanes[move.Lanes.Count - 1] + 1}, {move.Damage} damage each";
             _ui.ShowLaneCaption(boss.Data.displayName.ToUpperInvariant(), what, new Color(1f, 0.6f, 0.5f));
             if (_camera != null)
             {

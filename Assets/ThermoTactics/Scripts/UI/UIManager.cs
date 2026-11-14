@@ -77,6 +77,7 @@ namespace ThermoTactics
         [Header("Stage complete (after the stage's last level)")]
         [SerializeField] private GameObject _stagePanel;
         [SerializeField] private Text _stageTitle;
+        [SerializeField] private Image _stageThumb;
         [SerializeField] private Text _stageStats;
         [SerializeField] private Text _stageStarCount;
         [SerializeField] private Image _stageStarFill;
@@ -176,7 +177,7 @@ namespace ThermoTactics
             _pausePanel.transform.SetAsLastSibling();
             GameManager gm = GameManager.Instance;
             string saved = gm.LastSaveOk ? "Progress saved" : "Progress could not be saved";
-            _pauseInfo.text = $"{gm.PlayerName} · Baguio Level {gm.LevelNumber} · Wave {_waves.WaveNumber} of {_waves.TotalWaves} · Turn {_waves.TurnInWave}\n{saved}. Continue from the Main Menu returns here.";
+            _pauseInfo.text = $"{gm.PlayerName} · {gm.Stage.ShortName} Level {gm.LevelNumber} · Wave {_waves.WaveNumber} of {_waves.TotalWaves} · Turn {_waves.TurnInWave}\n{saved}. Continue from the Main Menu returns here.";
         }
 
         /// <summary>Everything the end screens need about the level that just ended.</summary>
@@ -186,6 +187,7 @@ namespace ThermoTactics
             public GameResult Record;
             public float Threshold;
             public bool CanGoNext;
+            public bool FirstClear;       // this win cleared the level for the first time (the next level just opened)
             public int Stars;            // stars earned this time (0 on a loss)
             public float Peak;           // highest temperature reached in the level
             public int BestStars;        // best stars ever on this level
@@ -227,7 +229,7 @@ namespace ThermoTactics
             string where = $"Level {gm.LevelNumber} · {gm.Level.locationName}";
             _endBody.text = e.Won
                 ? $"{where} is safe, {r.player_name}!\nAll {r.waves_cleared} waves cleared. Highest temperature: <b>{e.Peak:0.00} °C</b> (limit {e.Threshold:0.0} °C)."
-                  + (e.CanGoNext ? $"\n<color=#F3C95A>Level {gm.LevelNumber + 1} is now unlocked.</color>" : "")
+                  + (e.CanGoNext && e.FirstClear ? $"\n<color=#F3C95A>Level {gm.LevelNumber + 1} is now unlocked.</color>" : "")
                 : $"{where}: the temperature reached <b>{r.final_temperature:0.00} °C</b> and crossed the {e.Threshold:0.0} °C limit.\nWaves cleared: {r.waves_cleared} of {_waves.TotalWaves}. Fill more lanes so enemies can't heat the planet.";
             _endBody.text += r.id > 0 ? $"\n<size=13><color=#CFC6B2>Result saved · {r.created_at}</color></size>"
                                       : "\n<size=13><color=#FF9A86>Result not saved: the database could not be written.</color></size>";
@@ -321,6 +323,7 @@ namespace ThermoTactics
             StageData stage = gm.Stage;
             int maxStars = e.StageLevels * StarRating.MaxStars;
             _stageTitle.text = $"{stage.stageName.ToUpperInvariant()} CLEARED";
+            if (_stageThumb != null && stage.thumbnail != null) _stageThumb.sprite = stage.thumbnail;
             _stageStats.text =
                 $"You defeated the <b>{BossName(gm)}</b>. Highest temperature: {e.Peak:0.00} °C.\n" +
                 $"Levels cleared: <b>{e.StageCleared} / {e.StageLevels}</b>\n" +
@@ -331,9 +334,10 @@ namespace ThermoTactics
                 (quiz == null ? "" : $"\n<color=#F3C95A>Post-quiz {quiz.KeptScore} / {quiz.MaxScore} · knowledge gain {QuizManager.GainText(quiz.Gain)}</color>");
             _stageStarCount.text = $"{e.StageStars} / {maxStars}";
             _stageStarFill.fillAmount = maxStars > 0 ? e.StageStars / (float)maxStars : 0f;
+            string next = string.IsNullOrEmpty(stage.nextStageLabel) ? "" : $"<b>{stage.nextStageLabel}</b> is unlocked{(stage.nextStageReady ? "!" : " (coming soon).")}";
             _stageNext.text = e.StageStars >= maxStars
-                ? "Every star in the stage! <b>Stage 2 · Sierra Madre & Mangrove Coast</b> is unlocked (coming soon)."
-                : $"<b>Stage 2 · Sierra Madre & Mangrove Coast</b> is unlocked (coming soon). Replay levels for the {maxStars - e.StageStars} missing stars.";
+                ? $"Every star in the stage! {next}"
+                : $"{next} Replay levels for the {maxStars - e.StageStars} missing stars.";
             StartCoroutine(PopStars(_stageLevelStars, e.Stars));
         }
 
@@ -455,7 +459,10 @@ namespace ThermoTactics
                 var empty = new System.Collections.Generic.List<int>();
                 foreach (int lane in move.Lanes) if (_grid.IsAllySlotFree(lane)) empty.Add(lane + 1);
                 string lanes = empty.Count == 0 ? "" : (empty.Count == 1 ? $"Fill Lane {empty[0]} before ending the turn. " : $"Fill Lanes {string.Join(", ", empty)} before ending the turn. ");
-                _hint.text = lanes + (move.IsSlam ? "The slam hits every lane." : "Cleave targets the lane of your strongest unit.");
+                string tip = move.IsSlam
+                    ? (boss.IsStorm ? "The surge hits every lane; each Forest ally weakens it." : "The slam hits every lane.")
+                    : (boss.IsStorm ? "The storm band moves one lane every turn." : "Cleave targets the lane of your strongest unit.");
+                _hint.text = lanes + tip;
                 return;
             }
             _hint.text = sel == null
@@ -488,38 +495,43 @@ namespace ThermoTactics
             if (!show) return;
 
             BossData data = boss.Boss;
-            _bossName.text = $"{data.displayName.ToUpperInvariant()} <size=14><color=#E7A89F>· Baguio boss</color></size>";
+            _bossName.text = $"{data.displayName.ToUpperInvariant()} <size=14><color=#E7A89F>· {GameManager.Instance.Stage.ShortName} boss</color></size>";
             _bossHp.text = $"{boss.Hp} / {boss.MaxHp}";
             _bossHpFill.fillAmount = boss.Hp / (float)boss.MaxHp;
 
             BossUnit.BossMove move = boss.PlanNext(_grid);
             if (move.IsSlam)
             {
-                _bossNext.text = $"<color=#F3C95A><b>Next: LANDSLIDE SLAM</b></color> all 6 lanes, {move.Damage} damage";
+                _bossNext.text = $"<color=#F3C95A><b>Next: {move.Name}</b></color> all 6 lanes, {move.Damage} damage"
+                                 + (move.Shield > 0 ? $" <color=#8FE09B>(forest −{move.Shield})</color>" : "");
                 _bossSlam.text = "Every empty lane adds <b>+0.10 °C</b>. Fill all six!";
             }
             else
             {
-                _bossNext.text = $"<color=#FF9A86><b>Next: CLEAVE</b></color> lanes {move.Lanes[0] + 1}–{move.Lanes[move.Lanes.Count - 1] + 1}, {move.Damage} damage each";
+                _bossNext.text = $"<color=#FF9A86><b>Next: {move.Name}</b></color> lanes {move.Lanes[0] + 1}–{move.Lanes[move.Lanes.Count - 1] + 1}, {move.Damage} damage each";
                 int t = boss.TurnsUntilSlam;
-                _bossSlam.text = $"<color=#F3C95A><b>LANDSLIDE SLAM</b></color> all 6 lanes, {data.slamDamage} damage, in <b>{t} turn{(t == 1 ? "" : "s")}</b>";
+                string shield = boss.IsStorm ? $", −1 per Forest ally (max −{data.forestShieldMax})" : "";
+                _bossSlam.text = $"<color=#F3C95A><b>{boss.SlamName}</b></color> all 6 lanes, {data.slamDamage} damage{shield}, in <b>{t} turn{(t == 1 ? "" : "s")}</b>";
             }
+            string hit = boss.IsStorm ? $"{data.specialLanes + 1}-lane band" : "cleave";
             _bossNote.text = boss.IsEnraged
-                ? $"ENRAGED: cleave {data.enragedCleaveDamage}, slam every {data.enragedSlamEvery} turns"
-                : $"Gold tick = enrage at {Mathf.RoundToInt(data.enrageAtFraction * 100)}% HP: cleave {data.enragedCleaveDamage}, slam every {data.enragedSlamEvery} turns";
+                ? $"ENRAGED: {hit} {data.enragedCleaveDamage}, {boss.SlamName.ToLowerInvariant()} every {data.enragedSlamEvery} turns"
+                : $"Gold tick = enrage at {Mathf.RoundToInt(data.enrageAtFraction * 100)}% HP: {hit} {data.enragedCleaveDamage}, {boss.SlamName.ToLowerInvariant()} every {data.enragedSlamEvery} turns";
             if (GameManager.Instance.CanPlayerAct) _grid.SetDangerLanes(move.Lanes);
         }
 
         public void ShowBossMove(BossUnit.BossMove move, BossUnit boss)
         {
             _grid.SetDangerLanes(move.Lanes);
-            Announce(move.IsSlam ? $"{boss.Data.displayName}: LANDSLIDE SLAM!" : $"{boss.Data.displayName}: CLEAVE!", new Color(1f, 0.45f, 0.38f));
+            Announce($"{boss.Data.displayName}: {move.Name}!", new Color(1f, 0.45f, 0.38f));
         }
 
         private void OnBossDamaged(UnitBase _) => RefreshBoss();
 
         private void OnBossEnraged(BossUnit boss)
-            => Announce($"The {boss.Data.displayName} is ENRAGED! Harder cleaves and more slams.", new Color(1f, 0.45f, 0.38f));
+            => Announce(boss.IsStorm
+                ? $"The {boss.Data.displayName} becomes a SUPER TYPHOON! A wider storm band and more surges."
+                : $"The {boss.Data.displayName} is ENRAGED! Harder cleaves and more slams.", new Color(1f, 0.45f, 0.38f));
 
         public void Announce(string message, Color color)
         {

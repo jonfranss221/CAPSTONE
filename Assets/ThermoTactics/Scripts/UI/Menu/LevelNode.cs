@@ -22,7 +22,7 @@ namespace ThermoTactics
         public int LevelNumber => _levelNumber;
         public Button Button => _button;
 
-        private static Color Hex(string h) { ColorUtility.TryParseHtmlString(h, out Color c); return c; }
+        private static Color Hex(string h) => StageThemes.C(h);   // Baguio colours, translated to the stage's theme
 
         public void Set(NodeState state, bool selected, string caption, int stars = 0)
         {

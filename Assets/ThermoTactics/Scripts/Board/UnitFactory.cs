@@ -6,6 +6,8 @@ namespace ThermoTactics
     public class UnitFactory : MonoBehaviour
     {
         [SerializeField] private Sprite _shadowSprite;
+        [Tooltip("Soft, wide shadow under bosses (falls back to the unit shadow).")]
+        [SerializeField] private Sprite _bossShadowSprite;
         [SerializeField] private Sprite _pixelSprite;
 
         public UnitBase Spawn(UnitData data, int lane, int maxHp)
@@ -71,8 +73,18 @@ namespace ThermoTactics
 
             var shadow = new GameObject("Shadow").AddComponent<SpriteRenderer>();
             shadow.transform.SetParent(root.transform, false);
-            shadow.transform.localScale = new Vector3(3.2f, 2.2f, 1f);
-            shadow.sprite = _shadowSprite;
+            if (_bossShadowSprite != null)
+            {
+                // 192 × 64 soft shadow ≈ the old 48 × 16 one at ×3.2 × ×2.2, without the hard stepped edge.
+                shadow.sprite = _bossShadowSprite;
+                shadow.transform.localScale = new Vector3(0.8f, 0.55f, 1f);
+                if (data.isHover) shadow.color = new Color(1f, 1f, 1f, 0.7f);   // a hovering boss casts a lighter shadow
+            }
+            else
+            {
+                shadow.transform.localScale = new Vector3(3.2f, 2.2f, 1f);
+                shadow.sprite = _shadowSprite;
+            }
             shadow.sortingOrder = order - 1;
 
             var body = new GameObject("Body").AddComponent<SpriteRenderer>();

@@ -97,7 +97,7 @@ namespace ThermoTactics
         /// <summary>Writes the quiz-results CSV for the study (Documents/ThermoTactics) and shows where it went.</summary>
         private void OnExport()
         {
-            QuizResultExporter.ExportResult r = QuizResultExporter.Export(_menu.Database, _menu.Stage, SettingsStore.TesterCode);
+            QuizResultExporter.ExportResult r = QuizResultExporter.Export(_menu.Database, _menu.FirstStage, SettingsStore.TesterCode);
             _dataNote.text = r.Success ? $"<color=#9BD3B0>{r.Message}</color>" : $"<color=#FF9A86>{r.Message}</color>";
         }
 
@@ -105,7 +105,7 @@ namespace ThermoTactics
         {
             string name = _menu.PlayerName;
             _menu.Confirm("RESET PROGRESS?",
-                $"This deletes {name}'s saved game, Carbon Credits and bought allies, and locks Baguio Levels 2–10 again. The Level 1 tutorial shows again. Results and quiz answers stay.",
+                $"This deletes {name}'s saved game, Carbon Credits and bought allies, and locks every level after Baguio Level 1 again. The Level 1 tutorial shows again. Results and quiz answers stay.",
                 "RESET",
                 () =>
                 {

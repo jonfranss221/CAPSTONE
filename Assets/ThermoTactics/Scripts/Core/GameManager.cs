@@ -29,6 +29,7 @@ namespace ThermoTactics
         [SerializeField] private ResultsDatabase _database;
         [SerializeField] private UIManager _ui;
         [SerializeField] private FogScroller _fog;
+        [SerializeField] private StageEnvironment _environment;
         [SerializeField] private BattleCamera _camera;
         [SerializeField] private PopupManager _popups;
         [SerializeField] private LevelIntro _intro;
@@ -66,6 +67,7 @@ namespace ThermoTactics
             _deploy.Rearranged += Autosave;
 
             Stage = GameSession.Stage != null ? GameSession.Stage : _defaultStage;
+            if (_environment != null) _environment.Apply(Stage);
             PlayerName = ResultsDatabase.Sanitize(string.IsNullOrEmpty(GameSession.PlayerName) ? "Tester" : GameSession.PlayerName);
             LevelNumber = Mathf.Clamp(GameSession.LevelNumber, 1, Mathf.Max(1, Stage.LevelCount));
 
@@ -96,7 +98,7 @@ namespace ThermoTactics
             UnitData[] squad = savedSquad != null
                 ? PlayerSquad.Decode(savedSquad, Stage)
                 : GameSession.Squad;
-            bool tutorial = levelNumber == 1 && savedSquad == null && TutorialController.IsDue(PlayerName);
+            bool tutorial = levelNumber == 1 && Stage.stageId == 1 && savedSquad == null && TutorialController.IsDue(PlayerName);
             if (tutorial || squad == null || squad.Length == 0) return PlayerSquad.Default(Level);
             return squad;
         }
@@ -148,7 +150,7 @@ namespace ThermoTactics
                 if (resumed) yield return ShowMissedFacts(wave);
                 else yield return _popups.ShowFor(Stage, LevelNumber, PopupTrigger.LevelStart, 1);
             }
-            if (!resumed && LevelNumber == 1 && _tutorial != null && Current == State.Playing && TutorialController.IsDue(PlayerName))
+            if (!resumed && LevelNumber == 1 && Stage.stageId == 1 && _tutorial != null && Current == State.Playing && TutorialController.IsDue(PlayerName))
                 yield return _tutorial.Run(false);
             _opening = null;
         }
@@ -308,6 +310,7 @@ namespace ThermoTactics
                 Record = saved.Record,
                 Threshold = Level.lossThreshold,
                 CanGoNext = won && HasNextLevel,
+                FirstClear = won && (saved.Before == null || saved.Before.IsCleared != 1),
                 Stars = result.Stars,
                 Peak = result.PeakTemperature,
                 BestStars = StarRating.For(saved.After),
@@ -363,7 +366,7 @@ namespace ThermoTactics
             LoadMenu();
         }
 
-        /// <summary>Back to the Baguio level path.</summary>
+        /// <summary>Back to the stage's level path.</summary>
         public void ToLevelSelect()
         {
             Autosave();
@@ -395,8 +398,9 @@ namespace ThermoTactics
 
         private void OnTemperatureChanged(float value)
         {
-            // The cold Baguio fog thins as the planet warms.
-            if (_fog != null) _fog.SetDensity(Mathf.Lerp(0.85f, 0.15f, _temperature.Normalized));
+            // The stage's overlay (cold Baguio fog, coastal sea spray) thins as the planet warms.
+            float strength = _environment != null ? _environment.OverlayStrength : 1f;
+            if (_fog != null) _fog.SetDensity(Mathf.Lerp(0.85f, 0.15f, _temperature.Normalized) * strength);
         }
     }
 }

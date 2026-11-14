@@ -19,15 +19,27 @@ namespace ThermoTactics
 
         private readonly List<GameObject> _rows = new List<GameObject>();
 
+        private bool _ready, _opening;
+
         private void Awake()
         {
+            Init();
+            if (!_opening) _root.SetActive(false);
+        }
+
+        /// <summary>Wires the buttons once. The panel is saved hidden in the scene, so Show calls this too.</summary>
+        private void Init()
+        {
+            if (_ready) return;
+            _ready = true;
             _closeButton.onClick.AddListener(Hide);
             _rowTemplate.SetActive(false);
-            _root.SetActive(false);
         }
 
         public void Show(StageData stage, string player, ResultsDatabase db)
         {
+            _opening = true;
+            Init();
             foreach (GameObject r in _rows) Destroy(r);
             _rows.Clear();
             HashSet<string> seen = db.GetSeenFacts(player);
@@ -60,6 +72,7 @@ namespace ThermoTactics
                 ? "New facts pop up during the levels."
                 : "Climate fact pop-ups are off in Settings, so new facts will not appear.";
             _root.SetActive(true);
+            _opening = false;
             _root.transform.SetAsLastSibling();
         }
 

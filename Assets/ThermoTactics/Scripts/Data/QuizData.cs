@@ -3,7 +3,10 @@ using UnityEngine;
 
 namespace ThermoTactics
 {
-    /// <summary>One multiple-choice question (4 choices). Its topic links it to the other quiz and to the climate facts.</summary>
+    /// <summary>
+    /// One multiple-choice question (4 choices). Its topic links it to its twin in the other quiz and to the climate facts.
+    /// Unscored questions (game comprehension) are asked and stored but never count toward the awareness score.
+    /// </summary>
     [Serializable]
     public class QuizQuestion
     {
@@ -13,6 +16,8 @@ namespace ThermoTactics
         [TextArea(2, 4)] public string text = "";
         public string[] choices = new string[QuizData.ChoiceCount];
         [Range(0, QuizData.ChoiceCount - 1)] public int correctIndex;
+        [Tooltip("Off for game comprehension questions: asked after the post-quiz pairs, reported apart, not in the score.")]
+        public bool scored = true;
     }
 
     /// <summary>A topic both quizzes cover, e.g. "Forests & carbon".</summary>
@@ -24,13 +29,17 @@ namespace ThermoTactics
     }
 
     /// <summary>
-    /// A stage's two quizzes: 5 pre-quiz questions (before the stage) and 5 post-quiz questions (after its last level).
-    /// The post questions revisit the pre-quiz topics with deeper application, so learning is compared topic by topic.
+    /// A stage's two quizzes as matched pairs: one pre question (before the stage) and one post twin (after its last level)
+    /// per concept, both tagged with the concept's topic, so learning is compared concept by concept. The post-quiz may end
+    /// with unscored game comprehension questions.
     /// </summary>
     [CreateAssetMenu(menuName = "Thermo-Tactics/Quiz Data", fileName = "QuizData")]
     public class QuizData : ScriptableObject
     {
-        public const int QuestionCount = 5;
+        /// <summary>Most questions one quiz can show (progress dots on the quiz screen).</summary>
+        public const int MaxQuestions = 8;
+        /// <summary>Most topics in the before → after table of the result screen.</summary>
+        public const int MaxTopics = 7;
         public const int ChoiceCount = 4;
 
         public string quizId = "Q1";
@@ -42,6 +51,15 @@ namespace ThermoTactics
         public QuizQuestion[] Questions(string type) => type == QuizManager.Post ? postQuestions : preQuestions;
 
         public int Count(string type) { QuizQuestion[] q = Questions(type); return q != null ? q.Length : 0; }
+
+        /// <summary>Questions that count toward the awareness score (the matched pairs).</summary>
+        public int ScoredCount(string type)
+        {
+            int n = 0;
+            QuizQuestion[] q = Questions(type);
+            if (q != null) foreach (QuizQuestion x in q) if (x != null && x.scored) n++;
+            return n;
+        }
 
         public string TopicName(string topicId)
         {

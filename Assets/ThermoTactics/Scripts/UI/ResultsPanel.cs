@@ -16,15 +16,27 @@ namespace ThermoTactics
 
         private readonly List<GameObject> _rows = new List<GameObject>();
 
+        private bool _ready, _opening;
+
         private void Awake()
         {
+            Init();
+            if (!_opening) _root.SetActive(false);
+        }
+
+        /// <summary>Wires the buttons once. The panel is saved hidden in the scene, so Show calls this too.</summary>
+        private void Init()
+        {
+            if (_ready) return;
+            _ready = true;
             _closeButton.onClick.AddListener(Hide);
             _rowTemplate.SetActive(false);
-            _root.SetActive(false);
         }
 
         public void Show(List<GameResult> records, string filePath)
         {
+            _opening = true;
+            Init();
             foreach (var r in _rows) Destroy(r);
             _rows.Clear();
 
@@ -42,6 +54,7 @@ namespace ThermoTactics
             _emptyText.gameObject.SetActive(records.Count == 0);
             _footer.text = $"{records.Count} record(s) · saved in {filePath}";
             _root.SetActive(true);
+            _opening = false;
             _root.transform.SetAsLastSibling();
         }
 

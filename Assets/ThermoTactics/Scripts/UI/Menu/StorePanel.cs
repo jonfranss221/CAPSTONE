@@ -38,18 +38,31 @@ namespace ThermoTactics
 
         public static Color TierColor(UnitTier t) => t == UnitTier.Legendary ? LegendaryColor : t == UnitTier.Epic ? EpicColor : t == UnitTier.Rare ? RareColor : CommonColor;
 
+        private bool _ready, _opening;
+
         private void Awake()
         {
+            Init();
+            if (!_opening) _root.SetActive(false);
+        }
+
+        /// <summary>Wires the buttons once. The panel is saved hidden in the scene, so Show calls this too.</summary>
+        private void Init()
+        {
+            if (_ready) return;
+            _ready = true;
             _closeButton.onClick.AddListener(Hide);
             _buyButton.onClick.AddListener(OnBuy);
             _tileTemplate.SetActive(false);
-            _root.SetActive(false);
         }
 
         public void Show(MainMenuController menu)
         {
+            _opening = true;
+            Init();
             _menu = menu;
             _root.SetActive(true);
+            _opening = false;
             _root.transform.SetAsLastSibling();
             Rebuild();
         }
@@ -60,12 +73,6 @@ namespace ThermoTactics
             if (_menu != null) _menu.RefreshProfile();
         }
 
-        /// <summary>The highest stage whose allies are on sale: Stage 1, plus one more for each stage fully cleared.</summary>
-        public static int UnlockedStage(ResultsDatabase db, string player, StageData stage)
-        {
-            if (db == null || stage == null) return 1;
-            return db.CountCleared(player, stage.stageId) >= stage.LevelCount ? stage.stageId + 1 : stage.stageId;
-        }
 
         /// <summary>The allies sold in the store, cheapest stage first, then by price.</summary>
         public static List<UnitData> ForSale(StageData stage)
@@ -86,7 +93,7 @@ namespace ThermoTactics
             ResultsDatabase db = _menu.Database;
             int credits = db.GetCredits(player);
             HashSet<string> owned = db.GetOwned(player);
-            int open = UnlockedStage(db, player, _menu.Stage);
+            int open = _menu.StoreStage;
             List<UnitData> units = ForSale(_menu.Stage);
 
             int ownedCount = 0;
@@ -129,7 +136,7 @@ namespace ThermoTactics
             ResultsDatabase db = _menu.Database;
             int credits = db.GetCredits(player);
             bool has = db.GetOwned(player).Contains(u.unitId);
-            bool locked = u.unlockStage > UnlockedStage(db, player, _menu.Stage);
+            bool locked = u.unlockStage > _menu.StoreStage;
 
             _detailCard.sprite = u.card;
             _detailName.text = u.displayName.ToUpperInvariant();
@@ -145,7 +152,8 @@ namespace ThermoTactics
             }
             else if (locked)
             {
-                _detailState.text = $"Unlocks in Stage {u.unlockStage}" + (u.unlockStage == 2 ? ": clear all 10 Baguio levels." : ".");
+                StageData prev = _menu.FindStage(u.unlockStage - 1);
+                _detailState.text = $"Unlocks in Stage {u.unlockStage}" + (prev != null ? $": clear all {prev.LevelCount} {prev.ShortName} levels." : ".");
                 SetBuy(false, "LOCKED");
             }
             else if (credits < u.priceCredits)
