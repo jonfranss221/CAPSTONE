@@ -10,6 +10,51 @@ Thermo-Tactics uses semantic versioning, **MAJOR.MINOR.PATCH**:
 Each release is built with **Thermo-Tactics ▸ Release ▸ Build Android APK** from `main`, tagged `vX.Y.Z` in Git,
 and published as `Thermo-Tactics-vX.Y.Z.apk` under the repository's GitHub Releases.
 
+## [0.5.0] — player codes, leaderboard and admin role
+
+Release type: **Testing**. Saved games from 0.4.0 still load: the database only gains a new table.
+
+### Added
+- **Participant codes.** Each player name registered on a phone is given a code (A-001, A-002, …) the first time
+  it presses Start. The code is shown in the player profile and is used in the quiz CSV, so a player's pre-quiz and
+  post-quiz can be matched without writing down extra personal details. One name is one player per phone: capitals
+  and extra spaces are ignored, and a code is never given to a second player.
+- **"Is this you?" check.** Typing a name that is already registered, when it is not the last player on the phone,
+  asks to confirm before continuing, and suggests adding a surname or initial. This keeps two students with the same
+  first name from sharing one set of results on a shared phone.
+- **Leaderboard**, replacing the Results screen everywhere players see it (Settings, the end-of-level button and the
+  Level Complete and Stage Complete screens). It ranks the players on the phone by their total stars across every
+  stage, with equal stars sharing a rank, and highlights the current player's row. Quiz scores are not shown.
+- **Admin role.** Settings has an ADMIN section: entering the admin code unlocks the admin tools until the app is
+  closed, and a LOCK button ends it sooner. An ADMIN tag shows on the title screen while it is unlocked. Admin-only
+  tools, greyed out otherwise: the full results table (with codes), the quiz CSV export, and the phone letter used
+  for new codes. Resetting your own progress, the credits and the leaderboard stay open to players.
+- **Security Checks** test (Thermo-Tactics ▸ Test ▸ Security Checks): 11 negative tests covering access control,
+  the admin code, player names, quiz scores, missing records and a damaged save file. It writes
+  `Logs/qa/security/report.txt` and runs on a separate test database, so the real save file is untouched.
+
+### Changed
+- The quiz CSV now starts with the player's participant code and is named `quiz_results_phone<letter>_<date>.csv`,
+  so files collected from several phones can be merged without clashing.
+- The optional "tester code" field was removed from the player profile. Codes are now given automatically, and the
+  phone letter is set once by an admin instead of typed by each player.
+- Player names are limited to letters, numbers, spaces and `. - '`. Other symbols are refused, both on the name
+  field and in the database code.
+- The admin code is stored only as a salted PBKDF2-SHA256 hash (100,000 rounds) and is compared in constant time,
+  so it cannot be read out of the APK and is slow to guess. Three wrong codes in a row start a 30-second wait.
+- Admin unlock, lock, wrong codes and refused exports are written to the device log (never the code itself).
+- The export and the full results table check the admin state in the code that does the work, not only by greying
+  out their buttons.
+- A damaged or unreadable save file now logs a short message and leaves the game running with empty results,
+  instead of stopping the screen that asked for the data.
+
+### Known issues
+- The quiz CSV fills the per-question and per-topic columns for Stage 1 only; Stage 2 rows carry their scores and
+  gain but leave those columns blank.
+- The APK is still signed with the default debug key. A release key, kept outside the repository, is planned.
+- Access control is enforced inside the app. The game is offline with no server, so a rooted phone could still read
+  the database file directly. This is accepted for the prototype.
+
 ## [0.4.0] — Stage 2 and the matched-pair quizzes
 
 Release type: **Testing**.
