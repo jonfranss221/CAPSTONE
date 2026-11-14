@@ -1525,7 +1525,7 @@ namespace ThermoTactics.EditorTools
                 secLabels[b] = TxtAt("Label", sb.transform, "RETRY", Pixel, 18, Cream, 52, 0, 160, 54, TextAnchor.MiddleLeft);
                 secondary[b] = sb;
             }
-            refs["_endResultsButton"] = Btn("ResultsButton", ed.transform, "See all results", Clear, CreamDim, Clear, 290, 486, 200, 30, 14, 0f, Body);
+            refs["_endResultsButton"] = Btn("ResultsButton", ed.transform, "See the leaderboard", Clear, CreamDim, Clear, 290, 486, 200, 30, 14, 0f, Body);
             refs["_endPanel"] = end.gameObject;
             _endArrays = (stars, secondary, secLabels, secIcons);
 
@@ -1563,7 +1563,7 @@ namespace ThermoTactics.EditorTools
             refs["_stageSelectButton"] = StageBtn(sd.transform, "STAGE SELECT", "icon_map", Gold, Ink, 40, 486, 300, 60, 22, 4f);
             refs["_stageLevelSelectButton"] = StageBtn(sd.transform, "LEVEL SELECT", "icon_list", new Color(0.078f, 0.11f, 0.09f, 1f), Cream, 356, 486, 260, 60, 19, 0f);
             refs["_stageRetryButton"] = StageBtn(sd.transform, "RETRY BOSS", "icon_restart", new Color(0.078f, 0.11f, 0.09f, 1f), Cream, 632, 486, 268, 60, 19, 0f);
-            refs["_stageResultsButton"] = Btn("ResultsButton", sd.transform, "See all results", Clear, CreamDim, Clear, 370, 548, 200, 26, 14, 0f, Body);
+            refs["_stageResultsButton"] = Btn("ResultsButton", sd.transform, "See the leaderboard", Clear, CreamDim, Clear, 370, 548, 200, 26, 14, 0f, Body);
             refs["_stagePanel"] = stagePanel.gameObject;
             _stageStars = lvlStars;
 

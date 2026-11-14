@@ -197,6 +197,11 @@ namespace ThermoTactics.EditorTools
             Ref(menu, "_walletText", TxtAt("Amount", wallet.transform, "0 CC", BodyBold, 19, Hex("#C9F5CF"), 48, 21, 156, 24, TextAnchor.MiddleLeft));
             Ref(menu, "_walletRoot", wallet.gameObject);
 
+            // ADMIN tag (top, left of the wallet): shown only while the admin code is unlocked in Settings.
+            var admin = Box("AdminTag", f, Hex("#5A1A14"), Hex("#FF9A86"), 776, 66, 128, 34, 0f, "ui_frame2");
+            TxtAt("Label", admin.transform, "ADMIN", Pixel, 18, Hex("#FFD9D3"), 0, 0, 128, 34, TextAnchor.MiddleCenter);
+            Ref(menu, "_adminTag", admin.gameObject);
+
             // ---- player profile form ----
             var form = Box("PlayerProfile", f, new Color(0.067f, 0.094f, 0.078f, 0.95f), Moss, 776, 120, 440, 436, 6f);
             Icon("Icon", form.transform, "icon_user", Gold, 28, 30, 28);
@@ -205,8 +210,11 @@ namespace ThermoTactics.EditorTools
             TxtAt("NameLabel", form.transform, "Player name <color=#CFC6B2>(2–20 characters)</color>", BodyBold, 15, Cream, 28, 86, 384, 20, TextAnchor.MiddleLeft);
             Ref(menu, "_nameMessage", TxtAt("NameMessage", form.transform, "", BodyBold, 13, Hex("#FF9A86"), 28, 160, 384, 18, TextAnchor.MiddleLeft));
             Ref(menu, "_nameInput", NewInput("NameInput", form.transform, "Type your name", 19, 28, 110, 384, 48, ResultsDatabase.MaxNameLength));
-            TxtAt("TesterLabel", form.transform, "Tester code <color=#CFC6B2>(optional, from your researcher)</color>", BodyBold, 15, Cream, 28, 184, 384, 20, TextAnchor.MiddleLeft);
-            Ref(menu, "_testerInput", NewInput("TesterInput", form.transform, "e.g. TT-007", 19, 28, 208, 384, 48, 8));
+            // The player code is given automatically (A-001, A-002, ...) the first time a name presses Start; it cannot be typed.
+            TxtAt("CodeLabel", form.transform, "Player code <color=#CFC6B2>(given automatically)</color>", BodyBold, 15, Cream, 28, 184, 384, 20, TextAnchor.MiddleLeft);
+            var codeBox = At(Img("CodeBox", form.transform, new Color(0.953f, 0.918f, 0.843f, 0.05f)), 28, 208, 384, 48);
+            Border(codeBox.transform, Slate, "ui_frame2");
+            Ref(menu, "_codeText", TxtAt("Code", codeBox.transform, "", BodyBold, 17, Cream, 14, 2, 356, 44, TextAnchor.MiddleLeft));
 
             var infoSaved = At(Img("InfoSaved", form.transform, new Color(0.886f, 0.682f, 0.173f, 0.12f)), 28, 272, 384, 78);
             Border(infoSaved.transform, Hex("#8C6D1E"), "ui_frame2");
@@ -267,7 +275,7 @@ namespace ThermoTactics.EditorTools
             Ref(panel, "_menu", menu);
             Ref(panel, "_root", root.gameObject);
 
-            var d = Box("Dialog", f, Panel, Moss, 230, 64, 820, 592, 8f);
+            var d = Box("Dialog", f, Panel, Moss, 230, 36, 820, 648, 8f);
             Weave(d.transform, 0, 0, 820);
             TxtAt("Title", d.transform, "SETTINGS", Pixel, 34, Cream, 28, 38, 400, 38, TextAnchor.MiddleLeft);
             TxtAt("Sub", d.transform, "Saved on this phone", Body, 15, CreamDim, 28, 76, 400, 20);
@@ -306,12 +314,38 @@ namespace ThermoTactics.EditorTools
             var reset = Btn("ResetButton", d.transform, "Reset my progress", Clear, Hex("#FFD9D3"), RedSoft, R, 402, bw + 30, 48, 14, 0f, BodyBold);
             Ref(panel, "_resetButton", reset);
             Ref(panel, "_creditsButton", Btn("CreditsButton", d.transform, "Credits", Clear, Cream, Slate, R + bw + 38, 402, bw - 15, 48, 15, 0f, BodyBold));
-            Ref(panel, "_resultsButton", Btn("ResultsButton", d.transform, "Results", Clear, Cream, Slate, R + 2 * bw + 31, 402, bw - 15, 48, 15, 0f, BodyBold));
-            Ref(panel, "_exportButton", Btn("ExportButton", d.transform, "Export quiz results (CSV for the study)", Clear, Cream, Slate, R, 458, W, 44, 15, 0f, BodyBold));
-            // Left of the Done button, under the display options: room for the export path.
-            Ref(panel, "_dataNote", TxtAt("DataNote", d.transform, "", Body, 13, CreamDim, L, 504, 540, 72));
+            Ref(panel, "_leaderboardButton", Btn("LeaderboardButton", d.transform, "Leaderboard", Clear, Cream, Slate, R + 2 * bw + 31, 402, bw - 15, 48, 15, 0f, BodyBold));
 
-            Ref(panel, "_doneButton", Btn("DoneButton", d.transform, "DONE", Gold, Ink, Ink, 592, 516, 200, 52, 22));
+            // Admin tools: greyed out (CanvasGroup alpha) until the admin code is entered on the left.
+            TxtAt("AdminToolsLabel", d.transform, "Admin only", BodyBold, 13, CreamDim, R, 458, W, 18, TextAnchor.MiddleLeft);
+            Button AdminBtn(string name, string label, float x, float w)
+            {
+                var b = Btn(name, d.transform, label, Clear, Cream, Slate, x, 480, w, 46, 14, 0f, BodyBold);
+                b.gameObject.AddComponent<CanvasGroup>();
+                return b;
+            }
+            float aw = (W - 16) / 3f;
+            Ref(panel, "_resultsButton", AdminBtn("ResultsButton", "Full results", R, aw));
+            Ref(panel, "_exportButton", AdminBtn("ExportButton", "Export CSV", R + aw + 8, aw));
+            var letter = AdminBtn("PhoneLetterButton", "Phone: A", R + 2 * aw + 16, aw);
+            Ref(panel, "_phoneLetterButton", letter);
+            Ref(panel, "_phoneLetterLabel", letter.GetComponentInChildren<Text>());
+
+            Legend(d.transform, "ADMIN", L, 466);
+            TxtAt("AdminLabel", d.transform, "Admin code:", BodyBold, 16, Cream, L, 498, 100, 44, TextAnchor.MiddleLeft);
+            var code = NewInput("AdminInput", d.transform, "Enter code", 16, L + 104, 498, 150, 44, 16);
+            code.contentType = InputField.ContentType.Password;
+            code.asteriskChar = '*';
+            Ref(panel, "_adminInput", code);
+            var unlock = Btn("AdminButton", d.transform, "UNLOCK", Clear, Gold, Gold, L + 262, 498, 102, 44, 16, 0f);
+            Ref(panel, "_adminButton", unlock);
+            Ref(panel, "_adminButtonLabel", unlock.GetComponentInChildren<Text>());
+            Ref(panel, "_adminStatus", TxtAt("AdminStatus", d.transform, "", Body, 14, CreamDim, L, 546, W, 22, TextAnchor.MiddleLeft));
+
+            // Under both columns, left of the Done button: room for the export path.
+            Ref(panel, "_dataNote", TxtAt("DataNote", d.transform, "", Body, 13, CreamDim, L, 576, 540, 60));
+
+            Ref(panel, "_doneButton", Btn("DoneButton", d.transform, "DONE", Gold, Ink, Ink, 592, 576, 200, 52, 22));
             root.gameObject.SetActive(false);
             return panel;
         }
@@ -658,9 +692,9 @@ namespace ThermoTactics.EditorTools
             var results = root.gameObject.AddComponent<ResultsPanel>();
             var d = Box("Dialog", f, Panel, Moss, 190, 60, 900, 600, 8f);
             Weave(d.transform, 0, 0, 900);
-            TxtAt("Title", d.transform, "RESULTS", Pixel, 34, Cream, 28, 36, 600, 40, TextAnchor.MiddleLeft);
+            var title = TxtAt("Title", d.transform, "LEADERBOARD", Pixel, 34, Cream, 28, 36, 600, 40, TextAnchor.MiddleLeft);
             var header = At(Img("Header", d.transform, Moss), 28, 92, 844, 40);
-            RowTexts(header.transform, "NAME", "RESULT", "DATE CREATED", Cream, BodyBold);
+            RowTexts(header.transform, "#   NAME", "PLAYER CODE", "TOTAL STARS", Cream, BodyBold);
 
             var scroll = At(Img("Scroll", d.transform, new Color(0, 0, 0, 0.25f), null, true), 28, 136, 844, 360);
             var sr = scroll.gameObject.AddComponent<ScrollRect>();
@@ -687,6 +721,10 @@ namespace ThermoTactics.EditorTools
 
             Ref(results, "_root", root.gameObject); Ref(results, "_content", content); Ref(results, "_rowTemplate", row.gameObject);
             Ref(results, "_emptyText", empty); Ref(results, "_footer", footer); Ref(results, "_closeButton", close);
+            Ref(results, "_title", title);
+            Ref(results, "_headerA", header.transform.Find("Name").GetComponent<Text>());
+            Ref(results, "_headerB", header.transform.Find("Result").GetComponent<Text>());
+            Ref(results, "_headerC", header.transform.Find("Date").GetComponent<Text>());
             return results;
         }
 

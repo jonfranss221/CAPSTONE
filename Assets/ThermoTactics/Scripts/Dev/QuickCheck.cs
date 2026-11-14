@@ -171,12 +171,31 @@ namespace ThermoTactics.Dev
             menu.ShowLevelSelect(10); yield return Hold(0.8f); yield return Shot("32_level_path_after");
             menu.OpenFacts(); yield return Hold(0.8f); yield return Shot("33_climate_facts");
             Check("Climate Facts lists the seen facts", Active("FactsPanel"));
-            var export = QuizResultExporter.Export(db, stage, "QC");
-            Check("Quiz CSV exported", export.Success);
+            AdminSession.Lock();
+            Check("Export refused while admin is locked", !QuizResultExporter.Export(db, stage).Success);
+            AdminSession.DevUnlock();
+            var export = QuizResultExporter.Export(db, stage);
+            AdminSession.Lock();
+            Check("Quiz CSV exported (admin)", export.Success);
             Line("  " + export.Message);
 
             int total = db.GetProgress(Player, stage.stageId).Sum(p => StarRating.For(p));
             Line($"Stars in Baguio after the check: {total} / 30");
+
+            // 6. Player code, leaderboard and admin lock.
+            PlayerRecord rec = db.RegisterPlayer(Player);
+            Check("Player has a code", rec != null && rec.Code.Length == 5);
+            Check("Same name in other capitals keeps the code", rec != null && db.RegisterPlayer(Player.ToUpperInvariant() + "  ")?.Code == rec.Code);
+            LeaderboardRow mine = db.GetLeaderboard().FirstOrDefault(r => rec != null && r.Code == rec.Code);
+            Check("Player is on the leaderboard with every star", mine != null && mine.Stars >= total);
+            if (rec != null) Line($"  {rec.Name} = {rec.Code}, leaderboard #{mine?.Rank} with {mine?.Stars} stars");
+            menu.OpenLeaderboard(); yield return Hold(0.8f); yield return Shot("34_leaderboard");
+            Check("Leaderboard shown", Active("ResultsPanel"));
+            AdminSession.Lock();
+            AdminSession.DevResetTries();
+            Check("Wrong admin code is refused", !AdminSession.TryUnlock("wrong"));
+            AdminSession.DevResetTries();
+            // The right-code test is in Thermo-Tactics ▸ Test ▸ Security Checks (it reads the code from a git-ignored file).
             Line(_errors.Count == 0 ? "Console errors: none" : $"Console errors: {_errors.Count}");
             foreach (string e in _errors.Distinct().Take(15)) Line("  " + e.Replace("\n", "\n    "));
             Line("DONE");
