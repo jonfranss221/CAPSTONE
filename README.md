@@ -4,10 +4,11 @@ A Philippine climate-themed 2D turn-based strategy game for Android, built in Un
 Players defend Philippine ecosystems from fossil-fuel threats while keeping the global
 temperature below the **1.5 °C** limit. Capstone project.
 
-> **Status (v0.4.0):** Stage 1 (Baguio Forest) and Stage 2 (Sierra Madre Coast) playable from the Main Menu: 10 levels
+> **Status (v0.5.0):** Stage 1 (Baguio Forest) and Stage 2 (Sierra Madre Coast) playable from the Main Menu: 10 levels
 > each with unlocking and 1–3 stars, the full roster with Speed, counters, traits and synergies, Carbon Credits, the Store
 > and squad selection, moving and taking back units, a boss per stage (Clearcut Behemoth, Typhoon Tyrant), matched-pair pre- and post-quizzes
-> with recap cards for both stages, and save / Continue.
+> with recap cards for both stages, save / Continue, player codes, a leaderboard,
+> and an admin role for exporting the quiz results.
 > Download the APK from [Releases](https://github.com/jonfranss221/CAPSTONE/releases); changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 All names, text and dialogue are in English. The Filipino theme is in the environments and UI art.
@@ -36,7 +37,7 @@ All names, text and dialogue are in English. The Filipino theme is in the enviro
 
 ## How to play
 
-1. On the title screen, type a **player name** (2–20 characters). A tester code is optional.
+1. On the title screen, type a **player name** (2–20 characters). The game gives each new name a player code (A-001, A-002, …) the first time it presses Start.
 2. Press **Start**, pick a stage, then a level on the path. Level 1 is open; clearing a level opens the next.
    **Sierra Madre Coast** opens once all 10 Baguio levels are cleared.
    Every level opens with a short intro: the screen fades in, the camera glides onto the road and a title card shows
