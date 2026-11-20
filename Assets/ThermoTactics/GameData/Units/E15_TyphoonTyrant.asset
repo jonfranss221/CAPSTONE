@@ -53,6 +53,8 @@ MonoBehaviour:
   slamName: STORM SURGE
   forestShieldPerAlly: 1
   forestShieldMax: 3
+  laneShieldCategory: 2
+  laneShieldMax: 0
   boardAnchor: {x: 4.5, y: 3}
   worldScale: 2.1
   description: 'Stage 2 boss: a super typhoon fed by warmer seas. The Sierra Madre

@@ -49,6 +49,8 @@ MonoBehaviour:
   slamName: LANDSLIDE SLAM
   forestShieldPerAlly: 0
   forestShieldMax: 0
+  laneShieldCategory: 2
+  laneShieldMax: 0
   boardAnchor: {x: 4.5, y: 3}
   worldScale: 1.25
   description: 'Stage 1 boss: felled pine logs, landslide mud and stone, with a chainsaw

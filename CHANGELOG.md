@@ -10,6 +10,57 @@ Thermo-Tactics uses semantic versioning, **MAJOR.MINOR.PATCH**:
 Each release is built with **Thermo-Tactics ▸ Release ▸ Build Android APK** from `main`, tagged `vX.Y.Z` in Git,
 and published as `Thermo-Tactics-vX.Y.Z.apk` under the repository's GitHub Releases.
 
+## [0.6.0] — Stage 3: Metro Manila
+
+Release type: **Testing**. Saved games from 0.5.0 still load: the database is unchanged. Because this is the first
+build signed with the release key, phones that have 0.5.0 or older must **uninstall it first** (export the quiz CSV
+before uninstalling, since uninstalling removes the phone's results).
+
+### Added
+- **Stage 3 · Metro Manila.** The battlefield is an MRT-3 rail yard with one track per lane, EDSA traffic, buildings
+  and a park along the top, and a parked train, platform and depot shed along the bottom. Ten levels named after
+  MRT-3 stations from North Avenue to Taft Avenue, with a spike at Ortigas (Level 5) and the boss at Taft Avenue
+  (Level 10). Difficulty is medium, between Baguio and Sierra Madre and the later stages.
+- **Heat haze.** A hot, hazy afternoon: a heat shimmer and an orange tint over the board grow stronger as the global
+  temperature rises.
+- **Urban enemies.** Smog Wraith, Diesel Drone, Plastic Golem, Incinerator Fiend, Landfill Leviathan, Methane Cloud
+  and Toxic Runoff. New elites: Elite Smog Wraith and Elite Incinerator.
+- **Factory Titan boss** (420 HP). Smog Belch hits a 2-lane band and weakens the allies it hits; lanes with a
+  Renewable ally are spared (up to 3). Every third turn a Furnace Slam hits for 8. When overheated the band widens.
+- **Stage 3 quizzes**: 6 pre-quiz and 6 scored post-quiz questions (matched pairs, 7 topics) plus 2 unscored game
+  questions, with fact cards and recap cards. The answer key is balanced (3 each of A–D).
+- **Animated effects** switch in Settings, which stops the moving fog, sea spray and heat shimmer.
+- **Music and sound effects** across the whole game. One menu track plays on the Title, Stage Select and Level
+  Select screens; each stage's battle has battle music and the boss wave switches to a boss theme, crossfading
+  between them. Buttons click (Play, Start, End Turn and Buy use a stronger "confirm" click), and the game plays
+  sounds for placing, picking up and taking back a unit, attacks, a defeated unit, buying in the Store, and winning
+  or losing a level. The Music and Sound sliders in Settings now control them. Sources and licences are in the
+  Credits screen and `Assets/ThermoTactics/Audio/CREDITS.txt`.
+- **Release signing** window (Thermo-Tactics ▸ Release ▸ Release Signing). The keystore is kept outside the
+  repository and its password is typed in each session; it is never saved in the project.
+
+### Changed
+- **Bigger text and buttons for phones.** All UI text is drawn 20% larger where it fits its box, and shrinks back to
+  its design size where it does not. In battle the header and footer keep their 84 px and 87 px heights, while the
+  text, Oxygen box, pause button, deploy cards (76 px), End Turn button, lane caption and boss panel inside them grow.
+- **Tablets and narrow screens** (4:3) now show the whole menu and battle layout; phones (16:9 and wider) are unchanged.
+- The battle banners (wave start, boss moves) sit on a dark band below the boss panel, so they read clearly over the board.
+- **Larger slots** (88 × 44) on every stage, with a clear gap between lanes. Stage 3 has its own rail slot markers.
+- **Hydro Guardian** (Floodgate) now also puts out Burn on itself and the allies in the lanes next to it.
+- **Methane Leak** from all Landfill Leviathans together is capped at +0.05 °C per turn.
+- The quiz CSV export writes **one file per stage** (`quiz_results_phone<letter>_stage<n>_<date>.csv`), each with
+  that stage's per-question and per-topic columns, so Stage 2 and Stage 3 columns are no longer blank.
+- The Stage Select picture and the menu colours follow the stage (MRT blue and signal red for Metro Manila).
+- Stage 2's "next stage" now opens Stage 3.
+- **Stage 2 fact cards** on mangroves, typhoons and blue carbon now use figures from studies published in 2019 or later.
+
+### Fixed
+- Stage 2 rows in the quiz CSV left the per-question and per-topic columns blank (known issue in 0.5.0).
+
+### Known issues
+- Access control is enforced inside the app. The game is offline with no server, so a rooted phone could still read
+  the database file directly. This is accepted for the prototype.
+
 ## [0.5.0] — player codes, leaderboard and admin role
 
 Release type: **Testing**. Saved games from 0.4.0 still load: the database only gains a new table.

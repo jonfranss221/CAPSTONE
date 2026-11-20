@@ -24,7 +24,8 @@ MonoBehaviour:
   isHover: 0
   trait: 10
   traitValue: 1
-  traitText: 'Floodgate: takes 1 less damage from every hit; immune to Speed debuffs.'
+  traitText: 'Floodgate: takes 1 less damage from every hit; immune to Speed debuffs;
+    puts out Burn on itself and allies in adjacent lanes.'
   isStarter: 0
   tier: 1
   priceCredits: 600

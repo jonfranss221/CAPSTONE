@@ -4,11 +4,11 @@ A Philippine climate-themed 2D turn-based strategy game for Android, built in Un
 Players defend Philippine ecosystems from fossil-fuel threats while keeping the global
 temperature below the **1.5 °C** limit. Capstone project.
 
-> **Status (v0.5.0):** Stage 1 (Baguio Forest) and Stage 2 (Sierra Madre Coast) playable from the Main Menu: 10 levels
+> **Status (v0.6.0):** Stage 1 (Baguio Forest), Stage 2 (Sierra Madre Coast) and Stage 3 (Metro Manila) playable from the Main Menu: 10 levels
 > each with unlocking and 1–3 stars, the full roster with Speed, counters, traits and synergies, Carbon Credits, the Store
-> and squad selection, moving and taking back units, a boss per stage (Clearcut Behemoth, Typhoon Tyrant), matched-pair pre- and post-quizzes
-> with recap cards for both stages, save / Continue, player codes, a leaderboard,
-> and an admin role for exporting the quiz results.
+> and squad selection, moving and taking back units, a boss per stage (Clearcut Behemoth, Typhoon Tyrant, Factory Titan), matched-pair pre- and post-quizzes
+> with recap cards for every stage, save / Continue, player codes, a leaderboard,
+> an admin role for exporting the quiz results, and music and sound effects.
 > Download the APK from [Releases](https://github.com/jonfranss221/CAPSTONE/releases); changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 All names, text and dialogue are in English. The Filipino theme is in the environments and UI art.
@@ -213,7 +213,16 @@ Unit stats live in the `Units` table at the top of `Editor/ThermoTacticsBuilder.
 
 Enemies keep their Baguio stats. New enemies: Coal Brute, Diesel Drone, Toxic Runoff (Stage 2+), Incinerator Fiend,
 Landfill Leviathan (Stage 3+). Bosses: Clearcut Behemoth (Stage 1), Typhoon Tyrant (Storm Band and Storm Surge, Stage 2),
-Factory Titan (Overdrive, a later stage). Elites keep +50% HP and +1 damage, take their base unit's category and trait, and get Speed +1.
+Factory Titan (Smog Belch and Furnace Slam; lanes with a Renewable ally are spared, up to 3; Stage 3). Elites keep +50% HP and +1 damage, take their base unit's category and trait, and get Speed +1.
+
+## Audio
+
+`Scripts/Audio/AudioManager.cs` plays all music and sound effects. It starts by itself before the first scene, keeps
+running across scenes, and reads the clips from `Resources/AudioLibrary.asset`, which **Build Everything** fills from
+`Assets/ThermoTactics/Audio` (music streams from storage; effects load into memory). Music: menu screens, battle
+waves, boss wave. Effects: button click and confirm, deploy, pick up, attack (ally / enemy), unit defeated, Store
+purchase, win, lose. Volumes follow Settings ▸ Music and Settings ▸ Sound effects. Credits and licences:
+`Assets/ThermoTactics/Audio/CREDITS.txt` and the in-game Credits screen.
 
 ## Database (SQLite)
 

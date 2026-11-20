@@ -1,0 +1,188 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98395f251812ec84d8bbc703ba333038, type: 3}
+  m_Name: Stage3_Quiz
+  m_EditorClassIdentifier: 
+  quizId: Q3
+  stageId: 3
+  topics:
+  - id: heat
+    name: Urban heat island
+  - id: air
+    name: Air pollution
+  - id: transit
+    name: Transport & mass transit
+  - id: burning
+    name: Open burning
+  - id: methane
+    name: Landfills & methane
+  - id: floods
+    name: Flooding & esteros
+  - id: game
+    name: Game check
+  preQuestions:
+  - questionId: S3_PRE_1
+    topicId: heat
+    text: Why is Metro Manila often hotter than the countryside around it?
+    choices:
+    - Cities are closer to the sun because of their tall buildings
+    - Concrete, asphalt and buildings absorb the sun's heat and release it slowly,
+      and there are few trees to cool the air
+    - Traffic noise warms the air
+    - Rain never falls on large cities
+    correctIndex: 1
+    scored: 1
+  - questionId: S3_PRE_2
+    topicId: air
+    text: What is the biggest source of air pollution in Metro Manila?
+    choices:
+    - Cooking fires in homes
+    - Factories outside the city
+    - Motor vehicles such as cars, buses, jeepneys and trucks
+    - Ash from volcanoes
+    correctIndex: 2
+    scored: 1
+  - questionId: S3_PRE_3
+    topicId: transit
+    text: Why does a full train usually produce less pollution per passenger than
+      the same number of people travelling by car?
+    choices:
+    - Trains do not use any energy
+    - Trains only run at night, when the air is cleaner
+    - Train tracks absorb pollution from the air
+    - One train carries hundreds of people at once, so each person's share of the
+      emissions is much smaller
+    correctIndex: 3
+    scored: 1
+  - questionId: S3_PRE_4
+    topicId: burning
+    text: Why is burning garbage in the open harmful?
+    choices:
+    - It releases toxic smoke and greenhouse gases, and Philippine law prohibits
+      it
+    - It is harmless as long as the pile is small
+    - It makes garbage disappear without any pollution
+    - It only harms plants, not people
+    correctIndex: 0
+    scored: 1
+  - questionId: S3_PRE_5
+    topicId: methane
+    text: When food scraps and other organic waste rot in a dumpsite, which planet-warming
+      gas do they release?
+    choices:
+    - Oxygen
+    - Methane
+    - Nitrogen
+    - Hydrogen
+    correctIndex: 1
+    scored: 1
+  - questionId: S3_PRE_6
+    topicId: floods
+    text: Why do many streets in Metro Manila flood quickly during heavy rain?
+    choices:
+    - Rain in the city is heavier than anywhere else in the country
+    - The MRT tracks block the water
+    - Garbage clogs the esteros and drains, so rainwater cannot flow away
+    - Trees soak up too much water
+    correctIndex: 2
+    scored: 1
+  postQuestions:
+  - questionId: S3_POST_1
+    topicId: heat
+    text: A barangay replaces its small park with a concrete parking lot. What is
+      most likely to happen to that area on sunny days?
+    choices:
+    - It becomes cooler because parked cars block the sun
+    - Nothing changes, because the temperature depends only on the weather
+    - It becomes hotter, because the concrete stores heat and there are no trees
+      for shade
+    - It gets more rain
+    correctIndex: 2
+    scored: 1
+  - questionId: S3_POST_2
+    topicId: air
+    text: Which change would cut air pollution along EDSA the most?
+    choices:
+    - Fewer cars and old diesel vehicles on the road, with more people riding trains
+      and buses
+    - Putting up more billboards
+    - Spraying water on the road every morning
+    - Closing the parks near the highway
+    correctIndex: 0
+    scored: 1
+  - questionId: S3_POST_3
+    topicId: transit
+    text: The MRT stops running for a day, and thousands of its riders take cars
+      and taxis instead. What happens to emissions along EDSA?
+    choices:
+    - They drop, because the trains are switched off
+    - They stay the same, because the same people are travelling
+    - Only the noise changes, not the emissions
+    - They rise, because many more vehicles are needed to carry the same number of
+      people
+    correctIndex: 3
+    scored: 1
+  - questionId: S3_POST_4
+    topicId: burning
+    text: A neighbour burns plastic and dry leaves in the backyard every week. What
+      is the best advice?
+    choices:
+    - Burn them at night so nobody sees the smoke
+    - Wet the pile first so the smoke is cleaner
+    - Burn only the plastic and keep the leaves
+    - Stop burning, because it releases toxic smoke and is prohibited; compost the
+      leaves and segregate the plastic
+    correctIndex: 3
+    scored: 1
+  - questionId: S3_POST_5
+    topicId: methane
+    text: What can a household do to cut the methane coming from dumpsites?
+    choices:
+    - Put all trash together in one plastic bag
+    - Separate food and garden waste and compost it, so it does not rot in a dumpsite
+    - Burn leftover food in the backyard
+    - Throw food scraps into the nearest estero
+    correctIndex: 1
+    scored: 1
+  - questionId: S3_POST_6
+    topicId: floods
+    text: A cleanup removes tons of garbage from an estero. What is the most likely
+      effect during the next heavy rain?
+    choices:
+    - Rainwater drains away faster, so the flooding is less severe
+    - The estero overflows even more
+    - There is no effect on flooding
+    - More typhoons will reach the city
+    correctIndex: 0
+    scored: 1
+  - questionId: S3_GAME_1
+    topicId: game
+    text: In the Metro Manila stage, what do the enemies stand for?
+    choices:
+    - Wild animals that live in the city
+    - City problems such as smog, traffic exhaust, garbage burning and landfills
+    - Natural disasters such as earthquakes
+    - Rival teams defending the city
+    correctIndex: 1
+    scored: 0
+  - questionId: S3_GAME_2
+    topicId: game
+    text: In the boss level, why do Renewable allies keep their lanes safe from the
+      Factory Titan's Furnace Slam?
+    choices:
+    - They stand for clean energy, which replaces the fossil-fuel power the Factory
+      Titan stands for
+    - Renewable allies have more health than other allies
+    - The Factory Titan cannot see Renewable allies
+    - Renewable allies make the level shorter
+    correctIndex: 0
+    scored: 0

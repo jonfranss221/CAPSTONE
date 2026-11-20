@@ -23,6 +23,8 @@ MonoBehaviour:
   sideFill: {fileID: 21300000, guid: 5dc48d3031e2d154d8fb5d8e1251e72d, type: 3}
   overlayTile: {fileID: 21300000, guid: 49ed69c16e9ea1342a32a8c27ac78c11, type: 3}
   overlayStrength: 0.55
+  overlayRisesWithHeat: 0
+  heatTint: {r: 1, g: 1, b: 1, a: 1}
   slotMarker: {fileID: 21300000, guid: 76e8b0df4f025af4bb1805778fc10e3d, type: 3}
   deployHighlight: {fileID: 21300000, guid: 959d312f5b8c8d940a4367f8695dccff, type: 3}
   deployTint: {r: 0.36, g: 0.78, b: 1, a: 1}
@@ -30,7 +32,7 @@ MonoBehaviour:
   dangerHighlight: {fileID: 21300000, guid: e924c84adcd5d8d47aefcb9bc9288162, type: 3}
   cameraBackground: {r: 0.05490196, g: 0.16470589, b: 0.2, a: 1}
   nextStageLabel: "Stage 3 \xB7 Metro Manila"
-  nextStageReady: 0
+  nextStageReady: 1
   levelPathArt: {fileID: 21300000, guid: fc7b364c5a15d1f47970637fdcba452a, type: 3}
   theme: 1
   levels:
@@ -82,6 +84,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5cef704f9b3441c439f51de94530823f, type: 2}
   - {fileID: 11400000, guid: dbb052a751513cb4d8eca83733057786, type: 2}
   - {fileID: 11400000, guid: cbb08bbe73b43ca4586762d6a257a58c, type: 2}
+  - {fileID: 11400000, guid: 594ec14ac4e0d6a4998189973018b1a6, type: 2}
+  - {fileID: 11400000, guid: a4160c4b0c990524ead09aa820976ee3, type: 2}
   - {fileID: 11400000, guid: 14ecf08c7be239540ae0e57f736a4760, type: 2}
   - {fileID: 11400000, guid: a181aec865b99e84fa8bff3fb1f5306d, type: 2}
   - {fileID: 11400000, guid: c60942d66cfeb204ab1497426a51bafb, type: 2}

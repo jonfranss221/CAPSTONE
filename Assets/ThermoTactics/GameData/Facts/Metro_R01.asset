@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Metro_R01
+  m_EditorClassIdentifier: 
+  factId: S3_R01
+  stageId: 3
+  topicId: recap
+  title: 'Recap: heat and smog'
+  body: Concrete and asphalt store the sun's heat, so cities run hotter than the
+    countryside. Most of Metro Manila's air pollution comes from motor vehicles.
+  icon: {fileID: 0}
+  levelNumber: 7
+  trigger: 1
+  waveNumber: 1

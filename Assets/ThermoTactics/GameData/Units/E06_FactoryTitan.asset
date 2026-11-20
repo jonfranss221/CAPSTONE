@@ -17,39 +17,43 @@ MonoBehaviour:
   faction: 1
   isElite: 0
   opCost: 0
-  maxHp: 380
-  damage: 9
+  maxHp: 420
+  damage: 6
   speed: 2
   category: 5
   isHover: 0
-  trait: 29
-  traitValue: 0.05
-  traitText: "Smokestacks: +0.05 \xB0C every turn while alive; every 3rd turn Overdrive
-    hits 3 lanes."
+  trait: 0
+  traitValue: 0
+  traitText: Smog Belch hits 2 neighbouring lanes and moves one lane each turn; allies
+    it hits deal half damage next turn. Furnace Slam hits every lane every 3rd turn,
+    except lanes held by Renewable allies (up to 3). Below 40% HP it overheats.
   isStarter: 0
   tier: 0
   priceCredits: 0
-  unlockStage: 4
+  unlockStage: 3
   card: {fileID: 21300000, guid: 3d99368fe7064914ea594a01f19e31a7, type: 3}
   idlePose: {fileID: 21300000, guid: ef9cd8dde6811f54b8189f393301edf5, type: 3}
   animator: {fileID: 9100000, guid: dfdb8a41a85ded240ba4f14d5a7cf64f, type: 2}
   tint: {r: 1, g: 1, b: 1, a: 1}
   hitDelay: 0.42857143
   attackDuration: 0.85714287
-  pattern: 1
-  specialLanes: 3
+  pattern: 3
+  specialLanes: 2
   halfDamageTo: []
-  enragedCleaveDamage: 11
-  slamDamage: 9
+  enragedCleaveDamage: 8
+  slamDamage: 8
   slamEvery: 3
   enragedSlamEvery: 2
   enrageAtFraction: 0.4
   cleaveRadius: 0
-  cleaveName: SMOKE BLAST
-  slamName: OVERDRIVE
+  cleaveName: SMOG BELCH
+  slamName: FURNACE SLAM
   forestShieldPerAlly: 0
   forestShieldMax: 0
+  laneShieldCategory: 2
+  laneShieldMax: 3
   boardAnchor: {x: 4.5, y: 3}
-  worldScale: 2.1
-  description: 'Later-stage boss: a coal-fired factory on legs with two smokestacks.
-    Overdrive vents a blast across 3 lanes.'
+  worldScale: 1.5
+  description: 'Stage 3 boss: a coal-fired factory on legs with two smokestacks,
+    the fossil-fuel power behind the city''s smog. Renewable allies keep their lanes
+    safe from its Furnace Slam.'

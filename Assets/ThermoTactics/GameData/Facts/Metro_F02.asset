@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93cd3016e59ce4eb7b5cea6dbd29a2, type: 3}
+  m_Name: Metro_F02
+  m_EditorClassIdentifier: 
+  factId: S3_F02
+  stageId: 3
+  topicId: heat
+  title: The urban heat island
+  body: "Concrete, asphalt and buildings soak up the sun's heat and give it back
+    slowly, and a city has few trees for shade. That makes cities hotter than the
+    countryside around them. Metro Manila's surface temperature rose about 0.18 \xB0C
+    a year from 1997 to 2019 as the city spread."
+  icon: {fileID: 0}
+  levelNumber: 1
+  trigger: 1
+  waveNumber: 1

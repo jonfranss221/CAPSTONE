@@ -24,8 +24,8 @@ MonoBehaviour:
   isHover: 0
   trait: 28
   traitValue: 0.05
-  traitText: "Methane Leak: +0.05 \xB0C every 2 turns while alive; takes 1 less damage
-    from every hit."
+  traitText: "Methane Leak: +0.05 \xB0C every 2 turns while alive (all Leviathans
+    together at most +0.05 \xB0C a turn); takes 1 less damage from every hit."
   isStarter: 0
   tier: 0
   priceCredits: 0
