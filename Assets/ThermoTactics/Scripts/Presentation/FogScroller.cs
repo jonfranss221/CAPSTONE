@@ -20,13 +20,19 @@ public class FogScroller : MonoBehaviour
     private void Start()
     {
         _startPosition = transform.position;
+        transform.position = _startPosition + Vector3.right * -_tileWidth;
     }
+
+    private float _clock;
 
     private void Update()
     {
+        // Settings ▸ Animated effects off: the overlay stays where it is.
+        if (!SettingsStore.AnimatedEffects) return;
+        _clock += Time.deltaTime;
         // Mathf.Repeat wraps the offset back to 0 after one full sprite width,
         // so the two copies loop seamlessly.
-        float offset = Mathf.Repeat(Time.time * _speed, _tileWidth);
+        float offset = Mathf.Repeat(_clock * _speed, _tileWidth);
         transform.position = _startPosition + Vector3.right * (offset - _tileWidth);
     }
 

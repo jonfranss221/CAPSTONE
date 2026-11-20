@@ -19,7 +19,7 @@ namespace ThermoTactics.EditorTools
     public static class ReleaseBuilder
     {
         /// <summary>The version being released. Change this, then run Build Android APK.</summary>
-        public const string Version = "0.5.0";
+        public const string Version = "0.6.0";
         public const string AndroidPackage = "com.group26.thermotactics";
         public const string OutputFolder = "Builds";
 
@@ -62,6 +62,15 @@ namespace ThermoTactics.EditorTools
                 return;
             }
 
+            // v0.6.0: releases are signed with the team's release key (not Unity's debug key).
+            if (!ReleaseSigning.Ready)
+            {
+                Debug.LogError("[Release] Release signing is not set up. Open Thermo-Tactics ▸ Release ▸ Release Signing and enter the keystore password.");
+                ReleaseSigning.Open();
+                return;
+            }
+            ReleaseSigning.Apply();
+
             ApplyVersion();
             ThermoTacticsBuilder.BuildAll();   // scenes and data rebuilt from code, so the build matches the source
 
@@ -94,6 +103,7 @@ namespace ThermoTactics.EditorTools
             log.AppendLine($"Unity:           {Application.unityVersion}");
             log.AppendLine($"Target:          Android, min API {(int)PlayerSettings.Android.minSdkVersion}, {PlayerSettings.Android.targetArchitectures}, {PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android)}");
             log.AppendLine($"Development:     no");
+            log.AppendLine($"Signed with:     release keystore (alias {ReleaseSigning.Alias})");
             log.AppendLine($"Errors/Warnings: {s.totalErrors} / {s.totalWarnings}");
             log.AppendLine("Scenes:");
             foreach (string sc in scenes) log.AppendLine($"  - {sc}");

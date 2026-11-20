@@ -56,6 +56,7 @@ namespace ThermoTactics
         }
 
         public void CurePoison() { poisonDamage = 0; poisonTurns = 0; }
+        public void CureBurn() { burnDamage = 0; burnTurns = 0; }
 
         /// <summary>Damage from Poison and Burn this end of turn (before the timers count down).</summary>
         public int DamageOverTime => (Poisoned ? poisonDamage : 0) + (Burning ? burnDamage : 0);

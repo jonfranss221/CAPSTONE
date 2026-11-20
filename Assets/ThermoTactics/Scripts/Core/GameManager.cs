@@ -114,6 +114,7 @@ namespace ThermoTactics
             _waves.SpawnNextWave();
             Current = State.Playing;
             ApplySpeed();
+            AudioManager.PlayMusic(MusicTrack.Battle);
             _ui.ShowHud();
             _turns.BeginPlayerTurn(Level);   // also autosaves
             BeginOpening(false, $"Level {LevelNumber} · {Level.locationName}. Wave 1 of {_waves.TotalWaves}: keep it below {Level.lossThreshold:0.0}°C, {PlayerName}!", UIManager.Info);
@@ -219,6 +220,7 @@ namespace ThermoTactics
             _oxygen.Restore(s.oxygenLeft, s.oxygenAllowance, s.oxygenPenalty);
             Current = State.Playing;
             ApplySpeed();
+            AudioManager.PlayMusic(_grid.Boss != null ? MusicTrack.Boss : MusicTrack.Battle);
             _ui.ShowHud();
             _turns.ResumePlayerTurn();
             BeginOpening(true, $"Welcome back, {PlayerName}! Level {LevelNumber}, Wave {s.waveNumber} of {_waves.TotalWaves}, Turn {s.turnNumber}.", UIManager.Good);
@@ -277,6 +279,8 @@ namespace ThermoTactics
             if (Current != State.Playing) return;
             Current = State.Ended;
             Time.timeScale = 1f;
+            AudioManager.StopMusic();
+            AudioManager.Play(won ? Sfx.Win : Sfx.Lose);
             if (_tutorial != null) _tutorial.Stop();
             _grid.SetDeployHighlights(false);
             if (_camera != null) _camera.SnapHome();
@@ -398,9 +402,13 @@ namespace ThermoTactics
 
         private void OnTemperatureChanged(float value)
         {
-            // The stage's overlay (cold Baguio fog, coastal sea spray) thins as the planet warms.
+            // The stage's overlay (cold Baguio fog, coastal sea spray) thins as the planet warms;
+            // Metro Manila's heat shimmer thickens instead, and the city itself turns warmer.
             float strength = _environment != null ? _environment.OverlayStrength : 1f;
-            if (_fog != null) _fog.SetDensity(Mathf.Lerp(0.85f, 0.15f, _temperature.Normalized) * strength);
+            bool rises = _environment != null && _environment.OverlayRisesWithHeat;
+            float t = _temperature.Normalized;
+            if (_fog != null) _fog.SetDensity((rises ? Mathf.Lerp(0.35f, 1f, t) : Mathf.Lerp(0.85f, 0.15f, t)) * strength);
+            if (_environment != null) _environment.SetHeat(t);
         }
     }
 }

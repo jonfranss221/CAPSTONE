@@ -170,8 +170,8 @@ namespace ThermoTactics.EditorTools
             var rowLayout = row.gameObject.AddComponent<VerticalLayoutGroup>();
             rowLayout.childControlHeight = true; rowLayout.childControlWidth = true; rowLayout.childForceExpandHeight = false;
             rowLayout.spacing = 4; rowLayout.padding = new RectOffset(16, 16, 12, 12);
-            Txt("Head", row.transform, "-", BodyBold, 16, Cream);
-            Txt("Body", row.transform, "-", Body, 15, CreamDim).lineSpacing = 1.05f;
+            Flow(Txt("Head", row.transform, "-", BodyBold, 16, Cream));
+            Flow(Txt("Body", row.transform, "-", Body, 15, CreamDim)).lineSpacing = 1.05f;
 
             Ref(panel, "_footer", TxtAt("Footer", d.transform, "", Body, 13, CreamDim, 28, 524, 620, 40, TextAnchor.MiddleLeft));
             Ref(panel, "_closeButton", Btn("CloseButton", d.transform, "CLOSE", Gold, Ink, Ink, 712, 520, 160, 50, 20));

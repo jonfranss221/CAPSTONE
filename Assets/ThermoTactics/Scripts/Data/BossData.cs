@@ -6,15 +6,15 @@ namespace ThermoTactics
     /// A stage boss. It fills all 6 enemy slots, so every ally lane faces it.
     /// Cleave hits the targeted lane and its neighbours; the slam hits all 6 lanes.
     /// Each stage has its own boss designed for its environment (Stage 1: Clearcut Behemoth, Stage 2: Typhoon Tyrant).
-    /// The Factory Titan (E06) is defined with its own pattern for a later stage.
+    /// Stage 3: Factory Titan (smog band and Furnace Slam; Renewable allies spare their lanes from the slam).
     /// </summary>
     [CreateAssetMenu(menuName = "Thermo-Tactics/Boss Data", fileName = "BossData")]
     public class BossData : UnitData
     {
         [Header("Boss pattern")]
-        [Tooltip("How the boss picks lanes. CleaveAndSlam: Stage 1. StormSurge: Stage 2 (a band of lanes that moves every turn). Overdrive is for a later stage.")]
+        [Tooltip("How the boss picks lanes. CleaveAndSlam: Stage 1. StormSurge: Stage 2 (a band of lanes that moves every turn). SmogBelch: Stage 3.")]
         public BossPattern pattern = BossPattern.CleaveAndSlam;
-        [Tooltip("Overdrive: lanes hit by the special attack. StormSurge: width of the storm band (+1 once enraged).")]
+        [Tooltip("StormSurge and SmogBelch: width of the moving band (+1 once enraged).")]
         [Range(1, 6)] public int specialLanes = 3;
         [Tooltip("Units that take half damage from this boss (Typhoon Tyrant: Mangrove Guardian and Sea Turtle Guardian).")]
         public UnitData[] halfDamageTo = new UnitData[0];
@@ -40,6 +40,12 @@ namespace ThermoTactics
         [Min(0)] public int forestShieldPerAlly = 0;
         [Tooltip("The most the forest shield can cut.")]
         [Min(0)] public int forestShieldMax = 0;
+
+        [Header("Lane shield (SmogBelch)")]
+        [Tooltip("Allies of this category keep their own lane out of the slam.")]
+        public UnitCategory laneShieldCategory = UnitCategory.Renewable;
+        [Tooltip("The most lanes the shield can spare (0 = no shield).")]
+        [Range(0, 6)] public int laneShieldMax = 0;
 
         [Header("Placement")]
         [Tooltip("Board coordinates of the boss's feet (a along the lane, b across lanes).")]

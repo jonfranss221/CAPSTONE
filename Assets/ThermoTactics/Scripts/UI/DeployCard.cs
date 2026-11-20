@@ -28,7 +28,7 @@ namespace ThermoTactics
             if (_name != null) _name.text = data.displayName;
             _cost.text = data.opCost.ToString();
             _button.onClick.RemoveAllListeners();
-            _button.onClick.AddListener(() => onClick(data));
+            _button.onClick.AddListener(() => { AudioManager.Play(Sfx.Click); onClick(data); });
         }
 
         public void Refresh(bool selected, bool affordable, bool interactable)

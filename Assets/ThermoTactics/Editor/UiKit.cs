@@ -154,15 +154,37 @@ namespace ThermoTactics.EditorTools
         }
 
         // ---- text ----
+        /// <summary>How much larger UI text is drawn than the design size, when it fits (v0.6.0 mobile pass).</summary>
+        public const float MobileTextScale = 1.2f;
+        /// <summary>The smallest a label may shrink to, as a share of its design size, before it is clipped.</summary>
+        public const float MobileTextMin = 0.8f;
+
         public static Text Txt(string name, Transform parent, string value, Font font, int size, Color color,
                                TextAnchor align = TextAnchor.UpperLeft)
         {
             var t = NewRect(name, parent).gameObject.AddComponent<Text>();
-            t.font = font; t.text = value; t.fontSize = size; t.color = color; t.alignment = align;
+            // Mobile readability (v0.6.0): every label is drawn up to MobileTextScale larger and shrinks (best fit)
+            // to whatever fits its box, down to MobileTextMin of its design size, so no layout breaks.
+            // Best fit only measures the box height when vertical overflow is Truncate, so it must be set here.
+            int big = Mathf.RoundToInt(size * MobileTextScale);
+            t.font = font; t.text = value; t.fontSize = big; t.color = color; t.alignment = align;
+            t.resizeTextForBestFit = true;
+            t.resizeTextMinSize = Mathf.Max(8, Mathf.RoundToInt(size * MobileTextMin));
+            t.resizeTextMaxSize = big;
             t.supportRichText = true;
-            t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow;
+            t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Truncate;
             t.lineSpacing = 1f;
             t.raycastTarget = false;
+            return t;
+        }
+
+        /// <summary>For text whose box grows with it (rows in a layout group): plain larger text, no best fit,
+        /// so the layout can measure its real height.</summary>
+        public static Text Flow(Text t)
+        {
+            t.resizeTextForBestFit = false;
+            t.fontSize = t.resizeTextMaxSize;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
             return t;
         }
 
@@ -313,8 +335,9 @@ namespace ThermoTactics.EditorTools
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280f, 720f);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 1f;
+            // Expand: the whole 1280 x 720 layout is always on screen. Phones (16:9 and wider) behave exactly like
+            // "match height"; narrower screens such as 4:3 tablets fit the width and gain room above and below.
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             go.AddComponent<TextScaler>();
             return canvas;
         }

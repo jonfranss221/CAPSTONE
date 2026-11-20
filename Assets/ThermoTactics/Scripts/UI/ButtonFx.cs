@@ -7,10 +7,11 @@ namespace ThermoTactics
     /// <summary>
     /// Button feel: grows a little on hover, squashes when pressed, springs back on release.
     /// Scales around the button's centre (the pivot is moved to the centre without moving the button).
-    /// Does nothing while the button is disabled.
+    /// Does nothing while the button is disabled. Also plays the click sound: a "confirm" sound for the buttons that
+    /// start or commit something (Play, Start, End Turn, Buy ...), the ordinary click for the rest.
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
-    public class ButtonFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
+    public class ButtonFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
     {
         [SerializeField] private float _hoverScale = 1.035f;
         [SerializeField] private float _pressScale = 0.95f;
@@ -49,6 +50,15 @@ namespace ThermoTactics
         public void OnPointerExit(PointerEventData e) { _hover = false; _down = false; }
         public void OnPointerDown(PointerEventData e) => _down = true;
         public void OnPointerUp(PointerEventData e) => _down = false;
+
+        private static readonly string[] ConfirmButtons =
+            { "PlayButton", "StartButton", "EndTurnButton", "BuyButton", "PrimaryButton", "ContinueButton", "ResumeButton" };
+
+        public void OnPointerClick(PointerEventData e)
+        {
+            if (_selectable != null && !_selectable.IsInteractable()) return;
+            AudioManager.Play(System.Array.IndexOf(ConfirmButtons, gameObject.name) >= 0 ? Sfx.Confirm : Sfx.Click);
+        }
 
         private void Update()
         {

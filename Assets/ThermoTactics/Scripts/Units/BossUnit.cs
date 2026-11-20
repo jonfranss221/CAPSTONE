@@ -11,6 +11,8 @@ namespace ThermoTactics
     /// neighbours, or slams all 6 lanes (every 3rd boss turn; every 2nd once enraged).
     /// StormSurge (Stage 2): a storm band of neighbouring lanes that moves one lane every boss turn, back and forth,
     /// so the player can see where it goes next; the surge hits all 6 lanes, cut by 1 for every living Forest ally.
+    /// SmogBelch (Stage 3): a smog band that moves the same way; allies it hits deal half damage on their next turn.
+    /// The Furnace Slam hits every lane except the lanes held by living Renewable allies (up to laneShieldMax).
     /// Below the enrage fraction it enrages (harder hits, more slams; the storm band widens by one lane).
     /// A boss hit on a lane with no ally heats the planet, like any undefended enemy attack.
     /// </summary>
@@ -33,16 +35,19 @@ namespace ThermoTactics
             public bool IsSlam;
             public List<int> Lanes;
             public int Damage;
-            /// <summary>Damage the forest shield took off the slam (StormSurge only).</summary>
+            /// <summary>Damage the forest shield took off the slam (StormSurge), or lanes spared from it (SmogBelch).</summary>
             public int Shield;
             public string Name;
         }
 
         public bool IsStorm => Boss != null && Boss.pattern == BossPattern.StormSurge;
+        public bool IsSmog => Boss != null && Boss.pattern == BossPattern.SmogBelch;
+        /// <summary>The boss attacks a band of lanes that moves one lane each turn (Typhoon Tyrant, Factory Titan).</summary>
+        public bool UsesBand => IsStorm || IsSmog;
         public string CleaveName => Boss != null && !string.IsNullOrEmpty(Boss.cleaveName) ? Boss.cleaveName : "CLEAVE";
         public string SlamName => Boss != null && !string.IsNullOrEmpty(Boss.slamName) ? Boss.slamName : "SLAM";
 
-        /// <summary>Lanes in the storm band (StormSurge); widens by one once enraged.</summary>
+        /// <summary>Lanes in the moving band (StormSurge, SmogBelch); widens by one once enraged.</summary>
         public int BandWidth => Mathf.Clamp((Boss != null ? Boss.specialLanes : 3) + (IsEnraged ? 1 : 0), 1, 6);
 
         /// <summary>
@@ -68,6 +73,22 @@ namespace ThermoTactics
                 if (a != null && !a.IsDead && a.Data.category == UnitCategory.Forest) forest++;
             }
             return Mathf.Min(Boss.forestShieldMax, forest * Boss.forestShieldPerAlly);
+        }
+
+        /// <summary>
+        /// Lanes the Furnace Slam spares (SmogBelch): each living ally of the shield category keeps its own lane out,
+        /// up to laneShieldMax, from lane 1 upward.
+        /// </summary>
+        public List<int> ShieldedLanes(GridManager grid)
+        {
+            var lanes = new List<int>();
+            if (!IsSmog || Boss.laneShieldMax <= 0) return lanes;
+            for (int l = 0; l < grid.LaneCount && lanes.Count < Boss.laneShieldMax; l++)
+            {
+                UnitBase a = grid.GetAlly(l);
+                if (a != null && !a.IsDead && a.Data.category == Boss.laneShieldCategory) lanes.Add(l);
+            }
+            return lanes;
         }
 
         // Slam or cleave is decided at the start of the player's turn, so the warning shown in the HUD
@@ -114,10 +135,16 @@ namespace ThermoTactics
                 var all = new List<int>();
                 for (int i = 0; i < grid.LaneCount; i++) all.Add(i);
                 int full = Boss != null ? Boss.slamDamage : Damage;
+                if (IsSmog)
+                {
+                    List<int> spared = ShieldedLanes(grid);
+                    all.RemoveAll(spared.Contains);
+                    return new BossMove { IsSlam = true, Lanes = all, Damage = full, Shield = spared.Count, Name = SlamName };
+                }
                 int shield = Mathf.Min(full, ForestShield(grid));
                 return new BossMove { IsSlam = true, Lanes = all, Damage = full - shield, Shield = shield, Name = SlamName };
             }
-            if (IsStorm)
+            if (UsesBand)
             {
                 int width = BandWidth;
                 int start = BandStart(BossTurn, width, grid.LaneCount);

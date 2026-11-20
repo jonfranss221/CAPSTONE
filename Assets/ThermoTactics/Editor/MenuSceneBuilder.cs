@@ -292,9 +292,10 @@ namespace ThermoTactics.EditorTools
             Ref(panel, "_sfxValue", TxtAt("SfxValue", d.transform, "85%", Body, 16, CreamDim, L + W - 80, 216, 80, 22, TextAnchor.MiddleRight));
             Ref(panel, "_sfx", Range("SfxSlider", d.transform, L, 242, W));
             Legend(d.transform, "DISPLAY", L, 290);
-            Ref(panel, "_largeText", Check("LargeText", d.transform, "Large text", L, 320, W));
-            Ref(panel, "_highContrast", Check("HighContrast", d.transform, "High-contrast lane highlights", L, 366, W));
-            Ref(panel, "_laneCamera", Check("LaneCamera", d.transform, "Zoom in on each lane during battle", L, 412, W));
+            Ref(panel, "_largeText", Check("LargeText", d.transform, "Large text", L, 318, W));
+            Ref(panel, "_highContrast", Check("HighContrast", d.transform, "High-contrast lane highlights", L, 358, W));
+            Ref(panel, "_laneCamera", Check("LaneCamera", d.transform, "Zoom in on each lane during battle", L, 398, W));
+            Ref(panel, "_animatedEffects", Check("AnimatedEffects", d.transform, "Animated effects (fog, spray, heat)", L, 438, W));
 
             Legend(d.transform, "GAMEPLAY", R, 116);
             TxtAt("SpeedLabel", d.transform, "Battle animation speed", BodyBold, 16, Cream, R, 150, W, 22, TextAnchor.MiddleLeft);
@@ -331,21 +332,21 @@ namespace ThermoTactics.EditorTools
             Ref(panel, "_phoneLetterButton", letter);
             Ref(panel, "_phoneLetterLabel", letter.GetComponentInChildren<Text>());
 
-            Legend(d.transform, "ADMIN", L, 466);
-            TxtAt("AdminLabel", d.transform, "Admin code:", BodyBold, 16, Cream, L, 498, 100, 44, TextAnchor.MiddleLeft);
-            var code = NewInput("AdminInput", d.transform, "Enter code", 16, L + 104, 498, 150, 44, 16);
+            Legend(d.transform, "ADMIN", L, 484);
+            TxtAt("AdminLabel", d.transform, "Admin code:", BodyBold, 16, Cream, L, 510, 100, 44, TextAnchor.MiddleLeft);
+            var code = NewInput("AdminInput", d.transform, "Enter code", 16, L + 104, 510, 150, 44, 16);
             code.contentType = InputField.ContentType.Password;
             code.asteriskChar = '*';
             Ref(panel, "_adminInput", code);
-            var unlock = Btn("AdminButton", d.transform, "UNLOCK", Clear, Gold, Gold, L + 262, 498, 102, 44, 16, 0f);
+            var unlock = Btn("AdminButton", d.transform, "UNLOCK", Clear, Gold, Gold, L + 262, 510, 102, 44, 16, 0f);
             Ref(panel, "_adminButton", unlock);
             Ref(panel, "_adminButtonLabel", unlock.GetComponentInChildren<Text>());
-            Ref(panel, "_adminStatus", TxtAt("AdminStatus", d.transform, "", Body, 14, CreamDim, L, 546, W, 22, TextAnchor.MiddleLeft));
+            Ref(panel, "_adminStatus", TxtAt("AdminStatus", d.transform, "", Body, 14, CreamDim, L, 556, W, 22, TextAnchor.MiddleLeft));
 
             // Under both columns, left of the Done button: room for the export path.
-            Ref(panel, "_dataNote", TxtAt("DataNote", d.transform, "", Body, 13, CreamDim, L, 576, 540, 60));
+            Ref(panel, "_dataNote", TxtAt("DataNote", d.transform, "", Body, 13, CreamDim, L, 584, 540, 56));
 
-            Ref(panel, "_doneButton", Btn("DoneButton", d.transform, "DONE", Gold, Ink, Ink, 592, 576, 200, 52, 22));
+            Ref(panel, "_doneButton", Btn("DoneButton", d.transform, "DONE", Gold, Ink, Ink, 592, 584, 200, 52, 22));
             root.gameObject.SetActive(false);
             return panel;
         }
@@ -389,16 +390,19 @@ namespace ThermoTactics.EditorTools
         private static void BuildCredits(Transform c, MainMenuController menu)
         {
             var root = Overlay("CreditsDialog", c, out var f);
-            var d = Box("Dialog", f, Panel, Moss, 330, 140, 620, 420, 8f);
-            Weave(d.transform, 0, 0, 620);
-            TxtAt("Title", d.transform, "CREDITS", Pixel, 32, Cream, 28, 42, 560, 38, TextAnchor.MiddleLeft);
+            var d = Box("Dialog", f, Panel, Moss, 300, 60, 680, 600, 8f);
+            Weave(d.transform, 0, 0, 680);
+            TxtAt("Title", d.transform, "CREDITS", Pixel, 32, Cream, 28, 42, 620, 38, TextAnchor.MiddleLeft);
             TxtAt("Body", d.transform,
                 "<b>Thermo-Tactics</b> — a capstone project: a turn-based strategy game about keeping the planet below 1.5 °C, set in the Philippines.\n\n" +
                 "<b>Team</b>\nEdz Steinar Bederico · Jon Francis Gellido · Rodge Emanuel Ramos · Jherwin Reyes\n\n" +
                 "<b>Fonts</b>\nPixelify Sans and Atkinson Hyperlegible, SIL Open Font License 1.1\n\n" +
+                "<b>Music</b> (from chosic.com, used with credit)\n\"Superepic\" by Alexander Nakarada (CC BY 4.0) · \"Warfare\" by MaxKoMusic (CC BY-SA 3.0) · " +
+                "\"Thunder Unison\" by Keys of Moon (CC BY 4.0)\n\n" +
+                "<b>Sound effects</b>\nPixabay (Pixabay Content License): freesound_community, freesoundeffects, alphix, puyopuyomegafan1234\n\n" +
                 "Made with Unity 6. Results and progress are stored only on this device (SQLite).",
-                Body, 15, Cream, 28, 90, 564, 240);
-            Ref(menu, "_creditsClose", Btn("CloseButton", d.transform, "CLOSE", Gold, Ink, Ink, 392, 346, 200, 50, 20));
+                Body, 15, Cream, 28, 90, 624, 420);
+            Ref(menu, "_creditsClose", Btn("CloseButton", d.transform, "CLOSE", Gold, Ink, Ink, 452, 526, 200, 50, 20));
             Ref(menu, "_creditsDialog", root.gameObject);
         }
 

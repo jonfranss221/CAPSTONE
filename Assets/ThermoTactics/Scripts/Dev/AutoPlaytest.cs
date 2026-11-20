@@ -13,8 +13,9 @@ namespace ThermoTactics.Dev
     /// Editor-only automatic play-test (menu Thermo-Tactics ▸ Test ▸ Play Stage N Automatically).
     /// Plays the stage's Levels 1–10 in order as the player "Playtest" with a simple strategy (fill the lanes that
     /// have enemies first, then the rest), retries a lost level up to twice, and saves screenshots and a report
-    /// to Logs/qa/auto/ (Logs/qa/auto_stage2/ for Stage 2). For Stage 2 the earlier stage is marked cleared and the
-    /// player gets a mid-game squad (two Stage 2 allies and one store ally). Never included in a phone build.
+    /// to Logs/qa/auto/ (Logs/qa/auto_stage{N}/ for later stages). For Stage 2 and 3 the earlier stages are marked cleared
+    /// and the player gets a mid-game squad bought from the store. The "Playtest" player keeps that progress after the
+    /// run, so the stage stays unlocked for that player until the next play-test resets it. Never included in a phone build.
     /// </summary>
     public class AutoPlaytest : MonoBehaviour
     {
@@ -76,7 +77,11 @@ namespace ThermoTactics.Dev
                 foreach (StageData earlier in menu.Stages)
                     if (earlier != null && earlier.stageId < _stageId)
                         for (int l = 1; l <= earlier.LevelCount; l++) menu.Database.RecordAttempt(Player, earlier.stageId, l, true, 1.3f, 1);
-                string[] ids = { "A12", "A10", "A09", "A08", "A06" };   // Sea Turtle, Seagrass, Bamboo Warden, Geothermal, Wind Caller
+                // Stage 2: Sea Turtle, Seagrass, Bamboo Warden, Geothermal, Wind Caller.
+                // Stage 3+: Solar Sentinel and Hydro Guardian (Renewable lanes are spared by the Factory Titan),
+                //           Sea Turtle, Seagrass Healer, Wind Caller (vs hovering Smog Wraiths and Diesel Drones).
+                string[] ids = _stageId >= 3 ? new[] { "A05", "A07", "A12", "A10", "A06" }
+                                             : new[] { "A12", "A10", "A09", "A08", "A06" };
                 var squad = new List<UnitData>();
                 foreach (string id in ids)
                 {

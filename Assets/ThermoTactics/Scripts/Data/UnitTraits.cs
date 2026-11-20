@@ -57,16 +57,18 @@ namespace ThermoTactics
         Poison,         // E11 Toxic Runoff: N damage per turn for 2 turns; +2 damage vs Ocean allies
         Burn,           // E13 Incinerator Fiend: N damage per turn for 2 turns; +3 damage vs Forest allies
         MethaneLeak,    // E14 Landfill Leviathan: +N °C every 2 turns while alive; damage taken −1
-        Smokestacks,    // E06 Factory Titan (boss): +N °C every turn while alive
+        Smokestacks,    // E06 Factory Titan (boss, unused since Stage 3): +N °C every turn while alive
         StormSurge,     // E15 Typhoon Tyrant (boss): hits 2 random lanes each turn, every lane every 3rd turn
     }
 
-    /// <summary>How a boss picks the lanes it hits (BossUnit uses CleaveAndSlam today; the others are for later stages).</summary>
+    /// <summary>How a boss picks the lanes it hits.</summary>
     public enum BossPattern
     {
         CleaveAndSlam,   // B01 Clearcut Behemoth: cleave the strongest ally's lane ± radius; slam all lanes every Nth turn
-        Overdrive,       // E06 Factory Titan: hit one lane; every Nth turn Overdrive hits 3 lanes
-        StormSurge,      // E15 Typhoon Tyrant: hit N random lanes each turn; every lane every Nth turn
+        Overdrive,       // (not used) hit one lane; every Nth turn Overdrive hits 3 lanes
+        StormSurge,      // E15 Typhoon Tyrant: a moving band of lanes; the surge hits every lane every Nth turn
+        SmogBelch,       // E06 Factory Titan: a moving smog band (allies in it deal half damage next turn);
+                         // the Furnace Slam hits every lane every Nth turn, except lanes held by Renewable allies
     }
 
     public static class UnitCategoryInfo

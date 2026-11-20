@@ -32,6 +32,7 @@ namespace ThermoTactics
         [SerializeField] private Text _endWalletText;
         [SerializeField] private DeployCard[] _cards = new DeployCard[0];
         [SerializeField] private Text _announcement;
+        [SerializeField] private Image _announcementBand;
         [SerializeField] private RectTransform _floatingLayer;
 
         [Header("Boss panel")]
@@ -374,8 +375,9 @@ namespace ThermoTactics
             // In the boss wave the boss panel sits at the top left, so the banner moves right of it.
             var rt = (RectTransform)_laneCaption.transform;
             bool boss = _bossPanel.activeSelf;
-            rt.anchoredPosition = new Vector2(boss ? 230f : 0f, rt.anchoredPosition.y);
-            rt.sizeDelta = new Vector2(boss ? 700f : 760f, rt.sizeDelta.y);
+            // With the boss panel (20..540 px, 162 high) the caption moves right and narrows so they never overlap.
+            rt.anchoredPosition = new Vector2(boss ? 276f : 0f, rt.anchoredPosition.y);
+            rt.sizeDelta = new Vector2(boss ? 640f : 860f, rt.sizeDelta.y);
             _laneTitle.text = title;
             _laneDetail.text = detail;
             if (_laneAccent != null) _laneAccent.color = tone;
@@ -461,13 +463,16 @@ namespace ThermoTactics
                 foreach (int lane in move.Lanes) if (_grid.IsAllySlotFree(lane)) empty.Add(lane + 1);
                 string lanes = empty.Count == 0 ? "" : (empty.Count == 1 ? $"Fill Lane {empty[0]} before ending the turn. " : $"Fill Lanes {string.Join(", ", empty)} before ending the turn. ");
                 string tip = move.IsSlam
-                    ? (boss.IsStorm ? "The surge hits every lane; each Forest ally weakens it." : "The slam hits every lane.")
-                    : (boss.IsStorm ? "The storm band moves one lane every turn." : "Cleave targets the lane of your strongest unit.");
+                    ? (boss.IsStorm ? "The surge hits every lane; each Forest ally weakens it."
+                       : boss.IsSmog ? "The slam hits every lane except lanes held by Renewable allies." : "The slam hits every lane.")
+                    : (boss.IsStorm ? "The storm band moves one lane every turn."
+                       : boss.IsSmog ? "The smog band moves one lane every turn; allies in it deal half damage next turn."
+                       : "Cleave targets the lane of your strongest unit.");
                 _hint.text = lanes + tip;
                 return;
             }
             _hint.text = sel == null
-                ? "Tap a unit card, then a glowing slot on the road. Tap a placed unit to move it. Tap END TURN when ready."
+                ? "Tap a unit card, then a glowing slot. Tap a placed unit to move it. Tap END TURN when ready."
                 : UnitHint(sel);
         }
 
@@ -503,18 +508,22 @@ namespace ThermoTactics
             BossUnit.BossMove move = boss.PlanNext(_grid);
             if (move.IsSlam)
             {
-                _bossNext.text = $"<color=#F3C95A><b>Next: {move.Name}</b></color> all 6 lanes, {move.Damage} damage"
-                                 + (move.Shield > 0 ? $" <color=#8FE09B>(forest −{move.Shield})</color>" : "");
+                _bossNext.text = boss.IsSmog
+                    ? $"<color=#F3C95A><b>Next: {move.Name}</b></color> {move.Lanes.Count} lanes, {move.Damage} damage"
+                      + (move.Shield > 0 ? $" <color=#8FE09B>({move.Shield} spared by Renewable allies)</color>" : "")
+                    : $"<color=#F3C95A><b>Next: {move.Name}</b></color> all 6 lanes, {move.Damage} damage"
+                      + (move.Shield > 0 ? $" <color=#8FE09B>(forest −{move.Shield})</color>" : "");
                 _bossSlam.text = "Every empty lane adds <b>+0.10 °C</b>. Fill all six!";
             }
             else
             {
                 _bossNext.text = $"<color=#FF9A86><b>Next: {move.Name}</b></color> lanes {move.Lanes[0] + 1}–{move.Lanes[move.Lanes.Count - 1] + 1}, {move.Damage} damage each";
                 int t = boss.TurnsUntilSlam;
-                string shield = boss.IsStorm ? $", −1 per Forest ally (max −{data.forestShieldMax})" : "";
+                string shield = boss.IsStorm ? $", −1 per Forest ally (max −{data.forestShieldMax})"
+                              : boss.IsSmog ? $", Renewable lanes spared (max {data.laneShieldMax})" : "";
                 _bossSlam.text = $"<color=#F3C95A><b>{boss.SlamName}</b></color> all 6 lanes, {data.slamDamage} damage{shield}, in <b>{t} turn{(t == 1 ? "" : "s")}</b>";
             }
-            string hit = boss.IsStorm ? $"{data.specialLanes + 1}-lane band" : "cleave";
+            string hit = boss.IsStorm ? $"{data.specialLanes + 1}-lane band" : boss.IsSmog ? $"{data.specialLanes + 1}-lane smog" : "cleave";
             _bossNote.text = boss.IsEnraged
                 ? $"ENRAGED: {hit} {data.enragedCleaveDamage}, {boss.SlamName.ToLowerInvariant()} every {data.enragedSlamEvery} turns"
                 : $"Gold tick = enrage at {Mathf.RoundToInt(data.enrageAtFraction * 100)}% HP: {hit} {data.enragedCleaveDamage}, {boss.SlamName.ToLowerInvariant()} every {data.enragedSlamEvery} turns";
@@ -532,6 +541,8 @@ namespace ThermoTactics
         private void OnBossEnraged(BossUnit boss)
             => Announce(boss.IsStorm
                 ? $"The {boss.Data.displayName} becomes a SUPER TYPHOON! A wider storm band and more surges."
+                : boss.IsSmog
+                ? $"The {boss.Data.displayName} OVERHEATS! A wider smog band and more Furnace Slams."
                 : $"The {boss.Data.displayName} is ENRAGED! Harder cleaves and more slams.", new Color(1f, 0.45f, 0.38f));
 
         public void Announce(string message, Color color)
@@ -544,14 +555,17 @@ namespace ThermoTactics
         {
             _announcement.text = message;
             _announcement.gameObject.SetActive(true);
+            if (_announcementBand != null) _announcementBand.gameObject.SetActive(true);
             for (float t = 0f; t < 3.2f; t += Time.unscaledDeltaTime)
             {
                 Color c = color;
                 c.a = t < 2.6f ? 1f : 1f - (t - 2.6f) / 0.6f;
                 _announcement.color = c;
+                if (_announcementBand != null) { Color b = _announcementBand.color; b.a = 0.82f * c.a; _announcementBand.color = b; }
                 yield return null;
             }
             _announcement.gameObject.SetActive(false);
+            if (_announcementBand != null) _announcementBand.gameObject.SetActive(false);
         }
 
         /// <summary>Damage numbers and °C changes that float up from a unit (Settings can hide them).</summary>
@@ -567,7 +581,7 @@ namespace ThermoTactics
             go.transform.SetParent(_floatingLayer, false);
             var text = go.AddComponent<Text>();
             text.font = _font;
-            text.fontSize = 24;
+            text.fontSize = 28;
             text.alignment = TextAnchor.MiddleCenter;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.raycastTarget = false;
@@ -576,7 +590,7 @@ namespace ThermoTactics
             outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
             outline.effectDistance = new Vector2(2f, -2f);
             var rt = (RectTransform)go.transform;
-            rt.sizeDelta = new Vector2(160f, 36f);
+            rt.sizeDelta = new Vector2(200f, 40f);
 
             for (float t = 0f; t < 1f; t += Time.deltaTime)
             {

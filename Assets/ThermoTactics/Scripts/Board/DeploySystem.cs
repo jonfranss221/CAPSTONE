@@ -99,6 +99,7 @@ namespace ThermoTactics
             }
 
             if (!_grid.MoveAlly(unit, lane)) return;
+            AudioManager.Play(Sfx.Deploy);
             _ui.Announce($"{unit.Data.displayName} moved to Lane {lane + 1} ({cost}).", UIManager.Good);
             SetBoardSelected(null);
             _grid.SetDeployHighlights(true);
@@ -114,6 +115,7 @@ namespace ThermoTactics
             _grid.Remove(unit);
             Destroy(unit.gameObject);
             _oxygen.Refund(refund);
+            AudioManager.Play(Sfx.Pickup);
             _ui.Announce($"{unit.Data.displayName} taken back (+{refund} OP).", UIManager.Good);
             SetBoardSelected(null);
             _grid.SetDeployHighlights(true);
@@ -155,6 +157,7 @@ namespace ThermoTactics
             unit.DeployedThisTurn = true;
             _grid.Place(unit, lane);
             _grid.SetDeployHighlights(true);
+            AudioManager.Play(Sfx.Deploy);
             Deployed?.Invoke(unit);
         }
 
@@ -178,6 +181,7 @@ namespace ThermoTactics
         {
             if (ReferenceEquals(BoardSelected, unit)) return;
             BoardSelected = unit;
+            if (unit != null) AudioManager.Play(Sfx.Pickup);
             _grid.SetSelectedLane(unit != null ? unit.Lane : -1);
             BoardSelectionChanged?.Invoke(unit);
         }

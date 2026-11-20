@@ -197,6 +197,7 @@ namespace ThermoTactics
                 () =>
                 {
                     bool ok = _menu.Database.Buy(player, u.unitId, u.priceCredits);
+                    if (ok) AudioManager.Play(Sfx.Purchase);
                     Rebuild();
                     _detailState.text = ok ? $"<color=#8FE09B>{u.displayName} joined your defenders!</color> Pick it in the squad screen before a level."
                                            : "<color=#FF9A86>Could not buy it. Check your Carbon Credits and try again.</color>";

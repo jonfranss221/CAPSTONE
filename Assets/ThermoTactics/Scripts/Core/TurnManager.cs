@@ -88,7 +88,7 @@ namespace ThermoTactics
         {
             BossUnit boss = _grid.Boss;
             if (boss == null || !SettingsStore.BossWarning || boss.TurnsUntilSlam != 1) return;
-            string shield = boss.IsStorm ? " Forest allies weaken it." : "";
+            string shield = boss.IsStorm ? " Forest allies weaken it." : boss.IsSmog ? " Lanes held by Renewable allies are spared." : "";
             _ui.Announce($"Warning: {boss.Data.displayName} {boss.SlamName} hits ALL 6 lanes this turn! Fill every lane.{shield}", UIManager.Warning);
         }
 
@@ -390,9 +390,13 @@ namespace ThermoTactics
             });
         }
 
+        /// <summary>The most heat all Landfill Leviathans together can leak in one turn.</summary>
+        public const float MethaneLeakCap = 0.05f;
+
         /// <summary>
-        /// After the lanes and the boss: Poison and Burn damage, heals (Regrowth, Meadow Mend, Blue Carbon Belt),
-        /// °C traits (Canopy, Smokestacks, Methane Leak), then every effect timer counts down.
+        /// After the lanes and the boss: Floodgate puts out Burn, then Poison and Burn damage, heals (Regrowth,
+        /// Meadow Mend, Blue Carbon Belt), °C traits (Canopy, Smokestacks, Methane Leak, capped together), then every
+        /// effect timer counts down.
         /// </summary>
         private IEnumerator EndOfTurn()
         {
@@ -401,6 +405,24 @@ namespace ThermoTactics
             var enemies = new System.Collections.Generic.List<UnitBase>(_grid.Enemies);
             var everyone = new System.Collections.Generic.List<UnitBase>(allies);
             everyone.AddRange(enemies);
+
+            // 0. Floodgate (Hydro Guardian): water puts out Burn on itself and on allies in the lanes beside it.
+            foreach (UnitBase h in allies)
+            {
+                if (h == null || h.IsDead || h.Data.trait != UnitTrait.Floodgate) continue;
+                var doused = new System.Collections.Generic.List<UnitBase> { h };
+                doused.AddRange(_grid.NeighbourAllies(h.Lane));
+                bool any = false;
+                foreach (UnitBase n in doused)
+                {
+                    if (n == null || n.IsDead || !n.Status.Burning) continue;
+                    n.Status.CureBurn();
+                    n.RefreshStatusIcons();
+                    _ui.ShowFloatingText(n.TopPosition + Vector3.up * 0.3f, "fire out", new Color(0.55f, 0.85f, 1f));
+                    any = true;
+                }
+                if (any) notes.Add($"{h.Data.displayName} puts out the fire");
+            }
 
             // 1. Poison and Burn.
             foreach (UnitBase u in everyone)
@@ -443,15 +465,25 @@ namespace ThermoTactics
                     float d = _lanes.AddClimate(-a.Data.traitValue, a.TopPosition + Vector3.up * 0.5f, "canopy");
                     if (d < 0f) notes.Add($"{a.Data.displayName}'s canopy cools {d:0.00} °C");
                 }
+            float methane = 0f; UnitBase leaker = null; int leakers = 0;
             foreach (UnitBase e in enemies)
             {
                 if (e == null || e.IsDead) continue;
-                bool leak = e.Data.trait == UnitTrait.MethaneLeak && e.Status.turnsAlive % 2 == 1;
-                if (e.Data.trait == UnitTrait.Smokestacks || leak)
+                if (e.Data.trait == UnitTrait.MethaneLeak)
                 {
-                    float d = _lanes.AddClimate(e.Data.traitValue, e.TopPosition + Vector3.up * 0.5f, leak ? "methane" : "smoke");
+                    if (e.Status.turnsAlive % 2 == 1) { methane += e.Data.traitValue; leaker = e; leakers++; }
+                }
+                else if (e.Data.trait == UnitTrait.Smokestacks)
+                {
+                    float d = _lanes.AddClimate(e.Data.traitValue, e.TopPosition + Vector3.up * 0.5f, "smoke");
                     notes.Add($"{e.Data.displayName} adds +{d:0.00} °C");
                 }
+            }
+            // Methane from every Landfill Leviathan together is capped, so two of them never double the leak.
+            if (leaker != null)
+            {
+                float d = _lanes.AddClimate(Mathf.Min(MethaneLeakCap, methane), leaker.TopPosition + Vector3.up * 0.5f, "methane");
+                notes.Add(leakers > 1 ? $"Landfill methane adds +{d:0.00} °C (capped)" : $"{leaker.Data.displayName} adds +{d:0.00} °C");
             }
 
             // 4. Timers.
@@ -478,8 +510,11 @@ namespace ThermoTactics
             BossUnit.BossMove move = boss.PlanNext(_grid);
             _ui.ShowBossMove(move, boss);
             string what = move.IsSlam
-                ? $"{move.Name} on all 6 lanes, {move.Damage} damage each" + (move.Shield > 0 ? $" (forest shield −{move.Shield})" : "")
-                : $"{move.Name} on lanes {move.Lanes[0] + 1}–{move.Lanes[move.Lanes.Count - 1] + 1}, {move.Damage} damage each";
+                ? (boss.IsSmog
+                    ? $"{move.Name} on {move.Lanes.Count} lane{(move.Lanes.Count == 1 ? "" : "s")}, {move.Damage} damage each" + (move.Shield > 0 ? $" ({move.Shield} spared by Renewable allies)" : "")
+                    : $"{move.Name} on all 6 lanes, {move.Damage} damage each" + (move.Shield > 0 ? $" (forest shield −{move.Shield})" : ""))
+                : $"{move.Name} on lanes {move.Lanes[0] + 1}–{move.Lanes[move.Lanes.Count - 1] + 1}, {move.Damage} damage each"
+                  + (boss.IsSmog ? "; allies in the smog deal half damage next turn" : "");
             _ui.ShowLaneCaption(boss.Data.displayName.ToUpperInvariant(), what, new Color(1f, 0.6f, 0.5f));
             if (_camera != null)
             {
@@ -498,6 +533,13 @@ namespace ThermoTactics
                         Hit(boss, ally, ally.TopPosition, new HitInfo(), move.Damage);
                         hits++;
                         if (ally.IsDead) { downed++; _grid.Remove(ally); }
+                        else if (boss.IsSmog && !move.IsSlam)
+                        {
+                            // Smog: the ally deals half damage on its next turn.
+                            ally.Status.AddWeaken(Mathf.CeilToInt(ally.Damage / 2f));
+                            ally.RefreshStatusIcons();
+                            _ui.ShowFloatingText(ally.TopPosition + Vector3.up * 0.45f, "smog", new Color(0.75f, 0.72f, 0.66f));
+                        }
                     }
                     else
                     {

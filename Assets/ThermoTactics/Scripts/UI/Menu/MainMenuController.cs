@@ -169,6 +169,7 @@ namespace ThermoTactics
 
         private void Start()
         {
+            AudioManager.PlayMusic(MusicTrack.Menu);   // one track for the Title, Stage Select and Level Select screens
             string name = !string.IsNullOrEmpty(GameSession.PlayerName) ? GameSession.PlayerName : SettingsStore.LastPlayer;
             _nameInput.SetTextWithoutNotify(name);
             RefreshAdminTag();

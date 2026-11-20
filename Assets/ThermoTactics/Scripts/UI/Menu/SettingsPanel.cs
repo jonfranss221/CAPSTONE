@@ -24,6 +24,7 @@ namespace ThermoTactics
         [SerializeField] private Toggle _numbers;
         [SerializeField] private Toggle _bossWarning;
         [SerializeField] private Toggle _laneCamera;
+        [SerializeField] private Toggle _animatedEffects;
         [SerializeField] private Button _resetButton;
         [SerializeField] private Button _creditsButton;
         [SerializeField] private Button _leaderboardButton;
@@ -54,6 +55,7 @@ namespace ThermoTactics
             _numbers.onValueChanged.AddListener(v => SettingsStore.ShowNumbers = v);
             _bossWarning.onValueChanged.AddListener(v => SettingsStore.BossWarning = v);
             if (_laneCamera != null) _laneCamera.onValueChanged.AddListener(v => SettingsStore.LaneCamera = v);
+            if (_animatedEffects != null) _animatedEffects.onValueChanged.AddListener(v => SettingsStore.AnimatedEffects = v);
             for (int i = 0; i < _speedButtons.Length; i++)
             {
                 int index = i;
@@ -80,6 +82,7 @@ namespace ThermoTactics
             _numbers.SetIsOnWithoutNotify(SettingsStore.ShowNumbers);
             _bossWarning.SetIsOnWithoutNotify(SettingsStore.BossWarning);
             if (_laneCamera != null) _laneCamera.SetIsOnWithoutNotify(SettingsStore.LaneCamera);
+            if (_animatedEffects != null) _animatedEffects.SetIsOnWithoutNotify(SettingsStore.AnimatedEffects);
             Labels();
             Speeds();
             bool named = _menu.NameIsValid;
@@ -183,7 +186,7 @@ namespace ThermoTactics
         private void OnExport()
         {
             if (!AdminSession.Unlocked) return;
-            QuizResultExporter.ExportResult r = QuizResultExporter.Export(_menu.Database, _menu.FirstStage);
+            QuizResultExporter.ExportResult r = QuizResultExporter.ExportStages(_menu.Database, _menu.Stages);
             _dataNote.text = r.Success ? $"<color=#9BD3B0>{r.Message}</color>" : $"<color=#FF9A86>{r.Message}</color>";
         }
 

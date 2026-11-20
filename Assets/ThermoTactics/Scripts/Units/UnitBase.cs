@@ -165,6 +165,7 @@ namespace ThermoTactics
         {
             if (_animator != null) _animator.SetTrigger(AttackTrigger);
             yield return new WaitForSeconds(Data.hitDelay);
+            AudioManager.Play(Data.faction == Faction.Ally ? Sfx.AttackAlly : Sfx.AttackEnemy);
             onHit?.Invoke();
             yield return new WaitForSeconds(Mathf.Max(0f, Data.attackDuration - Data.hitDelay));
         }
@@ -178,7 +179,7 @@ namespace ThermoTactics
             if (_animator != null) _animator.SetTrigger(HurtTrigger);
             OnHpChanged();
             Damaged?.Invoke(this);
-            if (IsDead) StartCoroutine(DieRoutine());
+            if (IsDead) { AudioManager.Play(Sfx.UnitDown); StartCoroutine(DieRoutine()); }
         }
 
         /// <summary>Called whenever HP changes (the boss uses it to enrage).</summary>

@@ -43,6 +43,7 @@ namespace ThermoTactics
                 if (enemy is BossData boss)
                 {
                     _grid.PlaceBoss(_factory.SpawnBoss(boss, _level.ScaledHp(boss)));
+                    AudioManager.PlayMusic(MusicTrack.Boss);
                     break;   // a boss wave is the boss alone
                 }
                 if (free.Count == 0) continue;

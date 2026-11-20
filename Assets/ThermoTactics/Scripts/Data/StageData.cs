@@ -23,6 +23,10 @@ namespace ThermoTactics
         public Sprite overlayTile;
         [Tooltip("Overlay strength: 1 = Baguio fog. It still thins as the planet warms.")]
         [Range(0f, 1.5f)] public float overlayStrength = 1f;
+        [Tooltip("The overlay grows stronger as the planet warms instead of thinning (Metro Manila heat shimmer).")]
+        public bool overlayRisesWithHeat = false;
+        [Tooltip("Colour the battlefield shifts toward as the temperature nears the limit. White = no change.")]
+        public Color heatTint = Color.white;
         public Sprite slotMarker;
         [Tooltip("Deploy ring (blue), also tinted gold for a picked-up unit and yellow in high contrast. Empty = the scene's.")]
         public Sprite deployHighlight;

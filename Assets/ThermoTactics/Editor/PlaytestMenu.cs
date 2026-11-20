@@ -12,6 +12,9 @@ namespace ThermoTactics.EditorTools
         [MenuItem("Thermo-Tactics/Test/Play Stage 2 Automatically")]
         public static void PlayStage2() => PlayStage(2);
 
+        [MenuItem("Thermo-Tactics/Test/Play Stage 3 Automatically")]
+        public static void PlayStage3() => PlayStage(3);
+
         private static void PlayStage(int stageId)
         {
             if (EditorApplication.isPlaying) return;

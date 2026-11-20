@@ -28,8 +28,9 @@ namespace ThermoTactics.EditorTools
         private const string TemplateScene = "Assets/Settings/Scenes/URP2DSceneTemplate.unity";
         public const string StagePath = DataDir + "/Stage1_Baguio.asset";
         public const string Stage2Path = DataDir + "/Stage2_SierraMadreCoast.asset";
+        public const string Stage3Path = DataDir + "/Stage3_MetroManila.asset";
         /// <summary>Every built stage, in order. The Main Menu lists them; the battle scene is shared.</summary>
-        public static readonly string[] StagePaths = { StagePath, Stage2Path };
+        public static readonly string[] StagePaths = { StagePath, Stage2Path, Stage3Path };
 
         private struct UnitDef
         {
@@ -78,7 +79,7 @@ namespace ThermoTactics.EditorTools
             Ally("ForestSpirit",       "A04", "Forest Spirit",       UnitCategory.Forest,    3, 18, 6, 6, UnitTrait.Regrowth, 2f,
                  "Regrowth: heals itself 2 HP every turn.", 0.354f, tier: UnitTier.Rare, price: 600, stage: 1),
             Ally("HydroGuardian",      "A07", "Hydro Guardian",      UnitCategory.Renewable, 4, 24, 5, 3, UnitTrait.Floodgate, 1f,
-                 "Floodgate: takes 1 less damage from every hit; immune to Speed debuffs.", 0.382f, tier: UnitTier.Rare, price: 600, stage: 2),
+                 "Floodgate: takes 1 less damage from every hit; immune to Speed debuffs; puts out Burn on itself and allies in adjacent lanes.", 0.382f, tier: UnitTier.Rare, price: 600, stage: 2),
             Ally("SeagrassHealer",     "A10", "Seagrass Healer",     UnitCategory.Ocean,     3, 12, 3, 5, UnitTrait.MeadowMend, 2f,
                  "Meadow Mend: heals allies in adjacent lanes 2 HP every turn and cures Poison.", 0.312f, tier: UnitTier.Rare, price: 650, stage: 2),
             Ally("SeaTurtleGuardian",  "A12", "Sea Turtle Guardian", UnitCategory.Ocean,     4, 32, 4, 1, UnitTrait.Shell, 2f,
@@ -117,7 +118,7 @@ namespace ThermoTactics.EditorTools
             Foe("IncineratorFiend",   "E13", "Incinerator Fiend",   UnitCategory.Emissions,  16, 6, 5, UnitTrait.Burn, 1f,
                 "Burn: 1 damage per turn for 2 turns; +3 damage vs Forest allies.", 0.358f, stage: 3),
             Foe("LandfillLeviathan",  "E14", "Landfill Leviathan",  UnitCategory.Waste,      34, 7, 1, UnitTrait.MethaneLeak, 0.05f,
-                "Methane Leak: +0.05 °C every 2 turns while alive; takes 1 less damage from every hit.", 0.434f, stage: 3),
+                "Methane Leak: +0.05 °C every 2 turns while alive (all Leviathans together at most +0.05 °C a turn); takes 1 less damage from every hit.", 0.434f, stage: 3),
         };
         private const float PivotY = 0.042f;
 
@@ -134,6 +135,9 @@ namespace ThermoTactics.EditorTools
             ("EL01", "Elite Coal Brute",      "CoalBrute",          39, 7),
             ("EL02", "Elite Diesel Drone",    "DieselDrone",        15, 5),
             ("EL11", "Elite Toxic Runoff",    "ToxicRunoff",        24, 4),
+            // Stage 3 (Metro Manila)
+            ("EL03", "Elite Smog Wraith",     "SmogWraith",         18, 6),
+            ("EL13", "Elite Incinerator",     "IncineratorFiend",   24, 7),
         };
         private static readonly Color EliteTint = new Color(1f, 0.74f, 0.7f);
 
@@ -153,6 +157,7 @@ namespace ThermoTactics.EditorTools
         {
             ThermoTactics.EditorTools.RosterArtImporter.Import(false);
             ImportArt();
+            AudioBuilder.Build();
             var controllers = BuildAnimations();
             StageData stage = BuildData(controllers);
             MenuSceneBuilder.Build();
@@ -162,7 +167,7 @@ namespace ThermoTactics.EditorTools
                 PlayerSettings.bundleVersion = "0.2.0";
             AssetDatabase.SaveAssets();
             EditorSceneManager.OpenScene(MenuSceneBuilder.ScenePath, OpenSceneMode.Single);   // leave the Main Menu open in the editor
-            Debug.Log("[Thermo-Tactics] Built: Main Menu, the battle scene, Stage 1 (Baguio Forest) and Stage 2 (Sierra Madre Coast) with 10 levels and a boss each, and the 30-unit roster.");
+            Debug.Log("[Thermo-Tactics] Built: Main Menu, the battle scene, Stage 1 (Baguio Forest), Stage 2 (Sierra Madre Coast) and Stage 3 (Metro Manila) with 10 levels and a boss each, and the 30-unit roster.");
         }
 
         // =====================================================================
@@ -173,6 +178,7 @@ namespace ThermoTactics.EditorTools
         {
             GenerateSideFill(ArtEnv + "/baguio_background.png");
             GenerateSideFill(ArtEnv + "/coast_background.png");
+            GenerateSideFill(ArtEnv + "/metro_background.png");
             AssetDatabase.StartAssetEditing();
             try
             {
@@ -191,7 +197,7 @@ namespace ThermoTactics.EditorTools
                     importer.textureCompression = TextureImporterCompression.Uncompressed;
                     importer.mipmapEnabled = false;
                     importer.alphaIsTransparency = true;
-                    bool overlay = file == "fog_drift_tileable" || file == "sea_spray_tileable";
+                    bool overlay = file == "fog_drift_tileable" || file == "sea_spray_tileable" || file == "heat_shimmer_tileable";
                     importer.wrapMode = file == "weave_tile" || overlay ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
                     importer.spritePixelsPerUnit = ui ? 100 : overlay ? 32 : file == "pixel" ? 4 : 64;
 
@@ -782,13 +788,13 @@ namespace ThermoTactics.EditorTools
                 Body = "About 20 tropical cyclones enter the Philippine Area of Responsibility every year, and about 8 or 9 of them cross the country (PAGASA). Most form over the warm western Pacific and move west, so the Pacific coast of Luzon is often the first land they reach." },
             new FactDef { Id = "F03", TopicId = "mangroves", Level = 2, Trigger = PopupTrigger.LevelStart,
                 Title = "Mangroves break the waves",
-                Body = "Mangrove roots and trunks slow the sea down. Across 500 metres of mangroves, wave height can drop by half or more, and each kilometre can lower a storm surge by 5 to 50 centimetres. Clearing them leaves the shore open to the waves." },
+                Body = "Mangrove roots and trunks slow the sea down and break the waves. In strong storms, mangroves can cut flood depths by 15 to 20%, and by more than 70% in some places. Clearing them leaves the shore open to the waves." },
             new FactDef { Id = "F04", TopicId = "warmseas", Level = 3, Trigger = PopupTrigger.LevelStart,
                 Title = "Warmer seas, stronger typhoons",
-                Body = "Typhoons draw their energy from warm ocean water. Typhoons that hit East and Southeast Asia have become 12–15% stronger since the late 1970s, as the seas near these coasts warmed. A warmer ocean feeds stronger storms." },
+                Body = "Typhoons draw their energy from warm ocean water. Since the late 1970s, as the oceans warmed, a bigger share of tropical storms around the world have become the strongest kind. A warmer ocean feeds stronger storms." },
             new FactDef { Id = "F05", TopicId = "bluecarbon", Level = 4, Trigger = PopupTrigger.LevelStart,
                 Title = "Blue carbon",
-                Body = "Carbon stored by coastal plants such as mangroves and seagrass is called blue carbon. A hectare of mangroves can hold up to four times the carbon of most tropical forests, much of it in the mud under their roots. Clearing them releases it as CO2." },
+                Body = "Carbon stored by coastal plants such as mangroves and seagrass is called blue carbon. A hectare of mangroves holds about 394 tonnes of carbon, and over 650 tonnes in parts of the Philippines, much of it in the mud under their roots. Clearing them releases it as CO2." },
             new FactDef { Id = "F06", TopicId = "sierra", Level = 5, Trigger = PopupTrigger.LevelStart,
                 Title = "The Sierra Madre is not a wall",
                 Body = "The Sierra Madre weakens the winds of typhoons that cross it, by about 1–13% in one study. It does not block them, and their rain can fall even harder on its western side, so floods stay a danger. Its forests also hold the soil in place." },
@@ -837,6 +843,238 @@ namespace ThermoTactics.EditorTools
             foreach (FactDef d in CoastFacts)
                 if (d.Level < 1 || d.Level > levelCount) Debug.LogError($"[Thermo-Tactics] Stage 2 fact {d.Id} is on a level that does not exist.");
             CheckQuiz("Sierra Madre Coast", quiz, facts, levelCount);
+            return (quiz, facts);
+        }
+
+        // =====================================================================
+        // Stage 3 · Metro Manila: the MRT-3 line along EDSA, North Avenue (Quezon City) to Taft Avenue (Pasay).
+        // Medium difficulty, the middle of the curve. New enemies: Incinerator Fiend (L1), Landfill Leviathan (L3).
+        // Spike at Level 5 (Ortigas), Factory Titan at Level 10. Enemies are city problems: smog, traffic exhaust,
+        // plastic, open burning, landfills and their methane, polluted esteros.
+        // =====================================================================
+        private static readonly LevelDef[] MetroLevels =
+        {
+            new LevelDef { Name = "North Avenue", Caption = "North Ave", Subtitle = "Where the MRT line begins, Quezon City", Threat = 4, Scale = 0.95f,
+                Note = "New enemy: Incinerator Fiend. Its hit burns for 2 turns and deals +3 to Forest allies. A Hydro Guardian puts out the fire.",
+                Waves = new[] { (6, new[] { "SmogWraith", "PlasticGolem", "DieselDrone" }), (7, new[] { "IncineratorFiend", "DieselDrone", "MethaneCloud" }),
+                                (8, new[] { "IncineratorFiend", "PlasticGolem", "SmogWraith", "DieselDrone" }) } },
+            new LevelDef { Name = "Quezon Avenue", Caption = "Quezon Ave", Subtitle = "Near the Quezon Memorial Circle", Threat = 4, Scale = 0.95f,
+                Note = "Runoff from the esteros joins the smog. Drones in neighbouring lanes hit harder.",
+                Waves = new[] { (6, new[] { "IncineratorFiend", "ToxicRunoff", "DieselDrone" }), (8, new[] { "SmogWraith", "DieselDrone", "DieselDrone", "PlasticGolem" }),
+                                (9, new[] { "IncineratorFiend", "ToxicRunoff", "MethaneCloud", "SmogWraith" }) } },
+            new LevelDef { Name = "Kamuning", Caption = "Kamuning", Subtitle = "Quezon City's old neighbourhoods", Threat = 5, Scale = 1.00f,
+                Note = "New enemy: Landfill Leviathan (34 HP). While it stands, its methane warms the planet every 2 turns. Defeat it quickly.",
+                Waves = new[] { (6, new[] { "LandfillLeviathan", "DieselDrone", "MethaneCloud" }), (7, new[] { "IncineratorFiend", "PlasticGolem", "SmogWraith", "ToxicRunoff" }),
+                                (9, new[] { "LandfillLeviathan", "IncineratorFiend", "DieselDrone", "DieselDrone" }) } },
+            new LevelDef { Name = "Cubao", Caption = "Cubao", Subtitle = "The busy crossroads of EDSA", Threat = 5, Scale = 1.00f,
+                Note = "Garbage piles up: Plastic Golems and a Landfill Leviathan side by side protect each other.",
+                Waves = new[] { (6, new[] { "PlasticGolem", "LandfillLeviathan", "DieselDrone" }), (8, new[] { "IncineratorFiend", "SmogWraith", "ToxicRunoff", "MethaneCloud" }),
+                                (9, new[] { "LandfillLeviathan", "IncineratorFiend", "PlasticGolem", "DieselDrone", "SmogWraith" }) } },
+            new LevelDef { Name = "Ortigas", Caption = "Ortigas", Subtitle = "Towers over the business district", Threat = 8, Scale = 1.20f, Spike = true,
+                Note = "Difficulty spike. Elite Incinerators, elite drones and a 4th wave.",
+                Waves = new[] { (6, new[] { "elite:IncineratorFiend", "DieselDrone", "SmogWraith" }), (8, new[] { "elite:DieselDrone", "DieselDrone", "elite:PlasticGolem", "ToxicRunoff" }),
+                                (8, new[] { "LandfillLeviathan", "elite:SmogWraith", "IncineratorFiend", "MethaneCloud" }),
+                                (9, new[] { "elite:IncineratorFiend", "elite:ToxicRunoff", "LandfillLeviathan", "DieselDrone", "DieselDrone", "DieselDrone" }) } },
+            new LevelDef { Name = "Shaw Boulevard", Caption = "Shaw", Subtitle = "Where Mandaluyong meets EDSA", Threat = 6, Scale = 1.05f,
+                Note = "A breather after Level 5. Polluted runoff from the esteros: bring a Seagrass Healer.",
+                Waves = new[] { (6, new[] { "ToxicRunoff", "ToxicRunoff", "IncineratorFiend" }), (7, new[] { "SmogWraith", "PlasticGolem", "MethaneCloud", "DieselDrone" }),
+                                (9, new[] { "elite:SmogWraith", "LandfillLeviathan", "IncineratorFiend", "ToxicRunoff", "SmogWraith" }) } },
+            new LevelDef { Name = "Boni", Caption = "Boni", Subtitle = "Rush hour in Mandaluyong", Threat = 7, Scale = 1.10f,
+                Note = "Rush hour: drone swarms and a Landfill Leviathan behind them.",
+                Waves = new[] { (6, new[] { "IncineratorFiend", "DieselDrone", "DieselDrone" }), (8, new[] { "LandfillLeviathan", "elite:PlasticGolem", "SmogWraith", "MethaneCloud" }),
+                                (9, new[] { "elite:IncineratorFiend", "LandfillLeviathan", "DieselDrone", "ToxicRunoff", "SmogWraith", "MethaneCloud" }) } },
+            new LevelDef { Name = "Guadalupe", Caption = "Guadalupe", Subtitle = "Crossing the Pasig River", Threat = 8, Scale = 1.15f,
+                Note = "Four waves along the river, with elites mixed in.",
+                Waves = new[] { (6, new[] { "ToxicRunoff", "ToxicRunoff", "PlasticGolem", "DieselDrone" }), (8, new[] { "elite:ToxicRunoff", "IncineratorFiend", "SmogWraith", "MethaneCloud" }),
+                                (9, new[] { "LandfillLeviathan", "elite:IncineratorFiend", "DieselDrone", "DieselDrone", "ToxicRunoff" }),
+                                (10, new[] { "elite:SmogWraith", "elite:PlasticGolem", "LandfillLeviathan", "IncineratorFiend", "DieselDrone", "SmogWraith" }) } },
+            new LevelDef { Name = "Ayala", Caption = "Ayala", Subtitle = "The heart of Makati", Threat = 9, Scale = 1.15f,
+                Note = "Five-enemy waves. The last test before the Factory Titan.",
+                Waves = new[] { (6, new[] { "elite:DieselDrone", "DieselDrone", "IncineratorFiend", "SmogWraith" }), (8, new[] { "LandfillLeviathan", "elite:IncineratorFiend", "ToxicRunoff", "MethaneCloud" }),
+                                (9, new[] { "elite:SmogWraith", "elite:PlasticGolem", "IncineratorFiend", "DieselDrone", "ToxicRunoff" }),
+                                (10, new[] { "elite:IncineratorFiend", "elite:ToxicRunoff", "LandfillLeviathan", "elite:DieselDrone", "DieselDrone", "MethaneCloud" }) } },
+            new LevelDef { Name = "Taft Avenue", Caption = "Taft", Subtitle = "The end of the line, Pasay", Threat = 10, Scale = 1.10f, Boss = true,
+                Note = "Four waves, then Wave 5: the Factory Titan. Its smog band moves one lane every turn, and Renewable allies keep their lanes safe from its Furnace Slam.",
+                Waves = new[] { (6, new[] { "IncineratorFiend", "DieselDrone", "SmogWraith", "ToxicRunoff" }), (8, new[] { "LandfillLeviathan", "elite:IncineratorFiend", "DieselDrone", "DieselDrone" }),
+                                (9, new[] { "elite:SmogWraith", "PlasticGolem", "IncineratorFiend", "ToxicRunoff", "MethaneCloud" }),
+                                (10, new[] { "elite:IncineratorFiend", "elite:PlasticGolem", "LandfillLeviathan", "DieselDrone", "DieselDrone" }), (8, new[] { "titan" }) } },
+        };
+
+        // Stage 3 education: matched pairs, built like the other stages. One concept per level in Levels 1–6, recaps after
+        // Wave 1 of Levels 7–9, F09 before the boss (it explains the Furnace Slam), nothing in Level 10.
+        // Fact figures checked against their sources: US EPA (heat islands), Landicho & Blanco 2019 (Metro Manila surface
+        // temperature), DENR-NCR 2018 data via Inquirer (88% of air pollutants from vehicles), RA 9003 and RA 8749 via
+        // EcoWaste Coalition (open burning), RMI (methane ~80× CO2 over 20 years), MMDA via Daily Tribune 2026 (clogged
+        // waterways), Wikipedia MRT Line 3 (2025 ridership).
+        private static readonly (string id, string name)[] MetroTopics =
+        {
+            ("heat", "Urban heat island"),
+            ("air", "Air pollution"),
+            ("transit", "Transport & mass transit"),
+            ("burning", "Open burning"),
+            ("methane", "Landfills & methane"),
+            ("floods", "Flooding & esteros"),
+            ("game", "Game check"),
+        };
+
+        private static readonly QuizDef[] MetroPre =
+        {
+            new QuizDef { Id = "S3_PRE_1", TopicId = "heat", Answer = 'B',
+                Question = "Why is Metro Manila often hotter than the countryside around it?",
+                Choices = new[] { "Cities are closer to the sun because of their tall buildings",
+                                  "Concrete, asphalt and buildings absorb the sun's heat and release it slowly, and there are few trees to cool the air",
+                                  "Traffic noise warms the air",
+                                  "Rain never falls on large cities" } },
+            new QuizDef { Id = "S3_PRE_2", TopicId = "air", Answer = 'C',
+                Question = "What is the biggest source of air pollution in Metro Manila?",
+                Choices = new[] { "Cooking fires in homes",
+                                  "Factories outside the city",
+                                  "Motor vehicles such as cars, buses, jeepneys and trucks",
+                                  "Ash from volcanoes" } },
+            new QuizDef { Id = "S3_PRE_3", TopicId = "transit", Answer = 'D',
+                Question = "Why does a full train usually produce less pollution per passenger than the same number of people travelling by car?",
+                Choices = new[] { "Trains do not use any energy",
+                                  "Trains only run at night, when the air is cleaner",
+                                  "Train tracks absorb pollution from the air",
+                                  "One train carries hundreds of people at once, so each person's share of the emissions is much smaller" } },
+            new QuizDef { Id = "S3_PRE_4", TopicId = "burning", Answer = 'A',
+                Question = "Why is burning garbage in the open harmful?",
+                Choices = new[] { "It releases toxic smoke and greenhouse gases, and Philippine law prohibits it",
+                                  "It is harmless as long as the pile is small",
+                                  "It makes garbage disappear without any pollution",
+                                  "It only harms plants, not people" } },
+            new QuizDef { Id = "S3_PRE_5", TopicId = "methane", Answer = 'B',
+                Question = "When food scraps and other organic waste rot in a dumpsite, which planet-warming gas do they release?",
+                Choices = new[] { "Oxygen",
+                                  "Methane",
+                                  "Nitrogen",
+                                  "Hydrogen" } },
+            new QuizDef { Id = "S3_PRE_6", TopicId = "floods", Answer = 'C',
+                Question = "Why do many streets in Metro Manila flood quickly during heavy rain?",
+                Choices = new[] { "Rain in the city is heavier than anywhere else in the country",
+                                  "The MRT tracks block the water",
+                                  "Garbage clogs the esteros and drains, so rainwater cannot flow away",
+                                  "Trees soak up too much water" } },
+        };
+
+        private static readonly QuizDef[] MetroPost =
+        {
+            new QuizDef { Id = "S3_POST_1", TopicId = "heat", Answer = 'C',
+                Question = "A barangay replaces its small park with a concrete parking lot. What is most likely to happen to that area on sunny days?",
+                Choices = new[] { "It becomes cooler because parked cars block the sun",
+                                  "Nothing changes, because the temperature depends only on the weather",
+                                  "It becomes hotter, because the concrete stores heat and there are no trees for shade",
+                                  "It gets more rain" } },
+            new QuizDef { Id = "S3_POST_2", TopicId = "air", Answer = 'A',
+                Question = "Which change would cut air pollution along EDSA the most?",
+                Choices = new[] { "Fewer cars and old diesel vehicles on the road, with more people riding trains and buses",
+                                  "Putting up more billboards",
+                                  "Spraying water on the road every morning",
+                                  "Closing the parks near the highway" } },
+            new QuizDef { Id = "S3_POST_3", TopicId = "transit", Answer = 'D',
+                Question = "The MRT stops running for a day, and thousands of its riders take cars and taxis instead. What happens to emissions along EDSA?",
+                Choices = new[] { "They drop, because the trains are switched off",
+                                  "They stay the same, because the same people are travelling",
+                                  "Only the noise changes, not the emissions",
+                                  "They rise, because many more vehicles are needed to carry the same number of people" } },
+            new QuizDef { Id = "S3_POST_4", TopicId = "burning", Answer = 'D',
+                Question = "A neighbour burns plastic and dry leaves in the backyard every week. What is the best advice?",
+                Choices = new[] { "Burn them at night so nobody sees the smoke",
+                                  "Wet the pile first so the smoke is cleaner",
+                                  "Burn only the plastic and keep the leaves",
+                                  "Stop burning, because it releases toxic smoke and is prohibited; compost the leaves and segregate the plastic" } },
+            new QuizDef { Id = "S3_POST_5", TopicId = "methane", Answer = 'B',
+                Question = "What can a household do to cut the methane coming from dumpsites?",
+                Choices = new[] { "Put all trash together in one plastic bag",
+                                  "Separate food and garden waste and compost it, so it does not rot in a dumpsite",
+                                  "Burn leftover food in the backyard",
+                                  "Throw food scraps into the nearest estero" } },
+            new QuizDef { Id = "S3_POST_6", TopicId = "floods", Answer = 'A',
+                Question = "A cleanup removes tons of garbage from an estero. What is the most likely effect during the next heavy rain?",
+                Choices = new[] { "Rainwater drains away faster, so the flooding is less severe",
+                                  "The estero overflows even more",
+                                  "There is no effect on flooding",
+                                  "More typhoons will reach the city" } },
+            // Game comprehension (not scored).
+            new QuizDef { Id = "S3_GAME_1", TopicId = "game", Answer = 'B', Unscored = true,
+                Question = "In the Metro Manila stage, what do the enemies stand for?",
+                Choices = new[] { "Wild animals that live in the city",
+                                  "City problems such as smog, traffic exhaust, garbage burning and landfills",
+                                  "Natural disasters such as earthquakes",
+                                  "Rival teams defending the city" } },
+            new QuizDef { Id = "S3_GAME_2", TopicId = "game", Answer = 'A', Unscored = true,
+                Question = "In the boss level, why do Renewable allies keep their lanes safe from the Factory Titan's Furnace Slam?",
+                Choices = new[] { "They stand for clean energy, which replaces the fossil-fuel power the Factory Titan stands for",
+                                  "Renewable allies have more health than other allies",
+                                  "The Factory Titan cannot see Renewable allies",
+                                  "Renewable allies make the level shorter" } },
+        };
+
+        private static readonly FactDef[] MetroFacts =
+        {
+            new FactDef { Id = "F01", TopicId = "game", Level = 1, Trigger = PopupTrigger.LevelStart,
+                Title = "A hot city, the same rule",
+                Body = "The battle moves to a rail yard beside EDSA. Here the enemies stand for city problems: smog, traffic exhaust, plastic, burning garbage and landfills. An undefended lane still adds +0.10 °C." },
+            new FactDef { Id = "F02", TopicId = "heat", Level = 1, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "The urban heat island",
+                Body = "Concrete, asphalt and buildings soak up the sun's heat and give it back slowly, and a city has few trees for shade. That makes cities hotter than the countryside around them. Metro Manila's surface temperature rose about 0.18 °C a year from 1997 to 2019 as the city spread." },
+            new FactDef { Id = "F03", TopicId = "air", Level = 2, Trigger = PopupTrigger.LevelStart,
+                Title = "Most of the smog comes from traffic",
+                Body = "About 88% of the air pollutants in Metro Manila come from motor vehicles, according to 2018 data from the DENR. Old diesel engines on jeepneys, buses and trucks are among the worst." },
+            new FactDef { Id = "F04", TopicId = "methane", Level = 3, Trigger = PopupTrigger.LevelStart,
+                Title = "Dumpsites make methane",
+                Body = "Food and garden scraps rotting in a dumpsite release methane. Over 20 years, methane traps about 80 times more heat than the same amount of CO2. Composting food waste keeps it out of dumpsites." },
+            new FactDef { Id = "F05", TopicId = "transit", Level = 4, Trigger = PopupTrigger.LevelStart,
+                Title = "One train, hundreds of riders",
+                Body = "The MRT-3 carried about 392,000 passengers a day in 2025. A full train moves hundreds of people at once, so each rider's share of the emissions is far smaller than if each drove a car." },
+            new FactDef { Id = "F06", TopicId = "burning", Level = 5, Trigger = PopupTrigger.LevelStart,
+                Title = "Burning garbage is against the law",
+                Body = "Burning trash in the open releases toxic smoke and greenhouse gases. The Ecological Solid Waste Management Act (RA 9003) bans open burning of waste, and the Clean Air Act (RA 8749) bans burning that gives off toxic fumes." },
+            new FactDef { Id = "F07", TopicId = "floods", Level = 6, Trigger = PopupTrigger.LevelStart,
+                Title = "Clogged esteros flood the streets",
+                Body = "Garbage that clogs esteros and drains stops rainwater from flowing away. The MMDA names garbage-clogged waterways as the top cause of flooding in Metro Manila; cleanups removed nearly 5,000 tonnes of waste from esteros in the first five months of 2026." },
+            new FactDef { Id = "F08", TopicId = "energy", Level = 7, Trigger = PopupTrigger.LevelStart,
+                Title = "Clean power for the city",
+                Body = "Electricity from sunlight, wind, water and the Earth's heat releases very little CO2, unlike power from coal, oil and gas. Solar panels on roofs can power homes and offices right where the city needs them." },
+            new FactDef { Id = "F09", TopicId = "game", Level = 9, Trigger = PopupTrigger.LevelStart,
+                Title = "Clean energy against the furnace",
+                Body = "In the boss level, the Factory Titan's Furnace Slam skips every lane held by a Renewable ally, up to 3 lanes, just as clean energy replaces the coal and oil that power the furnaces." },
+            // Recaps: a short refresher after Wave 1 of Levels 7–9, two concepts each, before the post-quiz.
+            new FactDef { Id = "R01", TopicId = "recap", Level = 7, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "Recap: heat and smog",
+                Body = "Concrete and asphalt store the sun's heat, so cities run hotter than the countryside. Most of Metro Manila's air pollution comes from motor vehicles." },
+            new FactDef { Id = "R02", TopicId = "recap", Level = 8, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "Recap: trains and burning",
+                Body = "A full train carries hundreds of people with far less pollution per rider than cars. Burning garbage releases toxic smoke and is against the law." },
+            new FactDef { Id = "R03", TopicId = "recap", Level = 9, Trigger = PopupTrigger.AfterWave, Wave = 1,
+                Title = "Recap: methane and floods",
+                Body = "Food waste rotting in dumpsites releases methane, a strong heat-trapping gas; composting helps. Garbage in the esteros blocks the water and floods the streets." },
+        };
+
+        private static (QuizData quiz, PopupData[] facts) BuildMetroEducation(int levelCount)
+        {
+            EnsureFolder(DataDir + "/Quizzes");
+            EnsureFolder(DataDir + "/Facts");
+            var quiz = LoadOrCreate<QuizData>($"{DataDir}/Quizzes/Stage3_Quiz.asset");
+            quiz.quizId = "Q3"; quiz.stageId = 3;
+            quiz.topics = System.Array.ConvertAll(MetroTopics, t => new QuizTopic { id = t.id, name = t.name });
+            quiz.preQuestions = System.Array.ConvertAll(MetroPre, ToQuestion);
+            quiz.postQuestions = System.Array.ConvertAll(MetroPost, ToQuestion);
+            EditorUtility.SetDirty(quiz);
+
+            var facts = new PopupData[MetroFacts.Length];
+            for (int i = 0; i < MetroFacts.Length; i++)
+            {
+                FactDef d = MetroFacts[i];
+                var f = LoadOrCreate<PopupData>($"{DataDir}/Facts/Metro_{d.Id}.asset");
+                f.factId = "S3_" + d.Id; f.stageId = 3; f.topicId = d.TopicId; f.title = d.Title; f.body = d.Body;
+                f.levelNumber = d.Level; f.trigger = d.Trigger; f.waveNumber = Mathf.Max(1, d.Wave);
+                EditorUtility.SetDirty(f);
+                facts[i] = f;
+            }
+            foreach (FactDef d in MetroFacts)
+                if (d.Level < 1 || d.Level > levelCount) Debug.LogError($"[Thermo-Tactics] Stage 3 fact {d.Id} is on a level that does not exist.");
+            CheckQuiz("Metro Manila", quiz, facts, levelCount);
             return (quiz, facts);
         }
 
@@ -1007,15 +1245,22 @@ namespace ThermoTactics.EditorTools
             EditorUtility.SetDirty(boss);
             catalog.Add(boss);
 
-            // Later-stage bosses: built now so their art, stats and moves are ready; no Stage 1 wave uses them.
+            // Stage 3 boss. Smog Belch: a 2-lane smog band moving one lane per turn (3 lanes once it overheats); allies it
+            // hits deal half damage next turn. Furnace Slam: every lane every 3rd turn (every 2nd below 40% HP), except
+            // the lanes held by living Renewable allies (up to 3). Medium difficulty: between the Stage 2 and 4 bosses.
             BossData titan = BuildLaterBoss("FactoryTitan", "E06", "Factory Titan", controllers, UnitCategory.Emissions,
-                hp: 380, damage: 9, speed: 2, hover: false, stage: 4,
-                pattern: BossPattern.Overdrive, specialLanes: 3, specialDamage: 9, specialEvery: 3,
-                trait: UnitTrait.Smokestacks, traitValue: 0.05f,
-                traitText: "Smokestacks: +0.05 °C every turn while alive; every 3rd turn Overdrive hits 3 lanes.",
-                description: "Later-stage boss: a coal-fired factory on legs with two smokestacks. Overdrive vents a blast across 3 lanes.");
+                hp: 420, damage: 6, speed: 2, hover: false, stage: 3,
+                pattern: BossPattern.SmogBelch, specialLanes: 2, specialDamage: 8, specialEvery: 3,
+                trait: UnitTrait.None, traitValue: 0f,
+                traitText: "Smog Belch hits 2 neighbouring lanes and moves one lane each turn; allies it hits deal half damage next turn. Furnace Slam hits every lane every 3rd turn, except lanes held by Renewable allies (up to 3). Below 40% HP it overheats.",
+                description: "Stage 3 boss: a coal-fired factory on legs with two smokestacks, the fossil-fuel power behind the city's smog. Renewable allies keep their lanes safe from its Furnace Slam.");
+            titan.worldScale = 1.5f;   // smaller than the Stage 2 boss: the tall smokestacks otherwise leave the board
+            titan.enragedCleaveDamage = 8;
             titan.halfDamageTo = new UnitData[0];
-            titan.cleaveName = "SMOKE BLAST"; titan.slamName = "OVERDRIVE";
+            titan.cleaveName = "SMOG BELCH"; titan.slamName = "FURNACE SLAM";
+            titan.forestShieldPerAlly = 0; titan.forestShieldMax = 0;
+            titan.laneShieldCategory = UnitCategory.Renewable; titan.laneShieldMax = 3;
+            EditorUtility.SetDirty(titan);
             catalog.Add(titan);
             // Stage 2 boss. Storm Band: 3 neighbouring lanes, moving one lane per turn (4 lanes once it is a Super Typhoon);
             // Storm Surge: all 6 lanes every 3rd turn (every 2nd below 40% HP), cut by 1 per living Forest ally (max −3).
@@ -1036,6 +1281,7 @@ namespace ThermoTactics.EditorTools
             {
                 if (key == "boss") return boss;
                 if (key == "typhoon") return typhoon;
+                if (key == "titan") return titan;
                 if (key.StartsWith("elite:")) return elites[key.Substring(6)];
                 return byFolder[key];
             }
@@ -1048,6 +1294,7 @@ namespace ThermoTactics.EditorTools
             UnitData[] roster = { byFolder["MangroveGuardian"], byFolder["CoralDefender"], byFolder["WindCaller"], byFolder["GeothermalSentinel"], byFolder["ReefSentinel"] };
             LevelData[] levels = BuildLevels("Baguio", 1, "Stage 1 · Baguio", Levels, Enemy, roster);
             LevelData[] coastLevels = BuildLevels("Coast", 2, "Stage 2 · Sierra Madre Coast", CoastLevels, Enemy, roster);
+            LevelData[] metroLevels = BuildLevels("Metro", 3, "Stage 3 · Metro Manila", MetroLevels, Enemy, roster);
 
             var stage = LoadOrCreate<StageData>(StagePath);
             stage.stageId = 1;
@@ -1099,11 +1346,41 @@ namespace ThermoTactics.EditorTools
             coast.levelPathArt = Ui("levelpath_coast");
             coast.theme = StageTheme.Coast;
             coast.nextStageLabel = "Stage 3 · Metro Manila";
-            coast.nextStageReady = false;
+            coast.nextStageReady = true;
             coast.levels = coastLevels;
             coast.unitCatalog = catalog.ToArray();   // the whole roster, so squads and the store work the same in every stage
             (coast.quiz, coast.facts) = BuildCoastEducation(coastLevels.Length);
             EditorUtility.SetDirty(coast);
+
+            // ---- Stage 3: Metro Manila (the MRT-3 line along EDSA, a hot hazy afternoon) ----
+            var metro = LoadOrCreate<StageData>(Stage3Path);
+            metro.stageId = 3;
+            metro.stageName = "Metro Manila";
+            metro.shortName = "Metro Manila";
+            metro.region = "EDSA and the MRT-3 line · heat, traffic, esteros";
+            metro.threats = "smog, traffic exhaust, burning garbage, landfills";
+            metro.difficulty = "Medium";
+            metro.thumbnail = Ui("stage3_thumb");
+            metro.battleBackground = Sprite(ArtEnv + "/metro_background.png");
+            metro.sideFill = Sprite(SideFillPath(ArtEnv + "/metro_background.png"));
+            metro.overlayTile = Sprite(ArtEnv + "/heat_shimmer_tileable.png");
+            metro.overlayStrength = 1f;
+            metro.overlayRisesWithHeat = true;            // the heat shimmer thickens as the planet warms
+            metro.heatTint = new Color(1f, 0.82f, 0.66f);   // the city turns orange near the limit
+            metro.slotMarker = Sprite(ArtEnv + "/slot_marker_rail.png");
+            // Bright gravel: rings with a dark edge, like the coast; the deploy ring is white in the file and tinted here.
+            metro.deployHighlight = Sprite(ArtEnv + "/slot_highlight_deploy_rail.png");
+            metro.deployTint = new Color(0.36f, 0.78f, 1f); metro.deployAlpha = 0.85f;
+            metro.dangerHighlight = Sprite(ArtEnv + "/slot_highlight_attack_rail.png");
+            metro.cameraBackground = Hex("#2A2622");
+            metro.levelPathArt = Ui("levelpath_metro");
+            metro.theme = StageTheme.Metro;
+            metro.nextStageLabel = "Stage 4 · Batangas";
+            metro.nextStageReady = false;
+            metro.levels = metroLevels;
+            metro.unitCatalog = catalog.ToArray();
+            (metro.quiz, metro.facts) = BuildMetroEducation(metroLevels.Length);
+            EditorUtility.SetDirty(metro);
             AssetDatabase.SaveAssets();
             return AssetDatabase.LoadAssetAtPath<StageData>(StagePath);
         }
@@ -1362,22 +1639,22 @@ namespace ThermoTactics.EditorTools
             hline.rectTransform.anchorMin = new Vector2(0, 0); hline.rectTransform.anchorMax = new Vector2(1, 0); hline.rectTransform.pivot = new Vector2(0.5f, 0);
             hline.rectTransform.sizeDelta = new Vector2(0, 3); hline.rectTransform.anchoredPosition = Vector2.zero;
 
-            refs["_levelTitle"] = TxtAt("LevelTitle", header.transform, "LEVEL 1 · KENNON ROAD", BodyBold, 20, Cream, 20, 14, 330, 26, TextAnchor.MiddleLeft);
-            refs["_waveValue"] = TxtAt("WaveValue", header.transform, "WAVE 1 / 3 · TURN 1", BodyBold, 14, GoldLight, 20, 42, 320, 22, TextAnchor.MiddleLeft);
+            refs["_levelTitle"] = Fit(16, TxtAt("LevelTitle", header.transform, "LEVEL 1 · KENNON ROAD", BodyBold, 25, Cream, 20, 9, 336, 34, TextAnchor.MiddleLeft));
+            refs["_waveValue"] = Fit(13, TxtAt("WaveValue", header.transform, "WAVE 1 / 3 · TURN 1", BodyBold, 18, GoldLight, 20, 45, 336, 26, TextAnchor.MiddleLeft));
 
             // temperature (stretches between the title and the Oxygen box)
             var tGroup = NewRect("Temperature", header.transform);
             tGroup.anchorMin = new Vector2(0, 0); tGroup.anchorMax = new Vector2(1, 1); tGroup.pivot = new Vector2(0.5f, 0.5f);
-            tGroup.offsetMin = new Vector2(360, 18); tGroup.offsetMax = new Vector2(-286, -18);
-            var tLabel = Txt("Label", tGroup, "Global temperature", BodyBold, 14, Cream, TextAnchor.UpperLeft);
-            tLabel.rectTransform.anchorMin = new Vector2(0, 1); tLabel.rectTransform.anchorMax = new Vector2(1, 1); tLabel.rectTransform.pivot = new Vector2(0.5f, 1);
-            tLabel.rectTransform.sizeDelta = new Vector2(0, 20); tLabel.rectTransform.anchoredPosition = Vector2.zero;
-            var tValue = Txt("TemperatureValue", tGroup, "1.00 °C / limit 1.5 °C", Body, 14, Cream, TextAnchor.UpperRight);
-            tValue.rectTransform.anchorMin = new Vector2(0, 1); tValue.rectTransform.anchorMax = new Vector2(1, 1); tValue.rectTransform.pivot = new Vector2(0.5f, 1);
-            tValue.rectTransform.sizeDelta = new Vector2(0, 20); tValue.rectTransform.anchoredPosition = Vector2.zero;
+            tGroup.offsetMin = new Vector2(372, 13); tGroup.offsetMax = new Vector2(-304, -14);
+            var tLabel = Txt("Label", tGroup, "Global temperature", BodyBold, 18, Cream, TextAnchor.UpperLeft);
+            tLabel.rectTransform.anchorMin = new Vector2(0, 1); tLabel.rectTransform.anchorMax = new Vector2(0.5f, 1);   // left half tLabel.rectTransform.pivot = new Vector2(0.5f, 1);
+            tLabel.rectTransform.sizeDelta = new Vector2(0, 26); tLabel.rectTransform.anchoredPosition = Vector2.zero;
+            var tValue = Txt("TemperatureValue", tGroup, "1.00 °C / limit 1.5 °C", Body, 18, Cream, TextAnchor.UpperRight);
+            tValue.rectTransform.anchorMin = new Vector2(0.5f, 1); tValue.rectTransform.anchorMax = new Vector2(1, 1);   // right half: never overlaps the label tValue.rectTransform.pivot = new Vector2(0.5f, 1);
+            tValue.rectTransform.sizeDelta = new Vector2(0, 26); tValue.rectTransform.anchoredPosition = Vector2.zero;
             var tBack = Img("TemperatureBar", tGroup, Hex("#22332A"));
             tBack.rectTransform.anchorMin = new Vector2(0, 0); tBack.rectTransform.anchorMax = new Vector2(1, 0); tBack.rectTransform.pivot = new Vector2(0.5f, 0);
-            tBack.rectTransform.sizeDelta = new Vector2(0, 18); tBack.rectTransform.anchoredPosition = new Vector2(0, 2);
+            tBack.rectTransform.sizeDelta = new Vector2(0, 22); tBack.rectTransform.anchoredPosition = new Vector2(0, 2);
             Border(tBack.transform, Color.black, "ui_frame2");
             var tFill = Img("Fill", tBack.transform, Hex("#D9532F"));
             Stretch(tFill.rectTransform, 2);
@@ -1387,19 +1664,20 @@ namespace ThermoTactics.EditorTools
             {
                 var tick = Img("Tick", tBack.transform, Cream);
                 tick.rectTransform.anchorMin = new Vector2(at, 0); tick.rectTransform.anchorMax = new Vector2(at, 1); tick.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                tick.rectTransform.sizeDelta = new Vector2(2, 8); tick.rectTransform.anchoredPosition = Vector2.zero;
+                tick.rectTransform.sizeDelta = new Vector2(2, 10); tick.rectTransform.anchoredPosition = Vector2.zero;
             }
+            Fit(12, tValue); Fit(12, tLabel);
             refs["_temperatureFill"] = tFill; refs["_temperatureBack"] = tBack; refs["_temperatureValue"] = tValue;
 
             // Oxygen box and pause button (right edge)
-            var ox = AtRight(Img("Oxygen", header.transform, MossDim), 96, 14, 170, 56);
+            var ox = AtRight(Img("Oxygen", header.transform, MossDim), 92, 10, 196, 64);
             Border(ox.transform, Moss, "ui_frame2");
-            Icon("Icon", ox.transform, "icon_oxygen", Mint, 12, 16, 24);
-            refs["_oxygenValue"] = TxtAt("OxygenValue", ox.transform, "5 / 5", BodyBold, 22, Cream, 46, 4, 120, 28, TextAnchor.MiddleLeft);
-            refs["_oxygenSub"] = TxtAt("OxygenSub", ox.transform, "Oxygen", Body, 12, CreamDim, 46, 30, 124, 18, TextAnchor.MiddleLeft);
-            var pause = AtRight(Img("PauseButton", header.transform, Clear, null, true), 20, 16, 52, 52);
+            Icon("Icon", ox.transform, "icon_oxygen", Mint, 12, 18, 28);
+            refs["_oxygenValue"] = TxtAt("OxygenValue", ox.transform, "5 / 5", BodyBold, 28, Cream, 50, 3, 140, 36, TextAnchor.MiddleLeft);
+            refs["_oxygenSub"] = Fit(10, TxtAt("OxygenSub", ox.transform, "Oxygen", Body, 15, CreamDim, 50, 38, 140, 22, TextAnchor.MiddleLeft));
+            var pause = AtRight(Img("PauseButton", header.transform, Clear, null, true), 16, 10, 64, 64);
             Border(pause.transform, Slate);
-            Icon("Icon", pause.transform, "icon_pause", Cream, 16, 16, 20);
+            Icon("Icon", pause.transform, "icon_pause", Cream, 20, 20, 24);
             var pb = pause.gameObject.AddComponent<Button>(); pb.targetGraphic = pause;
             refs["_pauseButton"] = pb;
 
@@ -1410,22 +1688,23 @@ namespace ThermoTactics.EditorTools
             var fline = Img("GreenLine", footer.transform, Moss);
             fline.rectTransform.anchorMin = new Vector2(0, 1); fline.rectTransform.anchorMax = new Vector2(1, 1); fline.rectTransform.pivot = new Vector2(0.5f, 1);
             fline.rectTransform.sizeDelta = new Vector2(0, 3); fline.rectTransform.anchoredPosition = Vector2.zero;
-            var cardsArea = At(NewRect("CardsArea", footer.transform), 20, 9, LevelData.MaxRosterTypes * 82 - 12, 70);   // tutorial target
+            var cardsArea = At(NewRect("CardsArea", footer.transform), 20, 7, LevelData.MaxRosterTypes * CardStep - (CardStep - CardSize), CardSize);   // tutorial target
             for (int i = 0; i < LevelData.MaxRosterTypes; i++) cards.Add(Card(footer.transform, i));
 
-            var hint = Txt("Hint", footer.transform, "", Body, 14, CreamDim, TextAnchor.MiddleLeft);
+            var hint = Txt("Hint", footer.transform, "", Body, 17, CreamDim, TextAnchor.MiddleLeft);
             hint.rectTransform.anchorMin = new Vector2(0, 0); hint.rectTransform.anchorMax = new Vector2(1, 1); hint.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            hint.rectTransform.offsetMin = new Vector2(450, 10); hint.rectTransform.offsetMax = new Vector2(-250, -8);
+            hint.rectTransform.offsetMin = new Vector2(20 + LevelData.MaxRosterTypes * CardStep + 8, 8); hint.rectTransform.offsetMax = new Vector2(-306, -6);   // clear of END TURN (240 px + 20 px margin) with a gap
+            Fit(12, hint);
             refs["_hint"] = hint;
 
-            var endShadow = AtRight(Img("EndTurn_Shadow", footer.transform, Color.black), 16, 21, 210, 60);
-            var endTurn = Btn("EndTurnButton", footer.transform, "END TURN", Red, Hex("#FFF6E6"), Ink, 0, 0, 210, 60, 22, 0f);
-            AtRight(endTurn, 20, 17, 210, 60);
+            var endShadow = AtRight(Img("EndTurn_Shadow", footer.transform, Color.black), 16, 18, 240, 66);
+            var endTurn = Btn("EndTurnButton", footer.transform, "END TURN", Red, Hex("#FFF6E6"), Ink, 0, 0, 240, 66, 28, 0f);
+            AtRight(endTurn, 20, 14, 240, 66);
             refs["_endTurnButton"] = endTurn;
 
             // TAKE BACK: shown only while a unit placed this turn is picked up (refunds its OP).
-            var takeBack = Btn("TakeBackButton", footer.transform, "TAKE BACK", MossDim, Cream, Moss, 0, 0, 150, 60, 17, 4f);
-            AtRight(takeBack, 244, 17, 150, 60);
+            var takeBack = Btn("TakeBackButton", footer.transform, "TAKE BACK", MossDim, Cream, Moss, 0, 0, 170, 66, 21, 4f);
+            AtRight(takeBack, 276, 14, 170, 66);
             refs["_takeBackButton"] = takeBack;
             refs["_takeBackLabel"] = takeBack.GetComponentInChildren<Text>();
             takeBack.gameObject.SetActive(false);
@@ -1434,9 +1713,18 @@ namespace ThermoTactics.EditorTools
             var floating = NewRect("FloatingLayer", hud); Stretch(floating);
             refs["_floatingLayer"] = floating;
 
-            var announce = Txt("Announcement", hud, "", BodyBold, 22, Cream, TextAnchor.MiddleCenter);
+            // Dark band behind wave and boss announcements, so they read clearly over the board and damage numbers.
+            var band = Img("AnnouncementBand", hud, new Color(0.04f, 0.05f, 0.045f, 0.82f));
+            var brt = band.rectTransform;
+            brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 1); brt.pivot = new Vector2(0.5f, 1); brt.sizeDelta = new Vector2(1000, 84); brt.anchoredPosition = new Vector2(120, -272);   // below the boss panel (96 + 162 px)
+            Border(band.transform, new Color(0.89f, 0.68f, 0.17f, 0.6f), "ui_frame2");
+            band.gameObject.SetActive(false);
+            refs["_announcementBand"] = band;
+
+            var announce = Txt("Announcement", hud, "", BodyBold, 27, Cream, TextAnchor.MiddleCenter);
             var art = announce.rectTransform;
-            art.anchorMin = art.anchorMax = new Vector2(0.5f, 1); art.pivot = new Vector2(0.5f, 1); art.sizeDelta = new Vector2(900, 60); art.anchoredPosition = new Vector2(120, -230);
+            art.anchorMin = art.anchorMax = new Vector2(0.5f, 1); art.pivot = new Vector2(0.5f, 1); art.sizeDelta = new Vector2(960, 72); art.anchoredPosition = new Vector2(120, -278);
+            Fit(18, announce);
             var aol = announce.gameObject.AddComponent<Outline>(); aol.effectColor = new Color(0, 0, 0, 0.95f); aol.effectDistance = new Vector2(2, -2);
             announce.gameObject.SetActive(false);
             refs["_announcement"] = announce;
@@ -1445,27 +1733,27 @@ namespace ThermoTactics.EditorTools
             var lane = Img("LaneCaption", hud, new Color(0.055f, 0.08f, 0.066f, 0.93f));
             var lrt = lane.rectTransform;
             lrt.anchorMin = lrt.anchorMax = new Vector2(0.5f, 1); lrt.pivot = new Vector2(0.5f, 1);
-            lrt.sizeDelta = new Vector2(760, 64); lrt.anchoredPosition = new Vector2(0, -96);
+            lrt.sizeDelta = new Vector2(860, 74); lrt.anchoredPosition = new Vector2(0, -96);
             Border(lane.transform, Moss, "ui_frame2");
-            var accent = At(Img("Accent", lane.transform, Mint), 0, 0, 8, 64);
+            var accent = At(Img("Accent", lane.transform, Mint), 0, 0, 8, 74);
             refs["_laneAccent"] = accent;
-            refs["_laneTitle"] = TxtAt("Title", lane.transform, "LANE 1", BodyBold, 20, Cream, 24, 6, 700, 26, TextAnchor.MiddleLeft);
-            refs["_laneDetail"] = TxtAt("Detail", lane.transform, "", Body, 15, Cream, 24, 34, 720, 24, TextAnchor.MiddleLeft);
+            refs["_laneTitle"] = StretchX(Fit(16, TxtAt("Title", lane.transform, "LANE 1", BodyBold, 24, Cream, 24, 6, 0, 30, TextAnchor.MiddleLeft)), 24, 16);
+            refs["_laneDetail"] = StretchX(Fit(12, TxtAt("Detail", lane.transform, "", Body, 18, Cream, 24, 38, 0, 28, TextAnchor.MiddleLeft)), 24, 16);
             refs["_laneCaption"] = lane.gameObject;
 
             // ---------------- boss panel ----------------
-            var boss = At(Img("BossPanel", hud, new Color(0.055f, 0.04f, 0.03f, 0.92f)), 20, 96, 470, 124);
+            var boss = At(Img("BossPanel", hud, new Color(0.055f, 0.04f, 0.03f, 0.92f)), 20, 96, 520, 162);
             Border(boss.transform, Red);
-            Weave(boss.transform, 0, -3, 470, 6);
+            Weave(boss.transform, 0, -3, 520, 6);
             refs["_bossPanel"] = boss.gameObject;
-            refs["_bossName"] = TxtAt("Name", boss.transform, "CLEARCUT BEHEMOTH", BodyBold, 20, Cream, 14, 10, 330, 28, TextAnchor.MiddleLeft);
-            refs["_bossHp"] = TxtAt("Hp", boss.transform, "300 / 300", BodyBold, 15, Cream, 330, 10, 126, 28, TextAnchor.MiddleRight);
-            Bar("HpBar", boss.transform, Hex("#2A1512"), RedSoft, 14, 42, 442, 14, out Image bossFill);
-            var enrage = At(Img("EnrageTick", boss.transform, Gold), 14 + 442 * 0.4f - 1, 37, 3, 24);
+            refs["_bossName"] = Fit(16, TxtAt("Name", boss.transform, "CLEARCUT BEHEMOTH", BodyBold, 24, Cream, 14, 8, 360, 32, TextAnchor.MiddleLeft));
+            refs["_bossHp"] = Fit(13, TxtAt("Hp", boss.transform, "300 / 300", BodyBold, 18, Cream, 370, 8, 136, 32, TextAnchor.MiddleRight));
+            Bar("HpBar", boss.transform, Hex("#2A1512"), RedSoft, 14, 44, 492, 16, out Image bossFill);
+            var enrage = At(Img("EnrageTick", boss.transform, Gold), 14 + 492 * 0.4f - 1, 40, 3, 24);
             refs["_bossHpFill"] = bossFill;
-            refs["_bossNext"] = TxtAt("Next", boss.transform, "", Body, 13, Cream, 14, 62, 442, 18, TextAnchor.MiddleLeft);
-            refs["_bossSlam"] = TxtAt("Slam", boss.transform, "", Body, 13, Cream, 14, 80, 442, 18, TextAnchor.MiddleLeft);
-            refs["_bossNote"] = TxtAt("Note", boss.transform, "", Body, 12, CreamDim, 14, 100, 442, 18, TextAnchor.MiddleLeft);
+            refs["_bossNext"] = Fit(11, TxtAt("Next", boss.transform, "", Body, 16, Cream, 14, 66, 492, 22, TextAnchor.MiddleLeft));
+            refs["_bossSlam"] = Fit(11, TxtAt("Slam", boss.transform, "", Body, 16, Cream, 14, 89, 492, 44, TextAnchor.MiddleLeft));
+            refs["_bossNote"] = Fit(10, TxtAt("Note", boss.transform, "", Body, 14, CreamDim, 14, 135, 492, 20, TextAnchor.MiddleLeft));
 
             // ---------------- pause ----------------
             var pausePanel = Img("PausePanel", c, new Color(0.024f, 0.04f, 0.03f, 0.78f), null, true); Stretch(pausePanel.rectTransform);
@@ -1592,18 +1880,40 @@ namespace ThermoTactics.EditorTools
             return b;
         }
 
+        // Deploy cards in the 87 px footer (v0.6.0: 76 px cards on an 88 px step, was 70 on 82).
+        private const int CardSize = 76, CardStep = 88;
+
+        /// <summary>Stretches a text across its parent's width (left / right insets), keeping its y and height.</summary>
+        private static Text StretchX(Text t, float left, float right)
+        {
+            var rt = t.rectTransform;
+            rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(1, 1);
+            rt.offsetMin = new Vector2(left, rt.offsetMin.y); rt.offsetMax = new Vector2(-right, rt.offsetMax.y);
+            return t;
+        }
+
+        /// <summary>Lets a label that shows changing text (level names, penalties, hints) shrink below its design
+        /// size down to <paramref name="min"/> when it would otherwise wrap out of its box.</summary>
+        private static Text Fit(int min, Text t)
+        {
+            t.resizeTextForBestFit = true;
+            t.resizeTextMinSize = Mathf.Min(min, t.resizeTextMinSize);
+            t.verticalOverflow = VerticalWrapMode.Truncate;
+            return t;
+        }
+
         private static DeployCard Card(Transform parent, int index)
         {
-            var frame = At(Img($"Card_{index + 1}", parent, Hex("#3B5446"), Ui("ui_frame3"), true), 20 + index * 82, 9, 70, 70);
+            var frame = At(Img($"Card_{index + 1}", parent, Hex("#3B5446"), Ui("ui_frame3"), true), 20 + index * CardStep, 7, CardSize, CardSize);
             frame.type = Image.Type.Sliced;
             var back = Img("Back", frame.transform, MossDim); Stretch(back.rectTransform, 3); back.transform.SetAsFirstSibling();
             var btn = frame.gameObject.AddComponent<Button>();
             btn.targetGraphic = frame;
             var cb = btn.colors; cb.disabledColor = new Color(0.7f, 0.7f, 0.7f, 1f); btn.colors = cb;
-            var icon = At(Img("Icon", frame.transform, Color.white), 3, 3, 64, 64);
+            var icon = At(Img("Icon", frame.transform, Color.white), 3, 3, CardSize - 6, CardSize - 6);
             icon.preserveAspect = true;
-            var badge = AtRight(Img("CostBadge", frame.transform, Ink), -2, 50, 22, 22);
-            var cost = Txt("Cost", badge.transform, "2", BodyBold, 14, Mint, TextAnchor.MiddleCenter); Stretch(cost.rectTransform);
+            var badge = AtRight(Img("CostBadge", frame.transform, Ink), -2, CardSize - 26, 28, 28);
+            var cost = Txt("Cost", badge.transform, "2", BodyBold, 17, Mint, TextAnchor.MiddleCenter); Stretch(cost.rectTransform);
             var card = frame.gameObject.AddComponent<DeployCard>();
             Ref(card, "_button", btn); Ref(card, "_icon", icon); Ref(card, "_frame", frame); Ref(card, "_cost", cost);
             return card;

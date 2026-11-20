@@ -8,9 +8,10 @@ using UnityEngine;
 namespace ThermoTactics
 {
     /// <summary>
-    /// Writes the quiz results for the study as a CSV file the researcher copies off the phone (USB or Android share).
-    /// One row per player and stage: the player's code (A-001 ...) and name, pre / post score, gain, and each question's
-    /// pre / post correctness by topic. Admin only: Settings enables the button once the admin code is entered.
+    /// Writes the quiz results for the study as CSV files the researcher copies off the phone (USB or Android share):
+    /// one file per stage (quiz_results_phone{letter}_stage{n}_{date}.csv), each with that stage's question and topic
+    /// columns. One row per player: the player's code (A-001 ...) and name, pre / post score, normalized gain, and each
+    /// question's pre / post correctness by topic. Admin only: Settings enables the button once the admin code is entered.
     /// Reads the records through ResultsDatabase only; never opens the database itself.
     /// </summary>
     public static class QuizResultExporter
@@ -20,9 +21,16 @@ namespace ThermoTactics
             public bool Success;
             public string Path;
             public string Message;
+            /// <summary>Every file written (one per stage with results).</summary>
+            public List<string> Files = new List<string>();
         }
 
+        /// <summary>One stage (or, with null, every record without question columns).</summary>
         public static ExportResult Export(ResultsDatabase db, StageData stage)
+            => ExportStages(db, stage != null ? new[] { stage } : null);
+
+        /// <summary>Every given stage that has quiz results gets its own file with its own question columns.</summary>
+        public static ExportResult ExportStages(ResultsDatabase db, StageData[] stages)
         {
             // Checked here, where the data is read, not only by greying out the button: no screen can export without admin.
             if (!AdminSession.Unlocked)
@@ -33,18 +41,36 @@ namespace ThermoTactics
             List<QuizRecord> records = db.GetAllQuizzes();
             if (records.Count == 0) return new ExportResult { Message = "No quiz results to export yet." };
 
-            string csv = BuildCsv(db, records, stage);
             // The phone letter in the name keeps files from different phones apart when they are merged.
-            string file = $"quiz_results_phone{SafeFile(SettingsStore.PhoneLetter)}_{DateTime.Now:yyyy-MM-dd}.csv";
+            string date = $"{DateTime.Now:yyyy-MM-dd}";
+            string letter = SafeFile(SettingsStore.PhoneLetter);
+            var files = new List<(string name, string csv)>();
+            if (stages == null || stages.Length == 0)
+                files.Add(($"quiz_results_phone{letter}_{date}.csv", BuildCsv(db, records, null)));
+            else
+                foreach (StageData st in stages)
+                {
+                    if (st == null) continue;
+                    List<QuizRecord> mine = records.Where(r => r.StageId == st.stageId).ToList();
+                    if (mine.Count > 0) files.Add(($"quiz_results_phone{letter}_stage{st.stageId}_{date}.csv", BuildCsv(db, mine, st)));
+                }
+            if (files.Count == 0) return new ExportResult { Message = "No quiz results to export yet." };
 
             foreach (string dir in Folders())
             {
                 try
                 {
                     Directory.CreateDirectory(dir);
-                    string path = System.IO.Path.Combine(dir, file);
-                    File.WriteAllText(path, csv, new UTF8Encoding(true));   // BOM so Excel reads ° and accents
-                    return new ExportResult { Success = true, Path = path, Message = $"Saved to {path}" };
+                    var result = new ExportResult { Success = true };
+                    foreach (var f in files)
+                    {
+                        string path = System.IO.Path.Combine(dir, f.name);
+                        File.WriteAllText(path, f.csv, new UTF8Encoding(true));   // BOM so Excel reads ° and accents
+                        result.Files.Add(path);
+                    }
+                    result.Path = result.Files[0];
+                    result.Message = files.Count == 1 ? $"Saved to {result.Path}" : $"Saved {files.Count} files (one per stage) to {dir}";
+                    return result;
                 }
                 catch (Exception e)
                 {

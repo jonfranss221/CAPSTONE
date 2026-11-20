@@ -80,3 +80,7 @@ desktop.ini
 .plastic/
 ignore.conf
 *.slnx
+
+# Release signing keys never go in the repository (the release keystore lives in %USERPROFILE%\ThermoTactics-keys)
+*.keystore
+*.jks
