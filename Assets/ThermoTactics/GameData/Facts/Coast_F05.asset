@@ -17,9 +17,9 @@ MonoBehaviour:
   topicId: bluecarbon
   title: Blue carbon
   body: Carbon stored by coastal plants such as mangroves and seagrass is called
-    blue carbon. A hectare of mangroves can hold up to four times the carbon of most
-    tropical forests, much of it in the mud under their roots. Clearing them releases
-    it as CO2.
+    blue carbon. A hectare of mangroves holds about 394 tonnes of carbon, and over
+    650 tonnes in parts of the Philippines, much of it in the mud under their roots.
+    Clearing them releases it as CO2.
   icon: {fileID: 0}
   levelNumber: 4
   trigger: 0

@@ -16,9 +16,9 @@ MonoBehaviour:
   stageId: 2
   topicId: warmseas
   title: Warmer seas, stronger typhoons
-  body: "Typhoons draw their energy from warm ocean water. Typhoons that hit East
-    and Southeast Asia have become 12\u201315% stronger since the late 1970s, as
-    the seas near these coasts warmed. A warmer ocean feeds stronger storms."
+  body: Typhoons draw their energy from warm ocean water. Since the late 1970s, as
+    the oceans warmed, a bigger share of tropical storms around the world have become
+    the strongest kind. A warmer ocean feeds stronger storms.
   icon: {fileID: 0}
   levelNumber: 3
   trigger: 0

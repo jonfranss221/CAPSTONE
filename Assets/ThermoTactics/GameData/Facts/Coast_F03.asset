@@ -16,9 +16,9 @@ MonoBehaviour:
   stageId: 2
   topicId: mangroves
   title: Mangroves break the waves
-  body: Mangrove roots and trunks slow the sea down. Across 500 metres of mangroves,
-    wave height can drop by half or more, and each kilometre can lower a storm surge
-    by 5 to 50 centimetres. Clearing them leaves the shore open to the waves.
+  body: Mangrove roots and trunks slow the sea down and break the waves. In strong
+    storms, mangroves can cut flood depths by 15 to 20%, and by more than 70% in
+    some places. Clearing them leaves the shore open to the waves.
   icon: {fileID: 0}
   levelNumber: 2
   trigger: 0

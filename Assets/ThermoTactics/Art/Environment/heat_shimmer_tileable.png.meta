@@ -1,0 +1,2366 @@
+fileFormatVersion: 2
+guid: 79dfdfadb1cf1b941876d83b05690e5c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1685240702663484371
+    second: heat_shimmer_tileable_0
+  - first:
+      213: 6024839379071437393
+    second: heat_shimmer_tileable_1
+  - first:
+      213: 938732345709665085
+    second: heat_shimmer_tileable_2
+  - first:
+      213: 5502266123539180118
+    second: heat_shimmer_tileable_3
+  - first:
+      213: 5312199923421954974
+    second: heat_shimmer_tileable_4
+  - first:
+      213: -724078548674104921
+    second: heat_shimmer_tileable_5
+  - first:
+      213: -995360421462606430
+    second: heat_shimmer_tileable_6
+  - first:
+      213: -4467390849005994186
+    second: heat_shimmer_tileable_7
+  - first:
+      213: -3805288175870199459
+    second: heat_shimmer_tileable_8
+  - first:
+      213: -8660924602159461479
+    second: heat_shimmer_tileable_9
+  - first:
+      213: -9164024077697385272
+    second: heat_shimmer_tileable_10
+  - first:
+      213: -6975453561071981029
+    second: heat_shimmer_tileable_11
+  - first:
+      213: 7116158618722613241
+    second: heat_shimmer_tileable_12
+  - first:
+      213: -126887255031547695
+    second: heat_shimmer_tileable_13
+  - first:
+      213: -3567503289596228500
+    second: heat_shimmer_tileable_14
+  - first:
+      213: -3787080475673347131
+    second: heat_shimmer_tileable_15
+  - first:
+      213: -8240424045071758226
+    second: heat_shimmer_tileable_16
+  - first:
+      213: -1335504094699161679
+    second: heat_shimmer_tileable_17
+  - first:
+      213: 8293426230450281463
+    second: heat_shimmer_tileable_18
+  - first:
+      213: -1188883013649695957
+    second: heat_shimmer_tileable_19
+  - first:
+      213: -1674362393795724956
+    second: heat_shimmer_tileable_20
+  - first:
+      213: -5880448685352298356
+    second: heat_shimmer_tileable_21
+  - first:
+      213: -9018940650039041273
+    second: heat_shimmer_tileable_22
+  - first:
+      213: -1529337236347204096
+    second: heat_shimmer_tileable_23
+  - first:
+      213: 4559448457204914216
+    second: heat_shimmer_tileable_24
+  - first:
+      213: -8807480420221746877
+    second: heat_shimmer_tileable_25
+  - first:
+      213: -2189156748673094516
+    second: heat_shimmer_tileable_26
+  - first:
+      213: -1240456270007469666
+    second: heat_shimmer_tileable_27
+  - first:
+      213: -2372658972003346116
+    second: heat_shimmer_tileable_28
+  - first:
+      213: 7731115972053642736
+    second: heat_shimmer_tileable_29
+  - first:
+      213: -514864797585355958
+    second: heat_shimmer_tileable_30
+  - first:
+      213: 8341231733395536147
+    second: heat_shimmer_tileable_31
+  - first:
+      213: 2590591750104023078
+    second: heat_shimmer_tileable_32
+  - first:
+      213: 4972164181100917234
+    second: heat_shimmer_tileable_33
+  - first:
+      213: 8360192835913419519
+    second: heat_shimmer_tileable_34
+  - first:
+      213: -1452506659223512273
+    second: heat_shimmer_tileable_35
+  - first:
+      213: -6133559383480979467
+    second: heat_shimmer_tileable_36
+  - first:
+      213: 2076392659121871748
+    second: heat_shimmer_tileable_37
+  - first:
+      213: -552499777637375446
+    second: heat_shimmer_tileable_38
+  - first:
+      213: 1014737220718429032
+    second: heat_shimmer_tileable_39
+  - first:
+      213: -2437108168752453773
+    second: heat_shimmer_tileable_40
+  - first:
+      213: 3930518543600398409
+    second: heat_shimmer_tileable_41
+  - first:
+      213: 6206655410447768677
+    second: heat_shimmer_tileable_42
+  - first:
+      213: 5203545843818187826
+    second: heat_shimmer_tileable_43
+  - first:
+      213: 1087379933383820571
+    second: heat_shimmer_tileable_44
+  - first:
+      213: -4452705680230784247
+    second: heat_shimmer_tileable_45
+  - first:
+      213: -7968739238743204745
+    second: heat_shimmer_tileable_46
+  - first:
+      213: -712422752833014662
+    second: heat_shimmer_tileable_47
+  - first:
+      213: -7213139765728685007
+    second: heat_shimmer_tileable_48
+  - first:
+      213: -4217001658752731171
+    second: heat_shimmer_tileable_49
+  - first:
+      213: 2369817162428690237
+    second: heat_shimmer_tileable_50
+  - first:
+      213: 1803297821713829653
+    second: heat_shimmer_tileable_51
+  - first:
+      213: 1811928703144699371
+    second: heat_shimmer_tileable_52
+  - first:
+      213: -8937335662623138948
+    second: heat_shimmer_tileable_53
+  - first:
+      213: -372738864233749843
+    second: heat_shimmer_tileable_54
+  - first:
+      213: 8535629571120708008
+    second: heat_shimmer_tileable_55
+  - first:
+      213: 8524911031138671892
+    second: heat_shimmer_tileable_56
+  - first:
+      213: 6926060704463544223
+    second: heat_shimmer_tileable_57
+  - first:
+      213: -8773410809567215256
+    second: heat_shimmer_tileable_58
+  - first:
+      213: 495592155227783320
+    second: heat_shimmer_tileable_59
+  - first:
+      213: 2870039828810603485
+    second: heat_shimmer_tileable_60
+  - first:
+      213: 2491131585210027687
+    second: heat_shimmer_tileable_61
+  - first:
+      213: 2648062299555471012
+    second: heat_shimmer_tileable_62
+  - first:
+      213: -8306612260304269242
+    second: heat_shimmer_tileable_63
+  - first:
+      213: -625249690192397980
+    second: heat_shimmer_tileable_64
+  - first:
+      213: 2081920578641342651
+    second: heat_shimmer_tileable_65
+  - first:
+      213: -5964415989322622162
+    second: heat_shimmer_tileable_66
+  - first:
+      213: 1869782501769352177
+    second: heat_shimmer_tileable_67
+  - first:
+      213: 4166183786259970321
+    second: heat_shimmer_tileable_68
+  - first:
+      213: 2096476261897394513
+    second: heat_shimmer_tileable_69
+  - first:
+      213: -3947854886808031778
+    second: heat_shimmer_tileable_70
+  - first:
+      213: 5750721540876825027
+    second: heat_shimmer_tileable_71
+  - first:
+      213: 5631092185819359196
+    second: heat_shimmer_tileable_72
+  - first:
+      213: -1504079200896319149
+    second: heat_shimmer_tileable_73
+  - first:
+      213: 4918202336849752276
+    second: heat_shimmer_tileable_74
+  - first:
+      213: -3692660545965618443
+    second: heat_shimmer_tileable_75
+  - first:
+      213: -2759173703144832703
+    second: heat_shimmer_tileable_76
+  - first:
+      213: 7934364834981095837
+    second: heat_shimmer_tileable_77
+  - first:
+      213: -1381717890194608076
+    second: heat_shimmer_tileable_78
+  - first:
+      213: -8913961461564602760
+    second: heat_shimmer_tileable_79
+  - first:
+      213: 7205593926145564062
+    second: heat_shimmer_tileable_80
+  - first:
+      213: 9199372411872726582
+    second: heat_shimmer_tileable_81
+  - first:
+      213: 5674354614701233066
+    second: heat_shimmer_tileable_82
+  - first:
+      213: 6477906858952576961
+    second: heat_shimmer_tileable_83
+  - first:
+      213: 6517541755409447533
+    second: heat_shimmer_tileable_84
+  - first:
+      213: -2546833712573929633
+    second: heat_shimmer_tileable_85
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 0
+    wrapV: 0
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 9
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 238
+        width: 43
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d369438d7d236710800000000000000
+      internalID: 1685240702663484371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_1
+      rect:
+        serializedVersion: 2
+        x: 63
+        y: 268
+        width: 73
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15a865a8e778c9350800000000000000
+      internalID: 6024839379071437393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_2
+      rect:
+        serializedVersion: 2
+        x: 70
+        y: 259
+        width: 121
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3b9135481c070d00800000000000000
+      internalID: 938732345709665085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_3
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 271
+        width: 73
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65ae73913e9fb5c40800000000000000
+      internalID: 5502266123539180118
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_4
+      rect:
+        serializedVersion: 2
+        x: 332
+        y: 267
+        width: 73
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e934c636fa9b8b940800000000000000
+      internalID: 5312199923421954974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_5
+      rect:
+        serializedVersion: 2
+        x: 466
+        y: 268
+        width: 74
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a1bcc4756e83f5f0800000000000000
+      internalID: -724078548674104921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_6
+      rect:
+        serializedVersion: 2
+        x: 518
+        y: 260
+        width: 121
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2adfc3768f4cf22f0800000000000000
+      internalID: -995360421462606430
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_7
+      rect:
+        serializedVersion: 2
+        x: 601
+        y: 269
+        width: 71
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63fba2c21b3a002c0800000000000000
+      internalID: -4467390849005994186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_8
+      rect:
+        serializedVersion: 2
+        x: 294
+        y: 259
+        width: 121
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d593349b096e03bc0800000000000000
+      internalID: -3805288175870199459
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_9
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 241
+        width: 74
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99b08dd36f63ec780800000000000000
+      internalID: -8660924602159461479
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_10
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 230
+        width: 92
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8cc78b787a8d2d080800000000000000
+      internalID: -9164024077697385272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_11
+      rect:
+        serializedVersion: 2
+        x: 239
+        y: 240
+        width: 73
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1e221991f5323f90800000000000000
+      internalID: -6975453561071981029
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_12
+      rect:
+        serializedVersion: 2
+        x: 373
+        y: 237
+        width: 73
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f7bb4a8f8ca1c260800000000000000
+      internalID: 7116158618722613241
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_13
+      rect:
+        serializedVersion: 2
+        x: 508
+        y: 239
+        width: 73
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d8f15db6b43d3ef0800000000000000
+      internalID: -126887255031547695
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_14
+      rect:
+        serializedVersion: 2
+        x: 642
+        y: 242
+        width: 30
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6c4498d8aead7ec0800000000000000
+      internalID: -3567503289596228500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_15
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 225
+        width: 49
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5cb3ca74f56917bc0800000000000000
+      internalID: -3787080475673347131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_16
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 227
+        width: 91
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6c09ea9df124ad80800000000000000
+      internalID: -8240424045071758226
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_17
+      rect:
+        serializedVersion: 2
+        x: 462
+        y: 226
+        width: 91
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b770670a16577de0800000000000000
+      internalID: -1335504094699161679
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_18
+      rect:
+        serializedVersion: 2
+        x: 629
+        y: 230
+        width: 43
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fb55e4573b281370800000000000000
+      internalID: 8293426230450281463
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_19
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 207
+        width: 55
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2bf9e3b23d308fe0800000000000000
+      internalID: -1188883013649695957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_20
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 213
+        width: 120
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4697884264873c8e0800000000000000
+      internalID: -1674362393795724956
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_21
+      rect:
+        serializedVersion: 2
+        x: 382
+        y: 207
+        width: 121
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c88d9ad9313746ea0800000000000000
+      internalID: -5880448685352298356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_22
+      rect:
+        serializedVersion: 2
+        x: 606
+        y: 211
+        width: 66
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 703a710634946d280800000000000000
+      internalID: -9018940650039041273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_23
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 194
+        width: 91
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00e4fb5e2e3b6cae0800000000000000
+      internalID: -1529337236347204096
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_24
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 194
+        width: 91
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 828d66ff63a664f30800000000000000
+      internalID: 4559448457204914216
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_25
+      rect:
+        serializedVersion: 2
+        x: 388
+        y: 192
+        width: 91
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 341897ac83b85c580800000000000000
+      internalID: -8807480420221746877
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_26
+      rect:
+        serializedVersion: 2
+        x: 556
+        y: 196
+        width: 91
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8ce0b5298d8e91e0800000000000000
+      internalID: -2189156748673094516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_27
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 177
+        width: 72
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e997cca389309cee0800000000000000
+      internalID: -1240456270007469666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_28
+      rect:
+        serializedVersion: 2
+        x: 175
+        y: 180
+        width: 121
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c39d8906c3f921fd0800000000000000
+      internalID: -2372658972003346116
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_29
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 173
+        width: 61
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0fd2b9fe3017a4b60800000000000000
+      internalID: 7731115972053642736
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_30
+      rect:
+        serializedVersion: 2
+        x: 399
+        y: 176
+        width: 121
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4b4298c135dad8f0800000000000000
+      internalID: -514864797585355958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_31
+      rect:
+        serializedVersion: 2
+        x: 623
+        y: 181
+        width: 49
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 319b14a511202c370800000000000000
+      internalID: 8341231733395536147
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_32
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 170
+        width: 21
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 620020f9871a3f320800000000000000
+      internalID: 2590591750104023078
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_33
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 168
+        width: 61
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f1f073aafca00540800000000000000
+      internalID: 4972164181100917234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_34
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 168
+        width: 61
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffa826e071f550470800000000000000
+      internalID: 8360192835913419519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_35
+      rect:
+        serializedVersion: 2
+        x: 408
+        y: 165
+        width: 61
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2bd71f93e8a7dbe0800000000000000
+      internalID: -1452506659223512273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_36
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 166
+        width: 61
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ff2adadc3831eaa0800000000000000
+      internalID: -6133559383480979467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_37
+      rect:
+        serializedVersion: 2
+        x: 593
+        y: 144
+        width: 79
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48b103d4f14d0dc10800000000000000
+      internalID: 2076392659121871748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_38
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 144
+        width: 94
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a22217721602558f0800000000000000
+      internalID: -552499777637375446
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_39
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 147
+        width: 104
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8630a4d3022151e00800000000000000
+      internalID: 1014737220718429032
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_40
+      rect:
+        serializedVersion: 2
+        x: 257
+        y: 155
+        width: 61
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 377ae4a6807ad2ed0800000000000000
+      internalID: -2437108168752453773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_41
+      rect:
+        serializedVersion: 2
+        x: 369
+        y: 152
+        width: 61
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 94033666ac10c8630800000000000000
+      internalID: 3930518543600398409
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_42
+      rect:
+        serializedVersion: 2
+        x: 481
+        y: 154
+        width: 61
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56cdef62638722650800000000000000
+      internalID: 6206655410447768677
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_43
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 140
+        width: 61
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23c4e391065b63840800000000000000
+      internalID: 5203545843818187826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_44
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 141
+        width: 62
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b150b39c946271f00800000000000000
+      internalID: 1087379933383820571
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_45
+      rect:
+        serializedVersion: 2
+        x: 411
+        y: 138
+        width: 62
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 903ea7876cfc432c0800000000000000
+      internalID: -4452705680230784247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_46
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 140
+        width: 62
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77c9efee1e9596190800000000000000
+      internalID: -7968739238743204745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_47
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 125
+        width: 121
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a747b77e747fc16f0800000000000000
+      internalID: -712422752833014662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_48
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 126
+        width: 121
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1345f749997c5eb90800000000000000
+      internalID: -7213139765728685007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_49
+      rect:
+        serializedVersion: 2
+        x: 480
+        y: 124
+        width: 121
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd77fc085533a75c0800000000000000
+      internalID: -4217001658752731171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_50
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 109
+        width: 62
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3faf25472843e020800000000000000
+      internalID: 2369817162428690237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_51
+      rect:
+        serializedVersion: 2
+        x: 124
+        y: 112
+        width: 73
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51f0d7780d9960910800000000000000
+      internalID: 1803297821713829653
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_52
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 110
+        width: 73
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be526453e83452910800000000000000
+      internalID: 1811928703144699371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_53
+      rect:
+        serializedVersion: 2
+        x: 392
+        y: 108
+        width: 74
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7bdaee119438f380800000000000000
+      internalID: -8937335662623138948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_54
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 109
+        width: 73
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da26d535af3c3daf0800000000000000
+      internalID: -372738864233749843
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_55
+      rect:
+        serializedVersion: 2
+        x: 661
+        y: 111
+        width: 11
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a938f80fd5a47670800000000000000
+      internalID: 8535629571120708008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_56
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 85
+        width: 74
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41d54d87a619e4670800000000000000
+      internalID: 8524911031138671892
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_57
+      rect:
+        serializedVersion: 2
+        x: 178
+        y: 92
+        width: 120
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9f575ec38f4e1060800000000000000
+      internalID: 6926060704463544223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_58
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 87
+        width: 120
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8618c2b2a559e3680800000000000000
+      internalID: -8773410809567215256
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_59
+      rect:
+        serializedVersion: 2
+        x: 626
+        y: 93
+        width: 46
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89082dd7072b0e600800000000000000
+      internalID: 495592155227783320
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_60
+      rect:
+        serializedVersion: 2
+        x: 82
+        y: 82
+        width: 91
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ddb9a77a40e64d720800000000000000
+      internalID: 2870039828810603485
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_61
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 82
+        width: 91
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ae03396af6429220800000000000000
+      internalID: 2491131585210027687
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_62
+      rect:
+        serializedVersion: 2
+        x: 418
+        y: 78
+        width: 91
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ae9b14a1aecfb420800000000000000
+      internalID: 2648062299555471012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_63
+      rect:
+        serializedVersion: 2
+        x: 586
+        y: 86
+        width: 86
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 640d8a9d82cf8bc80800000000000000
+      internalID: -8306612260304269242
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_64
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 64
+        width: 91
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 469b82038baa257f0800000000000000
+      internalID: -625249690192397980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_65
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 70
+        width: 91
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb03e7c5cb774ec10800000000000000
+      internalID: 2081920578641342651
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_66
+      rect:
+        serializedVersion: 2
+        x: 337
+        y: 63
+        width: 91
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2bd3cf22432a3da0800000000000000
+      internalID: -5964415989322622162
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_67
+      rect:
+        serializedVersion: 2
+        x: 505
+        y: 65
+        width: 91
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f31431674dc2f910800000000000000
+      internalID: 1869782501769352177
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_68
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 47
+        width: 90
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1197409841241d930800000000000000
+      internalID: 4166183786259970321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_69
+      rect:
+        serializedVersion: 2
+        x: 191
+        y: 39
+        width: 91
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 159de667d0e281d10800000000000000
+      internalID: 2096476261897394513
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_70
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 51
+        width: 90
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: edd6407a5e66639c0800000000000000
+      internalID: -3947854886808031778
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_71
+      rect:
+        serializedVersion: 2
+        x: 376
+        y: 47
+        width: 91
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c17626d5caaecf40800000000000000
+      internalID: 5750721540876825027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_72
+      rect:
+        serializedVersion: 2
+        x: 544
+        y: 49
+        width: 91
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd7ad391288a52e40800000000000000
+      internalID: 5631092185819359196
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_73
+      rect:
+        serializedVersion: 2
+        x: 23
+        y: 35
+        width: 91
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 351858c8fef602be0800000000000000
+      internalID: -1504079200896319149
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_74
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 33
+        width: 91
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d0fc65b7f6f04440800000000000000
+      internalID: 4918202336849752276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_75
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 38
+        width: 91
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fa8e994cc801ccc0800000000000000
+      internalID: -3692660545965618443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_76
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 15
+        width: 73
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 141047eb22275b9d0800000000000000
+      internalID: -2759173703144832703
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_77
+      rect:
+        serializedVersion: 2
+        x: 161
+        y: 20
+        width: 74
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d99266387c68c1e60800000000000000
+      internalID: 7934364834981095837
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_78
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 7
+        width: 73
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 430f52746e623dce0800000000000000
+      internalID: -1381717890194608076
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_79
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 17
+        width: 73
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8768be5674f3b4480800000000000000
+      internalID: -8913961461564602760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_80
+      rect:
+        serializedVersion: 2
+        x: 430
+        y: 17
+        width: 73
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9d5e9bbf796ff360800000000000000
+      internalID: 7205593926145564062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_81
+      rect:
+        serializedVersion: 2
+        x: 565
+        y: 6
+        width: 107
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63ec33ed77cbaaf70800000000000000
+      internalID: 9199372411872726582
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_82
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 4
+        width: 11
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa39dd2457b5fbe40800000000000000
+      internalID: 5674354614701233066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_83
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 4
+        width: 74
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1cf4fef77f526e950800000000000000
+      internalID: 6477906858952576961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_84
+      rect:
+        serializedVersion: 2
+        x: 341
+        y: 4
+        width: 73
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6ab4f3f1b5f27a50800000000000000
+      internalID: 6517541755409447533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: heat_shimmer_tileable_85
+      rect:
+        serializedVersion: 2
+        x: 476
+        y: 4
+        width: 73
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f57aa0c6b34d7acd0800000000000000
+      internalID: -2546833712573929633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      heat_shimmer_tileable_0: 1685240702663484371
+      heat_shimmer_tileable_1: 6024839379071437393
+      heat_shimmer_tileable_10: -9164024077697385272
+      heat_shimmer_tileable_11: -6975453561071981029
+      heat_shimmer_tileable_12: 7116158618722613241
+      heat_shimmer_tileable_13: -126887255031547695
+      heat_shimmer_tileable_14: -3567503289596228500
+      heat_shimmer_tileable_15: -3787080475673347131
+      heat_shimmer_tileable_16: -8240424045071758226
+      heat_shimmer_tileable_17: -1335504094699161679
+      heat_shimmer_tileable_18: 8293426230450281463
+      heat_shimmer_tileable_19: -1188883013649695957
+      heat_shimmer_tileable_2: 938732345709665085
+      heat_shimmer_tileable_20: -1674362393795724956
+      heat_shimmer_tileable_21: -5880448685352298356
+      heat_shimmer_tileable_22: -9018940650039041273
+      heat_shimmer_tileable_23: -1529337236347204096
+      heat_shimmer_tileable_24: 4559448457204914216
+      heat_shimmer_tileable_25: -8807480420221746877
+      heat_shimmer_tileable_26: -2189156748673094516
+      heat_shimmer_tileable_27: -1240456270007469666
+      heat_shimmer_tileable_28: -2372658972003346116
+      heat_shimmer_tileable_29: 7731115972053642736
+      heat_shimmer_tileable_3: 5502266123539180118
+      heat_shimmer_tileable_30: -514864797585355958
+      heat_shimmer_tileable_31: 8341231733395536147
+      heat_shimmer_tileable_32: 2590591750104023078
+      heat_shimmer_tileable_33: 4972164181100917234
+      heat_shimmer_tileable_34: 8360192835913419519
+      heat_shimmer_tileable_35: -1452506659223512273
+      heat_shimmer_tileable_36: -6133559383480979467
+      heat_shimmer_tileable_37: 2076392659121871748
+      heat_shimmer_tileable_38: -552499777637375446
+      heat_shimmer_tileable_39: 1014737220718429032
+      heat_shimmer_tileable_4: 5312199923421954974
+      heat_shimmer_tileable_40: -2437108168752453773
+      heat_shimmer_tileable_41: 3930518543600398409
+      heat_shimmer_tileable_42: 6206655410447768677
+      heat_shimmer_tileable_43: 5203545843818187826
+      heat_shimmer_tileable_44: 1087379933383820571
+      heat_shimmer_tileable_45: -4452705680230784247
+      heat_shimmer_tileable_46: -7968739238743204745
+      heat_shimmer_tileable_47: -712422752833014662
+      heat_shimmer_tileable_48: -7213139765728685007
+      heat_shimmer_tileable_49: -4217001658752731171
+      heat_shimmer_tileable_5: -724078548674104921
+      heat_shimmer_tileable_50: 2369817162428690237
+      heat_shimmer_tileable_51: 1803297821713829653
+      heat_shimmer_tileable_52: 1811928703144699371
+      heat_shimmer_tileable_53: -8937335662623138948
+      heat_shimmer_tileable_54: -372738864233749843
+      heat_shimmer_tileable_55: 8535629571120708008
+      heat_shimmer_tileable_56: 8524911031138671892
+      heat_shimmer_tileable_57: 6926060704463544223
+      heat_shimmer_tileable_58: -8773410809567215256
+      heat_shimmer_tileable_59: 495592155227783320
+      heat_shimmer_tileable_6: -995360421462606430
+      heat_shimmer_tileable_60: 2870039828810603485
+      heat_shimmer_tileable_61: 2491131585210027687
+      heat_shimmer_tileable_62: 2648062299555471012
+      heat_shimmer_tileable_63: -8306612260304269242
+      heat_shimmer_tileable_64: -625249690192397980
+      heat_shimmer_tileable_65: 2081920578641342651
+      heat_shimmer_tileable_66: -5964415989322622162
+      heat_shimmer_tileable_67: 1869782501769352177
+      heat_shimmer_tileable_68: 4166183786259970321
+      heat_shimmer_tileable_69: 2096476261897394513
+      heat_shimmer_tileable_7: -4467390849005994186
+      heat_shimmer_tileable_70: -3947854886808031778
+      heat_shimmer_tileable_71: 5750721540876825027
+      heat_shimmer_tileable_72: 5631092185819359196
+      heat_shimmer_tileable_73: -1504079200896319149
+      heat_shimmer_tileable_74: 4918202336849752276
+      heat_shimmer_tileable_75: -3692660545965618443
+      heat_shimmer_tileable_76: -2759173703144832703
+      heat_shimmer_tileable_77: 7934364834981095837
+      heat_shimmer_tileable_78: -1381717890194608076
+      heat_shimmer_tileable_79: -8913961461564602760
+      heat_shimmer_tileable_8: -3805288175870199459
+      heat_shimmer_tileable_80: 7205593926145564062
+      heat_shimmer_tileable_81: 9199372411872726582
+      heat_shimmer_tileable_82: 5674354614701233066
+      heat_shimmer_tileable_83: 6477906858952576961
+      heat_shimmer_tileable_84: 6517541755409447533
+      heat_shimmer_tileable_85: -2546833712573929633
+      heat_shimmer_tileable_9: -8660924602159461479
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
