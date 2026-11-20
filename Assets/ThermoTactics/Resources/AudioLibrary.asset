@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04169b1b2a5a9aa47bae5038a89f8c01, type: 3}
+  m_Name: AudioLibrary
+  m_EditorClassIdentifier: 
+  menuMusic: {fileID: 8300000, guid: d4f7ebd52810b004ca47a67a2955a656, type: 3}
+  battleMusic: {fileID: 8300000, guid: 78657861f125b504fa690d564fc5358b, type: 3}
+  bossMusic: {fileID: 8300000, guid: 594e65f62bb25c54ba71e57dfa508d05, type: 3}
+  click: {fileID: 8300000, guid: 4a6670e696749ed46a67a1417073d6eb, type: 3}
+  confirm: {fileID: 8300000, guid: 676a9ee3e77dfe84cb74577e3f08fc8f, type: 3}
+  win: {fileID: 8300000, guid: 7d910a3d45c5fe143b93f0b6acbc987d, type: 3}
+  lose: {fileID: 8300000, guid: f2fbb0833aedc354fb53518c6140cece, type: 3}
+  deploy: {fileID: 8300000, guid: 80c0aa0123a16604a93916a7cd776126, type: 3}
+  pickup: {fileID: 8300000, guid: a7af5e656ca744440bf57b679b359ab0, type: 3}
+  attackAlly: {fileID: 8300000, guid: 855ea3b3f8d5b42419b1923c41c0e027, type: 3}
+  attackEnemy: {fileID: 8300000, guid: 1260ba6b3f33839499e0d30af798e233, type: 3}
+  unitDown: {fileID: 8300000, guid: d520cb6b41497274eb49aeefc109e4f4, type: 3}
+  purchase: {fileID: 8300000, guid: 9a090399366f81b45b244448b8789e32, type: 3}
+  musicGain: 0.45
+  sfxGain: 1

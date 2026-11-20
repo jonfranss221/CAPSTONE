@@ -1,0 +1,22 @@
+Thermo-Tactics audio: sources and licences
+==========================================
+
+Music (from chosic.com; free to use with credit to the author)
+- Music/menu_superepic.ogg       "Superepic" by Alexander Nakarada, CC BY 4.0
+                                  (Title, Stage Select, Level Select, Store, Settings)
+- Music/battle_warfare.ogg       "Warfare" by MaxKoMusic, CC BY-SA 3.0 (battle waves)
+- Music/boss_thunder_unison.ogg  "Thunder Unison" by Keys of Moon, CC BY 4.0 (boss waves)
+
+Sound effects (Pixabay Content License: free to use, no attribution required; credited anyway)
+- Sfx/ui_click.ogg       "button click" by freesoundeffects (Pixabay 289742)
+- Sfx/ui_confirm.ogg     "clickselect2" by freesound_community (Pixabay 92097)
+- Sfx/ui_click_alt.ogg   "click" by u_u4pf5h7zip (Pixabay 345983), spare
+- Sfx/win.ogg            "winner game sound" by puyopuyomegafan1234 (Pixabay 404167)
+- Sfx/lose.ogg           "game over" by alphix (Pixabay 417465)
+
+Sound effects supplied by the team (source to be confirmed)
+- Sfx/deploy.ogg, pickup.ogg, attack_ally.ogg, attack_enemy.ogg, unit_down.ogg, purchase.ogg
+
+Processing: converted from MP3 to Ogg Vorbis; music loudness-normalised to -18 LUFS (Superepic's
+silent first 0.7 s removed so it loops cleanly); effects trimmed of silence and peak-normalised (button clicks to -1 dBFS);
+the win sound shortened to its first 4 seconds with a fade. No other changes to the works.
